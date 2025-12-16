@@ -3206,15 +3206,7 @@
 </div>
     
     <script>
-        // 直接初始化应用
-        document.addEventListener('DOMContentLoaded', function() {
-            // 延迟一下调用初始化函数，确保DOM完全可见
-            setTimeout(function() {
-                if (typeof initializeApp === 'function') {
-                    initializeApp();
-                }
-            }, 100);
-        });
+        // 已经在页面早期初始化了应用，这里不再重复初始化
         
         // 更新单位标签函数
         function updateUnitLabel() {
