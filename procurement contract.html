@@ -314,11 +314,11 @@
             <ol>
                 <li>合同有效期：自合同签订之日起至全部货物交付并验收合格之日止。</li>
                 <li>交货地点：买方工厂或指定仓库。</li>
-                <li>交货期：<input type="text" id="deliveryDate" value="" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1" />前完成全部货物交付。</li>
-                <li>交货方式：<input type="text" id="deliveryMethod" value="卖方安排并承担所有包装和运输费用" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 min-w-[300px]" style="width: auto; min-width: 300px;" />。</li>
+                <li>交货期：<span contenteditable="true" id="deliveryDate" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 min-w-[80px]" style="display: inline-block; min-width: 80px;"></span>前完成全部货物交付。</li>
+                <li>交货方式：<span contenteditable="true" id="deliveryMethod" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 min-w-[80px]" style="display: inline-block; min-width: 80px;">卖方安排并承担所有包装和运输费用</span>。</li>
                 <li>货物验收：买方在收到货物后7个工作日内完成验收，如发现质量问题需及时通知卖方。</li>
-                <li>付款方式：<input type="text" id="paymentMethod" value="验收合格后30个工作日内支付全额货款" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1" />。</li>
-                <li>违约责任：如一方违约，需承担合同总金额5%的违约金。</li>
+                <li>付款方式：<span contenteditable="true" id="paymentMethod" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 min-w-[80px]" style="display: inline-block; min-width: 80px;">验收合格后30个工作日内支付全额货款</span>。</li>
+                <li>违约责任：<span contenteditable="true" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1">如一方违约，需承担合同总金额5%的违约金。</span></li>
                 <li>争议解决：双方协商解决，协商不成的提交合同签订地法院诉讼解决。</li>
                 <li>其他：本合同一式两份，买卖双方各执一份，具有同等法律效力。</li>
             </ol>
@@ -399,7 +399,11 @@
         document.getElementById('bankCode').textContent = supplierInfo.bankCode || '';
         document.getElementById('bankAccount').textContent = supplierInfo.bankAccount || '';
         
-        document.getElementById('deliveryDate').value = contractData.deliveryDate || '';
+        // 填充交货期，现在是span元素而不是input元素
+        const deliveryDateElement = document.getElementById('deliveryDate');
+        if (deliveryDateElement && contractData.deliveryDate) {
+            deliveryDateElement.textContent = contractData.deliveryDate;
+        }
         
         // 填充产品列表并计算数量合计
         const productsTableBody = document.getElementById('productsTableBody');
@@ -449,6 +453,8 @@
         
         // 更新买方印章公司名称
         updateBuyerSealCompanyName(contractData.companyName || 'XX公司');
+        
+
         
         // 自动打印
         // window.print();
