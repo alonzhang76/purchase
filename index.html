@@ -2907,6 +2907,16 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                     firstRow.querySelector('.product-quantity').value = product.quantity || '';
                                     firstRow.querySelector('.product-unit').value = product.unit || '只';
                                     firstRow.querySelector('.product-amount').value = product.amount ? product.amount.toFixed(2) : '0.00';
+                                    
+                                    // 启用第一个产品行的删除按钮并绑定事件
+                                    const removeBtn = firstRow.querySelector('.remove-product-btn');
+                                    if (removeBtn) {
+                                        removeBtn.disabled = false;
+                                        removeBtn.addEventListener('click', function() {
+                                            firstRow.remove();
+                                            calculateTotalAmount();
+                                        });
+                                    }
                                 }
                             } else {
                                 // 添加新的产品行
@@ -2967,6 +2977,34 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                     };
                 }
                 
+                // 为所有产品行的删除按钮绑定事件
+                function bindDeleteEvents() {
+                    const productRows = document.querySelectorAll('.product-row');
+                    productRows.forEach((row, index) => {
+                        const removeBtn = row.querySelector('.remove-product-btn');
+                        if (removeBtn) {
+                            // 如果不是唯一的一行，则启用删除按钮
+                            removeBtn.disabled = productRows.length <= 1;
+                            
+                            // 先移除可能存在的事件监听器，避免重复绑定
+                            removeBtn.onclick = null;
+                            
+                            // 绑定新的删除事件
+                            removeBtn.onclick = function() {
+                                if (productRows.length > 1) {
+                                    row.remove();
+                                    calculateTotalAmount();
+                                    // 重新绑定剩余行的删除事件，确保状态正确
+                                    bindDeleteEvents();
+                                }
+                            };
+                        }
+                    });
+                }
+                
+                // 绑定初始删除事件
+                bindDeleteEvents();
+                
                 // 重新绑定添加产品按钮事件
                 const addProductBtn = document.getElementById('addProductBtn');
                 if (addProductBtn) {
@@ -2982,17 +3020,11 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                             }
                         });
                         
-                        // 启用删除按钮
-                        const removeBtn = productRowTemplate.querySelector('.remove-product-btn');
-                        if (removeBtn) {
-                            removeBtn.disabled = false;
-                            removeBtn.addEventListener('click', function() {
-                                productRowTemplate.remove();
-                                calculateTotalAmount();
-                            });
-                        }
-                        
+                        // 添加新行
                         productList.appendChild(productRowTemplate);
+                        
+                        // 重新绑定所有删除事件
+                        bindDeleteEvents();
                     };
                 }
                 
