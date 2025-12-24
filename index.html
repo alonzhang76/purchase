@@ -140,8 +140,8 @@
             });
         });
 
-        // 公司选择状态管理 - 默认始终选择第一个公司
-        let currentCompany = 'companyA';
+        // 公司选择状态管理 - 从localStorage读取保存的公司，默认使用第一个公司
+        let currentCompany = localStorage.getItem('currentCompany') || 'companyA';
         
         // 获取当前公司的函数
         function getCurrentCompany() {
@@ -597,6 +597,65 @@
                         </div>
                     </div>
                 
+                <!-- 合同迁移模态框 -->
+                <div id="contract-migration-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
+                    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0 sm:items-end sm:justify-center">
+                        <!-- 背景遮罩 -->
+                        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                        </div>
+                        
+                        <!-- 模态框内容 -->
+                        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 sm:align-bottom">
+                            <div class="sm:flex sm:items-start">
+                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                        合同迁移
+                                    </h3>
+                                    <div class="mt-2">
+                                        <p class="text-sm text-gray-500">
+                                            将A公司的采购合同迁移到B公司。
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-5">
+                                <div class="space-y-4">
+                                    <!-- 源公司选择 -->
+                                    <div>
+                                        <label for="source-company" class="block text-sm font-medium text-gray-700">
+                                            源公司
+                                        </label>
+                                        <select id="source-company" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                            <option value="companyA">普利美（常州）环境工程科技有限公司</option>
+                                            <option value="companyB">无锡龙力印铁设备制造有限公司</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- 目标公司选择 -->
+                                    <div>
+                                        <label for="target-company" class="block text-sm font-medium text-gray-700">
+                                            目标公司
+                                        </label>
+                                        <select id="target-company" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                            <option value="companyA">普利美（常州）环境工程科技有限公司</option>
+                                            <option value="companyB">无锡龙力印铁设备制造有限公司</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+                                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm" onclick="migrateContracts()">
+                                    迁移
+                                </button>
+                                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('contract-migration-modal').classList.add('hidden')">
+                                    取消
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 新建付款模态框 -->
                 <div id="create-payment-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
                     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -971,6 +1030,9 @@
                                 </button>
                                 <button id="clear-all-orders-btn" class="btn btn-danger btn-sm text-sm">
                                     <i class="fa fa-trash-o mr-1"></i>清空所有记录
+                                </button>
+                                <button id="migrate-selected-btn" class="btn btn-warning btn-sm text-sm" title="迁移选中的合同">
+                                    <i class="fa fa-exchange mr-1"></i>迁移
                                 </button>
                             </div>
                         </div>
@@ -7613,8 +7675,219 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
     </script>
     
     <script>
+        // 合同迁移功能函数
+        function migrateContracts() {
+            const sourceCompany = document.getElementById('source-company').value;
+            const targetCompany = document.getElementById('target-company').value;
+            
+            // 验证源公司和目标公司是否不同
+            if (sourceCompany === targetCompany) {
+                alert('源公司和目标公司不能相同！');
+                return;
+            }
+            
+            // 获取选中的合同行
+            const selectedCheckboxes = document.querySelectorAll('#purchaseOrderTableBody input[type="checkbox"]:checked');
+            const selectedRows = Array.from(selectedCheckboxes).map(checkbox => checkbox.closest('tr'));
+            if (selectedRows.length === 0) {
+                alert('请先选择需要迁移的合同！');
+                return;
+            }
+            
+            // 获取当前公司的合同数据（源公司就是当前公司）
+            const currentCompany = localStorage.getItem('currentCompany') || 'companyA';
+            const sourceStorageKey = `purchaseOrders_${currentCompany}`;
+            const currentCompanyContracts = JSON.parse(localStorage.getItem(sourceStorageKey) || '[]');
+            
+            // 从选中行获取合同信息
+            const selectedContractNumbers = [];
+            selectedRows.forEach(row => {
+                const contractNumberCell = row.querySelector('td:nth-child(2)');
+                if (contractNumberCell && contractNumberCell.textContent.trim() !== '') {
+                    selectedContractNumbers.push(contractNumberCell.textContent.trim());
+                }
+            });
+            
+            // 找到对应的合同数据
+            const selectedContracts = currentCompanyContracts.filter(contract => 
+                selectedContractNumbers.includes(contract.contractNumber)
+            );
+            
+            // 确认迁移操作
+            if (!confirm(`确定要将选中的${selectedContracts.length}个合同迁移到${targetCompany === 'companyA' ? '普利美（常州）环境工程科技有限公司' : '无锡龙力印铁设备制造有限公司'}吗？\n\n此操作会将选中的合同数据复制到目标公司，\n目标公司中已存在的同名合同将被覆盖！`)) {
+                return;
+            }
+            
+            try {
+                // 获取目标公司的合同数据
+                const targetStorageKey = `purchaseOrders_${targetCompany}`;
+                const targetContracts = JSON.parse(localStorage.getItem(targetStorageKey) || '[]');
+                
+                // 创建映射表，避免重复合同
+                const targetContractMap = new Map();
+                targetContracts.forEach(contract => {
+                    targetContractMap.set(contract.contractNumber, contract);
+                });
+                
+                // 合并合同数据，源公司合同覆盖目标公司同名合同
+                let migratedCount = 0;
+                let newCount = 0;
+                let updatedCount = 0;
+                
+                selectedContracts.forEach(sourceContract => {
+                    if (targetContractMap.has(sourceContract.contractNumber)) {
+                        // 更新现有合同
+                        const index = targetContracts.findIndex(contract => 
+                            contract.contractNumber === sourceContract.contractNumber
+                        );
+                        if (index !== -1) {
+                            targetContracts[index] = sourceContract;
+                            updatedCount++;
+                        }
+                    } else {
+                        // 添加新合同
+                        targetContracts.push(sourceContract);
+                        targetContractMap.set(sourceContract.contractNumber, sourceContract);
+                        newCount++;
+                    }
+                    migratedCount++;
+                });
+                
+                // 保存合并后的合同数据到目标公司
+                localStorage.setItem(targetStorageKey, JSON.stringify(targetContracts));
+                
+                // 从源公司删除已迁移的合同
+                const remainingContracts = currentCompanyContracts.filter(contract => 
+                    !selectedContractNumbers.includes(contract.contractNumber)
+                );
+                localStorage.setItem(sourceStorageKey, JSON.stringify(remainingContracts));
+                
+                // 显示迁移结果
+                alert(`合同迁移成功！\n\n总迁移合同数: ${migratedCount}\n新增合同数: ${newCount}\n更新合同数: ${updatedCount}\n已从源公司删除: ${selectedContracts.length}个合同`);
+                
+                // 刷新采购订单列表
+                renderPurchaseOrderList();
+                
+                // 关闭模态框
+                document.getElementById('contract-migration-modal').classList.add('hidden');
+                
+                // 取消所有选中状态
+                document.querySelectorAll('#purchaseOrderTableBody input[type="checkbox"]:checked').forEach(checkbox => {
+                    checkbox.checked = false;
+                    const row = checkbox.closest('tr');
+                    if (row) {
+                        row.classList.remove('bg-blue-50');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('合同迁移失败:', error);
+                alert('合同迁移失败，请重试！');
+            }
+        }
+        
         // 数据备份与恢复功能
         document.addEventListener('DOMContentLoaded', function() {
+            // 合同迁移功能
+            const contractMigrationBtn = document.getElementById('contract-migration-btn');
+            const migrateSelectedBtn = document.getElementById('migrate-selected-btn');
+            const contractMigrationModal = document.getElementById('contract-migration-modal');
+            
+            function openMigrationModal() {
+                // 检查是否有选中的合同
+                const selectedCheckboxes = document.querySelectorAll('#purchaseOrderTableBody input[type="checkbox"]:checked');
+                if (selectedCheckboxes.length === 0) {
+                    alert('请先选择要迁移的合同！');
+                    return;
+                }
+                
+                // 设置默认的源公司为当前公司
+                const currentCompany = localStorage.getItem('currentCompany') || 'companyA';
+                document.getElementById('source-company').value = currentCompany;
+                
+                // 如果当前公司是companyA，默认目标公司设为companyB，反之亦然
+                const defaultTargetCompany = currentCompany === 'companyA' ? 'companyB' : 'companyA';
+                document.getElementById('target-company').value = defaultTargetCompany;
+                
+                // 打开模态框
+                contractMigrationModal.classList.remove('hidden');
+                
+                // 初始化拖拽功能
+                dragModal(contractMigrationModal);
+            }
+            
+            // 模态框拖拽功能
+            function dragModal(modalElement) {
+                const modalContent = modalElement.querySelector('.inline-block');
+                if (!modalContent) return;
+                
+                let isDragging = false;
+                let startX, startY, initialX, initialY;
+                
+                // 鼠标按下事件
+                modalContent.addEventListener('mousedown', (e) => {
+                    // 只允许在模态框头部区域拖拽
+                    // 修改条件，允许在标题或头部区域拖拽
+                    const isHeaderArea = e.target.closest('#modal-title') || 
+                                       e.target.closest('h3') || 
+                                       (e.target.parentElement && e.target.parentElement.querySelector('#modal-title'));
+                    
+                    if (isHeaderArea) {
+                        isDragging = true;
+                        modalContent.style.cursor = 'grabbing';
+                        
+                        // 获取初始位置
+                        startX = e.clientX;
+                        startY = e.clientY;
+                        
+                        // 获取当前位置
+                        const rect = modalContent.getBoundingClientRect();
+                        initialX = rect.left;
+                        initialY = rect.top;
+                        
+                        // 阻止文本选择
+                        e.preventDefault();
+                    }
+                });
+                
+                // 鼠标移动事件
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    // 计算移动距离
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    
+                    // 设置模态框位置（使用绝对定位）
+                    modalContent.style.position = 'absolute';
+                    modalContent.style.left = `${initialX + deltaX}px`;
+                    modalContent.style.top = `${initialY + deltaY}px`;
+                    modalContent.style.transform = 'none'; // 重置transform
+                });
+                
+                // 鼠标释放事件
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        modalContent.style.cursor = 'grab';
+                    }
+                });
+                
+                // 鼠标离开窗口事件
+                document.addEventListener('mouseleave', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        modalContent.style.cursor = 'grab';
+                    }
+                });
+            }
+            
+            // 合同迁移按钮已从备份数据菜单移至采购订单列表页面
+            
+            if (migrateSelectedBtn && contractMigrationModal) {
+                migrateSelectedBtn.addEventListener('click', openMigrationModal);
+            }
+            
             // 导出JSON备份功能
             const exportDataBtn = document.getElementById('export-data-btn');
             
