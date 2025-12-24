@@ -4591,6 +4591,36 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                         return;
                     }
                     
+                    // 公司映射关系：根据两个文件的公司选择下拉菜单确定正确映射
+                    const companyMapping = {
+                        'companyA': 'company2', // index.html的companyA(普利美)对应invoice.html的company2(普利美)
+                        'companyB': 'company1'  // index.html的companyB(龙力)对应invoice.html的company1(龙力)
+                    };
+                    
+                    // 直接获取公司选择下拉菜单的当前值，确保使用最新选择的公司
+                    const companySelectElement = document.getElementById('company-select');
+                    const currentCompanyFromSelect = companySelectElement ? companySelectElement.value : 'companyA';
+                    const currentCompanyFromStorage = localStorage.getItem('currentCompany') || 'companyA';
+                    
+                    // 优先使用下拉菜单的当前值，避免localStorage可能未更新的问题
+                    const currentCompany = currentCompanyFromSelect || currentCompanyFromStorage;
+                    
+                    // 明确获取映射后的公司值，避免使用逻辑或运算符可能带来的问题
+                    let mappedCompany = 'company2'; // 默认值
+                    if (currentCompany === 'companyA') {
+                        mappedCompany = 'company2';
+                    } else if (currentCompany === 'companyB') {
+                        mappedCompany = 'company1';
+                    }
+                    
+                    console.log('同步调试信息：', {
+                        currentCompanyFromSelect: currentCompanyFromSelect,
+                        currentCompanyFromStorage: currentCompanyFromStorage,
+                        currentCompany: currentCompany,
+                        mappedCompany: mappedCompany,
+                        companyMapping: companyMapping
+                    });
+                    
                     // 收集表单数据并转换为invoice.html所需的格式
                     const invoiceData = {
                         id: Date.now(),
@@ -4604,7 +4634,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                         status: 'approved', // 默认状态为已认证（使用invoice.html中定义的enum值）
                         remark: invoiceRemarkTextarea.value, // 备注
                         type: 'purchase', // 类型为进项发票
-                        company: 'company2' // 公司信息（使用invoice.html中默认选中的公司值）
+                        company: mappedCompany // 使用映射后的公司值
                     };
                     
                     // 将数据保存到localStorage中，以便invoice.html可以读取
@@ -5249,6 +5279,36 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                      return;
                  }
                  
+                 // 公司映射关系：根据两个文件的公司选择下拉菜单确定正确映射
+                 const companyMapping = {
+                     'companyA': 'company2', // index.html的companyA(普利美)对应invoice.html的company2(普利美)
+                     'companyB': 'company1'  // index.html的companyB(龙力)对应invoice.html的company1(龙力)
+                 };
+                 
+                 // 直接获取公司选择下拉菜单的当前值，确保使用最新选择的公司
+                 const companySelectElement = document.getElementById('company-select');
+                 const currentCompanyFromSelect = companySelectElement ? companySelectElement.value : 'companyA';
+                 const currentCompanyFromStorage = localStorage.getItem('currentCompany') || 'companyA';
+                 
+                 // 优先使用下拉菜单的当前值，避免localStorage可能未更新的问题
+                 const currentCompany = currentCompanyFromSelect || currentCompanyFromStorage;
+                 
+                 // 明确获取映射后的公司值，避免使用逻辑或运算符可能带来的问题
+                 let mappedCompany = 'company2'; // 默认值
+                 if (currentCompany === 'companyA') {
+                     mappedCompany = 'company2';
+                 } else if (currentCompany === 'companyB') {
+                     mappedCompany = 'company1';
+                 }
+                 
+                 console.log('编辑发票同步调试信息：', {
+                     currentCompanyFromSelect: currentCompanyFromSelect,
+                     currentCompanyFromStorage: currentCompanyFromStorage,
+                     currentCompany: currentCompany,
+                     mappedCompany: mappedCompany,
+                     companyMapping: companyMapping
+                 });
+                 
                  // 收集表单数据并转换为invoice.html所需的格式
                  const invoiceData = {
                      id: Date.now(), // 使用新ID避免与现有数据冲突
@@ -5262,7 +5322,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                      status: 'approved', // 默认状态为已认证（使用invoice.html中定义的enum值）
                      remark: remark, // 备注
                      type: 'purchase', // 类型为进项发票
-                     company: 'company2' // 公司信息（使用invoice.html中默认选中的公司值）
+                     company: mappedCompany // 使用映射后的公司信息
                  };
                  
                  // 将数据保存到localStorage中，以便invoice.html可以读取
