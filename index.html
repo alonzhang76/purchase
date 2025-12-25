@@ -65,6 +65,13 @@
     <script>
         // 供应商模糊搜索功能
         document.addEventListener('DOMContentLoaded', function() {
+            // 设置日期输入框的默认值为当前日期
+            const today = new Date().toISOString().split('T')[0];
+            const paymentDateInput = document.getElementById('payment-date');
+            const contractPaymentDateInput = document.getElementById('contract-payment-date');
+            if (paymentDateInput) paymentDateInput.value = today;
+            if (contractPaymentDateInput) contractPaymentDateInput.value = today;
+            
             const supplierInput = document.getElementById('supplier');
             const supplierDropdown = document.getElementById('supplier-dropdown');
             
@@ -736,7 +743,7 @@
                                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                                 <div class="form-group">
                                                     <label for="payment-date" class="form-label">付款日期</label>
-                                                    <input type="date" id="payment-date" class="form-input" value="${new Date().toISOString().split('T')[0]}" required>
+                                                    <input type="date" id="payment-date" class="form-input" required>
                                                 </div>
                                                 
                                                 <div class="form-group">
@@ -832,7 +839,7 @@
                                                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                                     <div class="form-group">
                                                         <label for="contract-payment-date" class="form-label">付款日期</label>
-                                                        <input type="date" id="contract-payment-date" class="form-input" value="${new Date().toISOString().split('T')[0]}" required>
+                                                        <input type="date" id="contract-payment-date" class="form-input" required>
                                                     </div>
                                                     
                                                     <div class="form-group">
@@ -1046,6 +1053,22 @@
                             </div>
                         </div>
                         
+                        <!-- 合同日期筛选 -->
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <div class="flex items-center gap-2">
+                                <label for="purchase-start-date" class="text-sm font-medium text-gray-700 whitespace-nowrap">合同日期：</label>
+                                <input type="date" id="purchase-start-date" class="form-input px-3 py-2 border border-gray-300 rounded-md">
+                                <span class="text-gray-500 whitespace-nowrap">至</span>
+                                <input type="date" id="purchase-end-date" class="form-input px-3 py-2 border border-gray-300 rounded-md">
+                                <button id="purchase-date-filter-btn" class="btn btn-primary btn-sm text-sm whitespace-nowrap">
+                                    <i class="fa fa-filter mr-1"></i>筛选
+                                </button>
+                                <button id="purchase-date-reset-btn" class="btn btn-secondary btn-sm text-sm whitespace-nowrap">
+                                    <i class="fa fa-refresh mr-1"></i>重置
+                                </button>
+                            </div>
+                        </div>
+                        
 
                         
                         <!-- 查询状态显示 -->
@@ -1165,6 +1188,23 @@
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                             <h3 class="text-lg font-medium mb-2 sm:mb-0">发票列表</h3>
                         </div>
+                        
+                        <!-- 发票日期筛选 -->
+                        <div class="flex flex-wrap items-center gap-3 mb-2">
+                            <div class="flex items-center gap-2">
+                                <label for="invoice-start-date" class="text-sm font-medium text-gray-700 whitespace-nowrap">发票日期：</label>
+                                <input type="date" id="invoice-start-date" class="form-input px-3 py-2 border border-gray-300 rounded-md">
+                                <span class="text-gray-500 whitespace-nowrap">至</span>
+                                <input type="date" id="invoice-end-date" class="form-input px-3 py-2 border border-gray-300 rounded-md">
+                                <button id="invoice-date-filter-btn" class="btn btn-primary btn-sm text-sm whitespace-nowrap">
+                                    <i class="fa fa-filter mr-1"></i>筛选
+                                </button>
+                                <button id="invoice-date-reset-btn" class="btn btn-secondary btn-sm text-sm whitespace-nowrap">
+                                    <i class="fa fa-refresh mr-1"></i>重置
+                                </button>
+                            </div>
+                        </div>
+                        
                         <div class="flex justify-between items-center mb-2">
                             <div class="text-sm text-gray-600">
                                 共 <span id="invoice-record-count">0</span> 条记录
@@ -1323,7 +1363,21 @@
                             <h3 class="text-lg font-medium mb-2 sm:mb-0">付款列表</h3>
                         </div>
                         
-
+                        <!-- 付款日期筛选 -->
+                        <div class="flex flex-wrap items-center gap-3 mb-4">
+                            <div class="flex items-center gap-2">
+                                <label for="payment-start-date" class="text-sm font-medium text-gray-700 whitespace-nowrap">付款日期：</label>
+                                <input type="date" id="payment-start-date" class="form-input px-3 py-2 border border-gray-300 rounded-md">
+                                <span class="text-gray-500 whitespace-nowrap">至</span>
+                                <input type="date" id="payment-end-date" class="form-input px-3 py-2 border border-gray-300 rounded-md">
+                                <button id="payment-date-filter-btn" class="btn btn-primary btn-sm text-sm whitespace-nowrap">
+                                    <i class="fa fa-filter mr-1"></i>筛选
+                                </button>
+                                <button id="payment-date-reset-btn" class="btn btn-secondary btn-sm text-sm whitespace-nowrap">
+                                    <i class="fa fa-refresh mr-1"></i>重置
+                                </button>
+                            </div>
+                        </div>
                         
                         <div class="table-container">
                             <table class="table">
@@ -5004,7 +5058,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
          let currentInvoicePage = 1;
          const invoicesPerPage = 10;
 
-         function renderInvoiceList(searchTerm = '') {
+         function renderInvoiceList(searchTerm = '', startDate = null, endDate = null) {
              const invoiceTableBody = document.querySelector('#invoices-page .table tbody');
              if (!invoiceTableBody) return;
               
@@ -5025,6 +5079,20 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                             invoice.supplier?.toLowerCase().includes(lowerCaseSearch) || 
                             invoice.amount?.toString().includes(searchTerm) || 
                             invoice.status?.toLowerCase().includes(lowerCaseSearch);
+                 });
+             }
+             
+             // 日期范围筛选
+             if (startDate || endDate) {
+                 const startDateTime = startDate ? new Date(startDate) : new Date(0);
+                 const endDateTime = endDate ? new Date(endDate) : new Date();
+                 // 设置结束日期的时间为当天的23:59:59
+                 endDateTime.setHours(23, 59, 59, 999);
+                 
+                 invoices = invoices.filter(invoice => {
+                     if (!invoice.invoiceDate) return false;
+                     const invoiceDateTime = new Date(invoice.invoiceDate);
+                     return invoiceDateTime >= startDateTime && invoiceDateTime <= endDateTime;
                  });
              }
               
@@ -5220,7 +5288,41 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                  searchInput.addEventListener('input', (e) => {
                      // 重置到第一页
                      currentInvoicePage = 1;
-                     renderInvoiceList(e.target.value);
+                     // 获取当前日期筛选条件
+                     const startDate = document.getElementById('invoice-start-date')?.value;
+                     const endDate = document.getElementById('invoice-end-date')?.value;
+                     renderInvoiceList(e.target.value, startDate, endDate);
+                 });
+             }
+             
+             // 发票日期筛选按钮事件监听
+             const filterBtn = document.getElementById('invoice-date-filter-btn');
+             if (filterBtn) {
+                 filterBtn.addEventListener('click', () => {
+                     // 重置到第一页
+                     currentInvoicePage = 1;
+                     // 获取搜索关键词和日期筛选条件
+                     const searchTerm = document.getElementById('invoice-search-input')?.value || '';
+                     const startDate = document.getElementById('invoice-start-date')?.value;
+                     const endDate = document.getElementById('invoice-end-date')?.value;
+                     renderInvoiceList(searchTerm, startDate, endDate);
+                 });
+             }
+             
+             // 发票日期重置按钮事件监听
+             const resetBtn = document.getElementById('invoice-date-reset-btn');
+             if (resetBtn) {
+                 resetBtn.addEventListener('click', () => {
+                     // 重置到第一页
+                     currentInvoicePage = 1;
+                     // 清空日期输入框
+                     const startDateInput = document.getElementById('invoice-start-date');
+                     const endDateInput = document.getElementById('invoice-end-date');
+                     if (startDateInput) startDateInput.value = '';
+                     if (endDateInput) endDateInput.value = '';
+                     // 获取搜索关键词
+                     const searchTerm = document.getElementById('invoice-search-input')?.value || '';
+                     renderInvoiceList(searchTerm, null, null);
                  });
              }
          });
@@ -5671,7 +5773,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
              return matchingInvoices.map(inv => inv.invoiceNumber).join(', ');
          }
          
-         function renderPaymentList(searchTerm = '') {
+         function renderPaymentList(searchTerm = '', startDate = null, endDate = null) {
              const storageKey = `${getCurrentCompany()}-payments`;
              let payments = JSON.parse(localStorage.getItem(storageKey)) || [];
 
@@ -5685,6 +5787,20 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                     (payment.amount?.toString().includes(lowerCaseSearch)) ||
                     (payment.status?.toLowerCase().includes(lowerCaseSearch))
                 );
+            }
+            
+            // 日期范围筛选
+            if (startDate || endDate) {
+                const startDateTime = startDate ? new Date(startDate) : new Date(0);
+                const endDateTime = endDate ? new Date(endDate) : new Date();
+                // 设置结束日期的时间为当天的23:59:59
+                endDateTime.setHours(23, 59, 59, 999);
+                
+                payments = payments.filter(payment => {
+                    if (!payment.paymentDate) return false;
+                    const paymentDateTime = new Date(payment.paymentDate);
+                    return paymentDateTime >= startDateTime && paymentDateTime <= endDateTime;
+                });
             }
             
             // 按付款日期倒序排序
@@ -7563,11 +7679,34 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
 
              // 付款搜索功能
              const paymentSearchInput = document.getElementById('payment-search-input');
+             const paymentStartDate = document.getElementById('payment-start-date');
+             const paymentEndDate = document.getElementById('payment-end-date');
+             const paymentDateFilterBtn = document.getElementById('payment-date-filter-btn');
+             const paymentDateResetBtn = document.getElementById('payment-date-reset-btn');
+              
              paymentSearchInput.addEventListener('input', () => {
                  // 重置到第一页
                  paymentCurrentPage = 1;
-                 renderPaymentList(paymentSearchInput.value);
+                 renderPaymentList(paymentSearchInput.value, paymentStartDate.value, paymentEndDate.value);
              });
+              
+             // 付款日期筛选功能
+             if (paymentDateFilterBtn) {
+                 paymentDateFilterBtn.addEventListener('click', () => {
+                     paymentCurrentPage = 1;
+                     renderPaymentList(paymentSearchInput.value, paymentStartDate.value, paymentEndDate.value);
+                 });
+             }
+              
+             // 付款日期重置功能
+             if (paymentDateResetBtn) {
+                 paymentDateResetBtn.addEventListener('click', () => {
+                     paymentCurrentPage = 1;
+                     paymentStartDate.value = '';
+                     paymentEndDate.value = '';
+                     renderPaymentList(paymentSearchInput.value, '', '');
+                 });
+             }
 
              // 如果当前页面是付款页面，渲染付款列表
             const currentPage = document.querySelector('.page:not(.hidden)');
