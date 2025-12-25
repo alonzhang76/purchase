@@ -425,6 +425,7 @@
             }
             .table {
                 @apply min-w-full divide-y divide-gray-200;
+                table-layout: fixed;
             }
             .table th {
                 @apply px-4 py-1 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;
@@ -458,6 +459,14 @@
             .purchase-order-table th:nth-child(4),
             .purchase-order-table td:nth-child(4) {
                 @apply sticky left-[260px] bg-white z-40 min-w-[300px] max-w-[400px] whitespace-nowrap;
+            }
+            /* 设置总金额（含税）列宽度 */
+            .table.purchase-order-table th:nth-child(13),
+            .table.purchase-order-table td:nth-child(13) {
+                width: 60px !important;
+                min-width: 60px !important;
+                max-width: 120px !important;
+                @apply whitespace-nowrap text-ellipsis overflow-hidden;
             }
             .tab {
                 @apply px-4 py-2 text-sm font-medium rounded-t-lg;
@@ -1083,7 +1092,7 @@
                                         <th>单价</th>
                                         <th>数量</th>
                                         <th>单位</th>
-                                        <th>总金额（含税）</th>
+                                        <th style="width: 140px !important; min-width: 140px !important; max-width: 140px !important;">总金额（含税）</th>
                                         <th>成本类别</th>
                                         <th>备注</th>
                                         <th>操作</th>
@@ -1096,7 +1105,8 @@
                                     <tr>
                                         <td colspan="10" class="text-right">合计：</td>
                                         <td id="totalQuantitySum" class="text-center">0</td>
-                                        <td id="totalAmountSum" class="text-right">¥0.00</td>
+                                        <td></td> <!-- 单位列 -->
+                                        <td id="totalAmountSum" class="text-left" style="width: 140px !important; min-width: 140px !important; max-width: 140px !important;">¥0.00</td>
                                         <td colspan="3"></td>
                                     </tr>
                                 </tfoot>
@@ -2733,6 +2743,61 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
         
         // 确保getCurrentCompany函数存在
 
+        // 更新采购订单选中合计
+        function updatePurchaseOrderSelectionTotal() {
+            // 直接从localStorage获取采购订单数据
+            const currentCompany = getCurrentCompany();
+            const storageKey = `purchaseOrders_${currentCompany}`;
+            const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
+            
+            const checkboxes = document.querySelectorAll('#purchaseOrderTableBody input[type="checkbox"]:checked');
+            
+            // 如果没有选中项，恢复原合计
+            if (checkboxes.length === 0) {
+                // 计算所有订单的总数量和总金额
+                let totalQuantity = 0;
+                let totalAmount = 0;
+                
+                purchaseOrders.forEach(order => {
+                    if (Array.isArray(order.products)) {
+                        order.products.forEach(product => {
+                            totalQuantity += parseFloat(product.quantity || 0);
+                        });
+                    }
+                    totalAmount += parseFloat(order.totalAmount || 0);
+                });
+                
+                document.getElementById('totalAmountSum').textContent = formatCurrency(totalAmount);
+                document.getElementById('totalQuantitySum').textContent = formatQuantity(totalQuantity);
+                return;
+            }
+            
+            // 计算选中项合计
+            let selectedTotalAmount = 0;
+            let selectedTotalQuantity = 0;
+            
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const contractNumber = row.querySelector('td:nth-child(2)').textContent;
+                
+                // 查找对应的采购订单
+                const order = purchaseOrders.find(o => o.contractNumber === contractNumber);
+                if (order) {
+                    selectedTotalAmount += parseFloat(order.totalAmount || 0);
+                    
+                    if (Array.isArray(order.products)) {
+                        order.products.forEach(product => {
+                            selectedTotalQuantity += parseFloat(product.quantity || 0);
+                        });
+                    }
+                }
+            });
+            
+            // 更新合计显示
+            document.getElementById('totalAmountSum').textContent = formatCurrency(selectedTotalAmount);
+            document.getElementById('totalQuantitySum').textContent = formatQuantity(selectedTotalQuantity);
+        }
+
         function viewPurchaseOrder(id) {
             // 确保id参数正确
             if (!id) {
@@ -3665,21 +3730,6 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                 return;
             }
             
-            // 计算总金额合计
-            const totalAmount = purchaseOrders.reduce((sum, order) => sum + parseFloat(order.totalAmount || 0), 0);
-            document.getElementById('totalAmountSum').textContent = formatCurrency(totalAmount);
-            
-            // 计算总数量合计
-            let totalQuantity = 0;
-            purchaseOrders.forEach(order => {
-                if (Array.isArray(order.products)) {
-                    order.products.forEach(product => {
-                        totalQuantity += parseFloat(product.quantity || 0);
-                    });
-                }
-            });
-            document.getElementById('totalQuantitySum').textContent = formatQuantity(totalQuantity);
-            
             // 更新记录条数
             document.getElementById('totalRecords').textContent = purchaseOrders.length;
             
@@ -3739,7 +3789,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                         <td>${formatCurrency(product.unitPrice || 0)}</td>
                         <td>${formatQuantity(product.quantity || '-')}</td>
                         <td>${product.unit || '-'}</td>
-                        <td>${isFirstProduct ? formatCurrency(order.totalAmount) : ''}</td>
+                        <td style="width: 140px !important; min-width: 140px !important; max-width: 140px !important;">${isFirstProduct ? formatCurrency(order.totalAmount) : ''}</td>
                         <td>${isFirstProduct ? (order.costCategory || '-') : ''}</td>
                         <td>${isFirstProduct ? (order.remarks || '-') : ''}</td>
                         <td class="action-buttons">
@@ -3773,6 +3823,27 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                      });
                  }
                     });
+            });
+            
+            // 计算总金额合计
+            const totalAmount = purchaseOrders.reduce((sum, order) => sum + parseFloat(order.totalAmount || 0), 0);
+            document.getElementById('totalAmountSum').textContent = formatCurrency(totalAmount);
+            
+            // 计算总数量合计
+            let totalQuantity = 0;
+            purchaseOrders.forEach(order => {
+                if (Array.isArray(order.products)) {
+                    order.products.forEach(product => {
+                        totalQuantity += parseFloat(product.quantity || 0);
+                    });
+                }
+            });
+            document.getElementById('totalQuantitySum').textContent = formatQuantity(totalQuantity);
+
+            // 添加复选框事件监听，实现选中合计功能
+            const checkboxes = tableBody.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updatePurchaseOrderSelectionTotal);
             });
             
             // 渲染分页控件
@@ -5060,6 +5131,12 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                  totalAmountSpan.textContent = formatCurrency(totalAmount);
              }
 
+             // 添加复选框事件监听，实现选中合计功能
+             const checkboxes = invoiceTableBody.querySelectorAll('input[type="checkbox"]');
+             checkboxes.forEach(checkbox => {
+                 checkbox.addEventListener('change', updateInvoiceSelectionTotal);
+             });
+
              // 更新分页信息
              const currentPageSpan = document.getElementById('invoice-current-page');
              const totalPagesSpan = document.getElementById('invoice-total-pages');
@@ -5096,6 +5173,46 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
              }
          }
          
+         // 更新发票选中合计
+         function updateInvoiceSelectionTotal() {
+             // 直接从localStorage获取发票数据
+             const storageKey = `${getCurrentCompany()}-invoices`;
+             const invoices = JSON.parse(localStorage.getItem(storageKey)) || [];
+              
+             const checkboxes = document.querySelectorAll('#invoices-page .table tbody input[type="checkbox"]:checked');
+              
+             // 如果没有选中项，恢复原合计
+             if (checkboxes.length === 0) {
+                 // 计算所有发票的总金额
+                 const totalAmount = invoices.reduce((sum, invoice) => sum + parseFloat(invoice.amount || 0), 0);
+                 const totalAmountSpan = document.getElementById('invoice-total-amount');
+                 if (totalAmountSpan) {
+                     totalAmountSpan.textContent = formatCurrency(totalAmount);
+                 }
+                 return;
+             }
+             
+             // 计算选中项合计
+             let selectedTotalAmount = 0;
+             
+             checkboxes.forEach(checkbox => {
+                 const row = checkbox.closest('tr');
+                 const invoiceNumber = row.querySelector('td:nth-child(2)').textContent;
+                 
+                 // 查找对应的发票
+                const invoice = invoices.find(i => i.invoiceNumber === invoiceNumber);
+                if (invoice) {
+                    selectedTotalAmount += parseFloat(invoice.amount || 0);
+                 }
+             });
+             
+             // 更新合计显示
+             const totalAmountSpan = document.getElementById('invoice-total-amount');
+             if (totalAmountSpan) {
+                 totalAmountSpan.textContent = formatCurrency(selectedTotalAmount);
+             }
+         }
+
          // 搜索框事件监听
          document.addEventListener('DOMContentLoaded', () => {
              const searchInput = document.getElementById('invoice-search-input');
@@ -5601,6 +5718,12 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
              // 更新记录条数
              document.getElementById('paymentTotalRecords').textContent = payments.length;
 
+             // 更新表格中的付款合计
+             const paymentTotalTableElement = document.getElementById('paymentTotalAmountTable');
+             if (paymentTotalTableElement) {
+                 paymentTotalTableElement.textContent = formatCurrency(totalAmount);
+             }
+
              // 分页计算
              const totalPages = Math.ceil(payments.length / paymentPageSize);
               // 确保当前页在有效范围内
@@ -5616,6 +5739,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
              // 渲染每个付款记录
              currentPagePayments.forEach(payment => {
                  const row = document.createElement('tr');
+                 row.dataset.paymentId = payment.id;
 
                  // 格式化日期
                  const formatDate = (dateString) => {
@@ -5797,6 +5921,12 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
              document.getElementById('paymentPageInfo').textContent = `第 ${paymentCurrentPage}/${totalPages} 页`;
 
              // 控制导航按钮状态
+
+             // 添加复选框事件监听，实现选中合计功能
+             const checkboxes = tableBody.querySelectorAll('input[type="checkbox"]');
+             checkboxes.forEach(checkbox => {
+                 checkbox.addEventListener('change', updatePaymentSelectionTotal);
+             });
              const firstPageBtn = document.getElementById('paymentFirstPage');
              const prevPageBtn = document.getElementById('paymentPrevPage');
              const nextPageBtn = document.getElementById('paymentNextPage');
@@ -5806,6 +5936,47 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
              prevPageBtn.disabled = paymentCurrentPage === 1;
              nextPageBtn.disabled = paymentCurrentPage === totalPages;
              lastPageBtn.disabled = paymentCurrentPage === totalPages;
+         }
+
+         // 更新付款选中合计
+         function updatePaymentSelectionTotal() {
+             const checkboxes = document.querySelectorAll('#paymentListTableBody input[type="checkbox"]:checked');
+             
+             if (checkboxes.length === 0) {
+                 // 没有选中项，恢复原合计
+                 const storageKey = `${getCurrentCompany()}-payments`;
+                 const payments = JSON.parse(localStorage.getItem(storageKey)) || [];
+                 const totalAmount = payments.reduce((sum, payment) => sum + parseFloat(payment.amount || 0), 0);
+                 
+                 const paymentTotalTableElement = document.getElementById('paymentTotalAmountTable');
+                 if (paymentTotalTableElement) {
+                     paymentTotalTableElement.textContent = formatCurrency(totalAmount);
+                 }
+                 return;
+             }
+             
+             // 计算选中项合计
+             let selectedTotalAmount = 0;
+             
+             checkboxes.forEach(checkbox => {
+                 const row = checkbox.closest('tr');
+                 const paymentId = row.dataset.paymentId;
+                 
+                 // 查找对应的付款记录
+                 const storageKey = `${getCurrentCompany()}-payments`;
+                 const payments = JSON.parse(localStorage.getItem(storageKey)) || [];
+                 const payment = payments.find(p => p.id === paymentId);
+                 
+                 if (payment) {
+                     selectedTotalAmount += parseFloat(payment.amount || 0);
+                 }
+             });
+             
+             // 更新合计显示
+             const paymentTotalTableElement = document.getElementById('paymentTotalAmountTable');
+             if (paymentTotalTableElement) {
+                 paymentTotalTableElement.textContent = formatCurrency(selectedTotalAmount);
+             }
          }
 
          // 查看付款详情功能
