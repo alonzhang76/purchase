@@ -1,0 +1,3498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发票管理系统</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af', // 商务蓝
+                        secondary: '#f8fafc',
+                        success: '#10b981', // 成功绿
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        dark: '#1e293b',
+                        light: '#f8fafc'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .transition-all {
+                transition-property: all;
+                transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+                transition-duration: 300ms;
+            }
+            .shadow-card {
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            }
+        }
+    </style>
+    <style>
+        /* 自定义样式 */
+        .invoice-table th {
+            position: sticky;
+            top: 0;
+            background-color: #f1f5f9;
+            z-index: 10;
+        }
+        
+
+        
+        /* 拖拽上传区域样式 */
+        .dropzone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .dropzone.active {
+            border-color: #1e40af;
+            background-color: rgba(30, 64, 175, 0.05);
+        }
+        
+        /* 加载动画 */
+        .loader {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #1e40af;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 页面切换动画 */
+        .page-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .page-enter {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        .page-enter-active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 数据管理下拉菜单样式 */
+        #data-management-btn:focus {
+            outline: 2px solid rgba(30, 64, 175, 0.5);
+        }
+        
+        #data-management-dropdown a {
+            transition: background-color 0.2s ease;
+        }
+        
+        #data-management-dropdown a:hover {
+            background-color: #f1f5f9;
+        }
+        
+        /* 下拉菜单显示类 */
+        #data-management-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        /* 下拉菜单显示/隐藏动画 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #data-management-dropdown.show {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <div class="flex flex-col h-screen overflow-hidden">
+        <!-- 顶部导航栏 -->
+        <header class="z-10 bg-white shadow-sm">
+            <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 bg-primary">
+                <div class="flex items-center">
+                    <svg class="w-8 h-8 mr-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="48" fill="#1e40af" stroke="#ffffff" stroke-width="4"/>
+                        <path d="M25,35 L50,60 L75,35" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M35,65 L50,80 L65,65" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <h1 class="text-xl font-bold text-white">发票管理系统</h1>
+                </div>
+                <div class="flex items-center">
+                    <!-- 数据管理下拉菜单 -->
+                    <div class="relative mr-4">
+                        <button id="data-management-btn" class="flex items-center px-4 py-2 rounded-md text-white hover:bg-blue-700 focus:outline-none">
+                            <i class="fa fa-database mr-2"></i>
+                            <span>数据管理</span>
+                            <i class="fa fa-caret-down ml-2"></i>
+                        </button>
+                        <!-- 下拉菜单 -->
+                        <div id="data-management-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 hidden">
+                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" id="backup-data-btn">
+                                <i class="fa fa-download mr-2"></i>备份数据
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100" id="restore-data-btn">
+                                <i class="fa fa-upload mr-2"></i>恢复数据
+                            </a>
+                        </div>
+                    </div>
+                    <span class="text-sm text-white">Designed By AlonZhang(136 6511 9291)</span>
+                </div>
+            </div>
+            <!-- 水平菜单栏 -->
+            <nav class="bg-white border-b border-gray-200 px-4">
+                <div class="flex space-x-1 overflow-x-auto">
+                    <button class="nav-btn flex items-center px-4 py-3 text-white bg-primary rounded-md" data-page="invoices">
+                        <i class="fa fa-file-text-o mr-2"></i>
+                        <span>发票列表</span>
+                    </button>
+                    <button class="nav-btn flex items-center px-4 py-3 text-gray-600 rounded-md hover:bg-gray-100" data-page="upload">
+                        <i class="fa fa-upload mr-2"></i>
+                        <span>上传发票</span>
+                    </button>
+                </div>
+            </nav>
+            <div class="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4">
+                    <!-- 移动端菜单按钮 -->
+                    <button class="md:hidden text-gray-500 focus:outline-none" id="mobile-menu-button">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                    
+
+                </div>
+                
+                <!-- 移动端侧边栏 -->
+                <div class="md:hidden hidden bg-white border-b border-gray-200" id="mobile-sidebar">
+                    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                        <button class="mobile-nav-btn block w-full text-left px-3 py-2 rounded-md text-base font-medium text-white bg-primary" data-page="invoices">
+                            <i class="fa fa-file-text-o mr-3"></i>发票列表
+                        </button>
+                        <button class="mobile-nav-btn block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:bg-gray-100" data-page="upload">
+                            <i class="fa fa-upload mr-3"></i>上传发票
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 页面内容 -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+                <!-- 发票列表页面 -->
+                <div id="invoices-page" class="page-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">发票列表</h2>
+                        <p class="mt-1 text-sm text-gray-500">管理和查看所有发票记录</p>
+                    </div>
+                    
+                    <!-- 筛选和操作栏 -->
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+                        <div class="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2">
+                              <div class="relative">
+                                  <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                      <i class="fa fa-search text-gray-400"></i>
+                                </div>
+                                <input class="block w-full pl-10 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" placeholder="搜索发票..." type="search" id="search-input">
+                            </div>
+                            <div class="relative">
+                                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" id="payment-status-filter">
+                                    <option value="">全部</option>
+                                    <option value="未付款">未付款</option>
+                                    <option value="已付款">已付款</option>
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" id="invoice-status-filter">
+                                    <option value="">所有状态</option>
+                                    <option value="已提交">已提交</option>
+                                    <option value="待验证">待验证</option>
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" id="days-filter">
+                                    <option>最近30天</option>
+                                    <option>最近90天</option>
+                                    <option>今年</option>
+                                    <option>去年</option>
+                                    <option>自定义</option>
+                                </select>
+                            </div>
+                            <!-- 自定义日期选择区域 -->
+                            <div id="custom-date-filter" class="hidden flex items-center space-x-2">
+                                <input type="date" id="start-date" class="block w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <input type="date" id="end-date" class="block w-auto pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <button id="custom-date-search" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    搜索
+                                </button>
+                                <button id="custom-date-reset" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                    重置
+                                </button>
+                            </div>
+                            <!-- 高级筛选按钮 -->
+                            <button id="advanced-filter-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <i class="fa fa-filter mr-2"></i>高级筛选
+                            </button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button id="export-invoices-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
+                                <i class="fa fa-download mr-2"></i> 导出
+                            </button>
+                            <button id="clear-invoices" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-danger hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-danger">
+                                <i class="fa fa-trash mr-2"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 发票表格 -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 invoice-table">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            <input type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('status')">
+                                            状态 <span id="sort-status"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('date')">
+                                            登记日期 <span id="sort-date"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('paymentDate')">
+                                            付款日期 <span id="sort-paymentDate"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('date')">
+                                            发票日期 <span id="sort-date2"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('invoiceNo')">
+                                            发票号码 <span id="sort-invoiceNo"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('seller')">
+                                            销售方 <span id="sort-seller"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('buyer')">
+                                            购买方 <span id="sort-buyer"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('amount')">
+                                            金额 <span id="sort-amount"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('taxRate')">
+                                            税率 <span id="sort-taxRate"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('taxAmount')">
+                                            税额 <span id="sort-taxAmount"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            项目名称
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('category')">
+                                            项目分类 <span id="sort-category"></span>
+                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            操作
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="invoice-table-body">
+                                    <!-- 发票数据将通过JavaScript动态填充 -->
+                                </tbody>
+                                <!-- 合计行 -->
+                                <tfoot class="bg-gray-50">
+                                    <tr>
+                                        <td class="px-6 py-3" colspan="7"></td>
+                                        <td class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                            合计：
+                                        </td>
+                                        <td id="total-amount" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                            ¥0.00
+                                        </td>
+                                        <td class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                            
+                                        </td>
+                                        <td id="total-tax-amount" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                            ¥0.00
+                                        </td>
+                                        <td class="px-6 py-3" colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                        
+                        <!-- 分页控件容器 -->
+                        <div id="invoice-pagination-stats" class="p-4 border-t border-gray-300"></div>
+
+                    </div>
+                </div>
+                
+                <!-- 上传发票页面 -->
+                <div id="upload-page" class="page-content hidden">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-gray-900">上传发票</h2>
+                        <p class="mt-1 text-sm text-gray-500">上传PDF格式的电子发票，系统将自动识别发票信息</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- 上传区域 -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                                <div class="p-6">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">拖拽或选择文件</h3>
+                                    
+                                    <!-- 拖拽上传区域 -->
+                                    <div id="dropzone" class="dropzone flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer">
+                                        <div class="space-y-2 text-center">
+                                            <i class="fa fa-cloud-upload text-4xl text-gray-400"></i>
+                                            <div class="flex text-sm text-gray-600">
+                                                <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary-dark focus-within:outline-none">
+                                                    <span>选择文件</span>
+                                                    <input id="file-upload" name="file-upload" type="file" accept=".pdf" class="sr-only" multiple>
+                                                </label>
+                                                <p class="pl-1">或拖拽文件到此处</p>
+                                            </div>
+                                            <p class="text-xs text-gray-500">
+                                                支持 PDF 格式，单个文件不超过 10MB
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 上传文件列表 -->
+                                    <div class="mt-6 hidden" id="upload-list">
+                                        <h4 class="text-sm font-medium text-gray-900 mb-2">待处理文件</h4>
+                                        <ul class="divide-y divide-gray-200" id="file-list">
+                                            <!-- 文件列表将通过JavaScript动态填充 -->
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="mt-6 flex justify-end">
+                                        <button id="start-upload" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <i class="fa fa-upload mr-2"></i> 开始上传
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 识别结果 -->
+                            <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg hidden" id="recognition-result">
+                                <div class="p-6">
+                                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">识别结果</h3>
+                                    
+                                    <div class="overflow-hidden border border-gray-200 rounded-md">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <tbody class="bg-white divide-y divide-gray-200" id="recognition-table">
+                                                <!-- 识别结果将通过JavaScript动态填充 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="mt-6 flex justify-end space-x-3">
+
+                                        <button id="save-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
+                                            <i class="fa fa-save mr-2"></i> 保存
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+
+                    </div>
+                </div>
+                
+
+            </main>
+        </div>
+    </div>
+    
+    <!-- 发票详情模态框 -->
+    <div id="invoice-detail-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">发票详情</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="mb-4">
+                            <h4 class="text-sm font-medium text-gray-500">发票信息</h4>
+                            <div class="mt-2 space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">发票号码:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-invoice-no">00123456</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">发票日期:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-invoice-date">2023-07-15</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">发票类型:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-invoice-type">增值税电子普通发票</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">金额:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-invoice-amount">¥1,280.50</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">税率:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-invoice-tax-rate">6%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">税额:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-invoice-tax-amount">¥72.74</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4 class="text-sm font-medium text-gray-500">销售方信息</h4>
+                            <div class="mt-2 space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">名称:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-seller-name">某某科技有限公司</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">纳税人识别号:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-seller-tax-id">91310000XXXXXXXXXX</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">地址:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-seller-address">上海市浦东新区XX路XX号</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">电话:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-seller-phone">021-XXXXXXXX</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">开户行及账号:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-seller-bank">XX银行上海分行 XXXXXXXXXXXX</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4 class="text-sm font-medium text-gray-500">购买方信息</h4>
+                            <div class="mt-2 space-y-2">
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">名称:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-buyer-name">某某贸易公司</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm text-gray-600">纳税人识别号:</span>
+                                    <span class="text-sm font-medium text-gray-900" id="modal-buyer-tax-id">91310000XXXXXXXXXX</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">发票项目</h4>
+                        <div class="border border-gray-200 rounded-md overflow-hidden mb-4">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            项目名称
+                                        </th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            数量
+                                        </th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            单价
+                                        </th>
+                                        <th scope="col" class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            金额
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200" id="modal-items">
+                                    <tr>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                                            技术服务费
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                                            1
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                                            ¥1,280.50
+                                        </td>
+                                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                                            ¥1,280.50
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4 class="text-sm font-medium text-gray-500 mb-2">发票预览</h4>
+                        <div class="border border-gray-200 rounded-md overflow-hidden">
+                            <img id="modal-invoice-image" src="https://p3-doubao-search-sign.byteimg.com/labis/0d3bd3d89891e4962533f242f30b0827~tplv-be4g95zd3a-image.jpeg?rk3s=542c0f93&x-expires=1782435452&x-signature=z6b85oauJNAad0V1%2BMq7GIC08OQ%3D" alt="发票预览" class="w-full h-auto">
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h4 class="text-sm font-medium text-gray-500 mb-2">备注</h4>
+                            <p class="text-sm text-gray-900" id="modal-remark">
+                                无备注信息
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <i class="fa fa-download mr-2"></i> 下载
+                </button>
+                <button class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    <i class="fa fa-print mr-2"></i> 打印
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑发票模态框 -->
+    <div id="edit-invoice-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">编辑发票</h3>
+                <button id="close-edit-modal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4">
+                <div class="space-y-4">
+                    <div>
+                        <label for="edit-date" class="block text-sm font-medium text-gray-700 mb-1">登记日期</label>
+                        <input type="date" id="edit-date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-item-name" class="block text-sm font-medium text-gray-700 mb-1">项目名称</label>
+                        <input type="text" id="edit-item-name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-category" class="block text-sm font-medium text-gray-700 mb-1">项目分类</label>
+                        <select id="edit-category" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="服务类">服务类</option>
+                            <option value="商品类">商品类</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button id="cancel-edit-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    取消
+                </button>
+                <button id="save-edit-btn" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟发票数据
+        // 从localStorage加载数据，如果没有则使用空数组
+        let mockInvoices = JSON.parse(localStorage.getItem('invoices')) || [];
+
+        // 分页相关变量
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let currentSearchTerm = '';
+
+        // DOM 加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 如果localStorage中没有数据，则将默认数据保存到localStorage
+            if (!localStorage.getItem('invoices')) {
+                // 为默认数据添加登记日期
+                const invoicesWithRegisterDate = mockInvoices.map(invoice => {
+                    return {
+                        ...invoice,
+                        registerDate: new Date().toISOString().split('T')[0] // 设置当前日期为登记日期
+                    };
+                });
+                localStorage.setItem('invoices', JSON.stringify(invoicesWithRegisterDate));
+                mockInvoices = invoicesWithRegisterDate;
+            } else {
+                // 从localStorage加载数据，并确保所有发票都有registerDate字段
+                mockInvoices = JSON.parse(localStorage.getItem('invoices'));
+                const updatedInvoices = mockInvoices.map(invoice => {
+                    if (!invoice.registerDate) {
+                        return {
+                            ...invoice,
+                            registerDate: new Date().toISOString().split('T')[0] // 为没有登记日期的发票设置当前日期
+                        };
+                    }
+                    return invoice;
+                });
+                if (updatedInvoices.length !== mockInvoices.length || JSON.stringify(updatedInvoices) !== JSON.stringify(mockInvoices)) {
+                    localStorage.setItem('invoices', JSON.stringify(updatedInvoices));
+                    mockInvoices = updatedInvoices;
+                }
+            }
+            
+            // 初始化页面
+            initPage();
+            
+            // 初始化图表
+            initCharts();
+            
+            // 初始化事件监听
+            initEventListeners();
+            
+            // 加载发票数据（使用filterInvoices而不是loadInvoiceData来显示统计条和分页）
+            currentSearchTerm = '';
+            filterInvoices(currentSearchTerm);
+        });
+
+        // 初始化页面
+        function initPage() {
+            // 默认显示发票列表页面
+        showPage('invoices');
+
+        // 为导出按钮添加点击事件监听器
+        document.getElementById('export-invoices-btn').addEventListener('click', exportInvoices);
+
+        // 导出发票数据
+        function exportInvoices() {
+            // 获取选中的复选框
+            const checkedBoxes = document.querySelectorAll('.invoice-checkbox:checked');
+            let exportData;
+
+            // 如果有选中的发票，只导出选中的发票
+            if (checkedBoxes.length > 0) {
+                const selectedIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+                exportData = mockInvoices.filter(invoice => selectedIds.includes(invoice.id));
+            } else {
+                // 否则导出所有发票
+                exportData = mockInvoices;
+            }
+
+            // 准备导出的字段
+            const headers = ['状态', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额'];
+            const data = exportData.map(invoice => [
+                invoice.status,
+                invoice.date,
+                `'${invoice.invoiceNo}`,  // 发票号码添加单引号，确保Excel以文本格式显示
+                invoice.seller,
+                invoice.buyer,
+                (invoice.amount || 0).toFixed(2),
+                `${((invoice.taxRate || 0) * 100).toFixed(0)}%`,
+                (invoice.taxAmount || 0).toFixed(2)
+            ]);
+
+            // 创建CSV内容
+            let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+            csvContent += headers.join(',') + '\n';
+            data.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            // 创建下载链接
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            // 生成包含日期和时间的文件名，格式：发票数据_YYYY-MM-DD_HH-MM-SS.csv
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10);
+            const timeStr = now.toISOString().slice(11, 19).replace(/:/g, '-');
+            link.setAttribute('download', `发票数据_${dateStr}_${timeStr}.csv`);
+            document.body.appendChild(link);
+
+            // 触发下载
+            link.click();
+            
+            // 清理
+            document.body.removeChild(link);
+            
+            showToast('发票数据已导出', 'success');
+        }
+        }
+
+        // 初始化图表 - 已删除（仪表盘和统计分析页面已移除）
+        function initCharts() {
+            // 无图表需要初始化
+        }
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 导航菜单点击事件
+            document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    showPage(page);
+                    
+                    // 更新导航菜单样式 - 现在由showPage函数统一处理
+                    // 如果是移动端，点击后关闭侧边栏
+                    document.getElementById('mobile-sidebar').classList.add('hidden');
+                    
+                    // 如果是移动端，点击后关闭侧边栏
+                    document.getElementById('mobile-sidebar').classList.add('hidden');
+                });
+            });
+            
+            // 清空按钮点击事件
+            document.getElementById('clear-invoices').addEventListener('click', function() {
+                if (confirm('确定要清空所有发票数据吗？此操作不可恢复。')) {
+                    clearInvoices();
+                }
+            });
+            
+            // 发票复选框点击事件
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('invoice-checkbox')) {
+                    updateTotalSummary();
+                }
+                // 全选复选框点击事件
+                else if (e.target === document.querySelector('.invoice-table thead input[type="checkbox"]')) {
+                    const isChecked = e.target.checked;
+                    document.querySelectorAll('.invoice-checkbox').forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                    });
+                    updateTotalSummary();
+                }
+            });
+            
+            // 移动端菜单按钮点击事件
+            document.getElementById('mobile-menu-button').addEventListener('click', function() {
+                const mobileSidebar = document.getElementById('mobile-sidebar');
+                mobileSidebar.classList.toggle('hidden');
+            });
+            
+            // 拖拽上传区域事件
+            const dropzone = document.getElementById('dropzone');
+            
+            // 拖拽进入
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            // 高亮拖拽区域
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropzone.classList.add('active');
+            }
+            
+            function unhighlight() {
+                dropzone.classList.remove('active');
+            }
+            
+            // 处理文件拖放
+            dropzone.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                handleFiles(files);
+            }
+            
+            // 文件选择器变化事件
+            document.getElementById('file-upload').addEventListener('change', function() {
+                handleFiles(this.files);
+            });
+            
+            // 开始上传按钮点击事件
+            document.getElementById('start-upload').addEventListener('click', function() {
+                const fileList = document.getElementById('file-list');
+                if (fileList.children.length > 0) {
+                    // 实际处理上传的PDF文件
+                    processUpload();
+                } else {
+                    alert('请先选择文件');
+                }
+            });
+
+            // 删除文件事件
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-file')) {
+                    const filename = e.target.closest('.remove-file').dataset.filename;
+                    currentFiles = currentFiles.filter(file => file.name !== filename);
+                    
+                    // 重新渲染文件列表
+                    const fileList = document.getElementById('file-list');
+                    const itemToRemove = e.target.closest('li');
+                    if (itemToRemove) {
+                        itemToRemove.remove();
+                    }
+                    
+                    // 如果没有文件，隐藏文件列表
+                    if (currentFiles.length === 0) {
+                        document.getElementById('upload-list').classList.add('hidden');
+                    }
+                }
+            });
+            
+            // 发票详情模态框关闭按钮点击事件
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('invoice-detail-modal').classList.add('hidden');
+            });
+            
+            // 点击模态框外部关闭模态框
+            document.getElementById('invoice-detail-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+            
+            // 编辑模态框事件监听器
+            // 关闭编辑模态框
+            document.getElementById('close-edit-modal').addEventListener('click', function() {
+                document.getElementById('edit-invoice-modal').classList.add('hidden');
+            });
+            
+            // 取消编辑
+            document.getElementById('cancel-edit-btn').addEventListener('click', function() {
+                document.getElementById('edit-invoice-modal').classList.add('hidden');
+            });
+            
+            // 点击编辑模态框外部关闭
+            document.getElementById('edit-invoice-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+            
+            // 保存编辑
+            document.getElementById('save-edit-btn').addEventListener('click', function() {
+                const editModal = document.getElementById('edit-invoice-modal');
+                const invoiceId = editModal.dataset.invoiceId;
+                const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+                
+                if (invoice) {
+                    // 更新发票数据
+                    invoice.date = document.getElementById('edit-date').value;
+                    if (invoice.items && invoice.items.length > 0) {
+                        invoice.items[0].name = document.getElementById('edit-item-name').value;
+                    }
+                    invoice.category = document.getElementById('edit-category').value;
+                    
+                    // 保存到localStorage
+                    localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    
+                    // 关闭模态框
+                    editModal.classList.add('hidden');
+                    
+                    // 刷新表格
+                    filterInvoices(currentSearchTerm);
+                }
+            });
+            
+            // 搜索框输入事件
+            document.getElementById('search-input').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                currentSearchTerm = searchTerm;
+                filterInvoices(searchTerm);
+            });
+            
+            // 付款状态筛选事件
+            document.getElementById('payment-status-filter').addEventListener('change', function() {
+                filterInvoices(currentSearchTerm);
+            });
+            
+            // 发票状态筛选事件
+            document.getElementById('invoice-status-filter').addEventListener('change', function() {
+                filterInvoices(currentSearchTerm);
+            });
+            
+            // 天数筛选事件
+            document.getElementById('days-filter').addEventListener('change', function() {
+                const customDateFilter = document.getElementById('custom-date-filter');
+                if (this.value === '自定义') {
+                    customDateFilter.classList.remove('hidden');
+                } else {
+                    customDateFilter.classList.add('hidden');
+                }
+                filterInvoices(currentSearchTerm);
+            });
+            
+            // 自定义日期搜索按钮事件
+            document.getElementById('custom-date-search').addEventListener('click', function() {
+                filterInvoices(currentSearchTerm);
+            });
+            
+            // 自定义日期重置按钮事件
+            document.getElementById('custom-date-reset').addEventListener('click', function() {
+                document.getElementById('start-date').value = '';
+                document.getElementById('end-date').value = '';
+                filterInvoices(currentSearchTerm);
+            });
+            
+            // 高级筛选模态框相关功能
+            // 动态提取税率和商品类别选项的函数
+            function updateFilterOptions() {
+                // 获取所有发票数据
+                const invoices = JSON.parse(localStorage.getItem('invoices')) || mockInvoices;
+                
+                // 提取所有唯一的税率
+                const taxRates = new Set();
+                invoices.forEach(invoice => {
+                    if (invoice.taxRate && invoice.taxRate !== '') {
+                        taxRates.add(String(invoice.taxRate));
+                    }
+                });
+                
+                // 更新税率下拉框
+                const taxRateSelect = document.getElementById('advanced-tax-rate');
+                // 保留"全部"选项，清空其他选项
+                taxRateSelect.innerHTML = '<option value="">全部</option>';
+                // 添加动态提取的税率选项
+                Array.from(taxRates).sort().forEach(rate => {
+                    const option = document.createElement('option');
+                    option.value = rate;
+                    // 将税率乘以100显示为百分比形式
+                    const displayRate = (parseFloat(rate) * 100).toFixed(0);
+                    option.textContent = displayRate + '%';
+                    taxRateSelect.appendChild(option);
+                });
+                
+                // 提取所有唯一的商品类别
+                const categories = new Set();
+                invoices.forEach(invoice => {
+                    if (invoice.category && invoice.category !== '') {
+                        categories.add(invoice.category);
+                    }
+                });
+                
+                // 更新商品类别下拉框
+                const categorySelect = document.getElementById('advanced-category');
+                // 保留"全部"选项，清空其他选项
+                categorySelect.innerHTML = '<option value="">全部</option>';
+                // 添加动态提取的商品类别选项
+                Array.from(categories).sort().forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            }
+            
+            // 打开高级筛选模态框
+            document.getElementById('advanced-filter-btn').addEventListener('click', function() {
+                // 更新筛选选项
+                updateFilterOptions();
+                document.getElementById('advanced-filter-modal').classList.remove('hidden');
+            });
+            
+            // 关闭高级筛选模态框
+            document.getElementById('close-advanced-filter').addEventListener('click', function() {
+                document.getElementById('advanced-filter-modal').classList.add('hidden');
+            });
+            
+            // 点击模态框外部关闭
+            document.getElementById('advanced-filter-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.add('hidden');
+                }
+            });
+            
+            // 重置高级筛选条件
+            document.getElementById('reset-advanced-filter').addEventListener('click', function() {
+                // 重置所有高级筛选输入
+                document.querySelectorAll('#advanced-filter-modal input, #advanced-filter-modal select').forEach(input => {
+                    if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                });
+            });
+            
+            // 应用高级筛选
+            document.getElementById('apply-advanced-filter').addEventListener('click', function() {
+                applyAdvancedFilter();
+                document.getElementById('advanced-filter-modal').classList.add('hidden');
+            });
+            
+            // 导出EXCEL功能
+            document.getElementById('export-excel').addEventListener('click', function() {
+                exportToExcel();
+            });
+            
+            // 高级筛选逻辑
+            function applyAdvancedFilter() {
+                // 获取所有高级筛选条件
+                const advancedFilters = {
+                    status: document.getElementById('advanced-status').value,
+                    paymentStatus: document.getElementById('advanced-payment-status').value,
+                    taxRate: document.getElementById('advanced-tax-rate').value,
+                    invoiceNoFrom: document.getElementById('advanced-invoice-no-from').value,
+                    invoiceNoTo: document.getElementById('advanced-invoice-no-to').value,
+                    sellerName: document.getElementById('advanced-seller-name').value.toLowerCase(),
+                    buyerName: document.getElementById('advanced-buyer-name').value.toLowerCase(),
+                    amountFrom: document.getElementById('advanced-amount-from').value,
+                    amountTo: document.getElementById('advanced-amount-to').value,
+                    itemName: document.getElementById('advanced-item-name').value.toLowerCase(),
+                    category: document.getElementById('advanced-category').value,
+                    invoiceDateFrom: document.getElementById('advanced-invoice-date-from').value,
+                    invoiceDateTo: document.getElementById('advanced-invoice-date-to').value,
+                    registerDateFrom: document.getElementById('advanced-register-date-from').value,
+                    registerDateTo: document.getElementById('advanced-register-date-to').value,
+                    paymentDateFrom: document.getElementById('advanced-payment-date-from').value,
+                    paymentDateTo: document.getElementById('advanced-payment-date-to').value
+                };
+                
+                // 保存高级筛选条件
+                localStorage.setItem('advancedFilters', JSON.stringify(advancedFilters));
+                
+                // 应用筛选
+                filterInvoices(document.getElementById('search-input').value);
+            }
+            
+            // 导出到EXCEL功能
+            function exportToExcel() {
+                // 获取当前筛选条件
+                const searchTerm = document.getElementById('search-input').value;
+                const paymentStatus = document.getElementById('payment-status-filter').value;
+                const invoiceStatus = document.getElementById('invoice-status-filter').value;
+                const daysFilter = document.getElementById('days-filter').value;
+                
+                // 获取高级筛选条件
+                const advancedFilters = JSON.parse(localStorage.getItem('advancedFilters') || '{}');
+                
+                // 筛选发票数据
+                const filteredInvoices = mockInvoices.filter(invoice => {
+                    // 基础筛选条件
+                    const lowerSearchTerm = searchTerm.toLowerCase();
+                    const searchMatch = String(invoice.invoiceNo || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.seller || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.buyer || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.date || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.registerDate || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.paymentDate || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.amount || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.taxRate || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.taxAmount || '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.items ? invoice.items[0].name || '' : '').toLowerCase().includes(lowerSearchTerm) ||
+                                       String(invoice.category || '').toLowerCase().includes(lowerSearchTerm);
+                    
+                    // 付款状态筛选
+                    let paymentStatusMatch = true;
+                    if (paymentStatus === '未付款') {
+                        paymentStatusMatch = !invoice.paymentDate || invoice.paymentDate === '';
+                    } else if (paymentStatus === '已付款') {
+                        paymentStatusMatch = !!invoice.paymentDate && invoice.paymentDate !== '';
+                    }
+                    
+                    // 发票状态筛选
+                    let invoiceStatusMatch = true;
+                    if (invoiceStatus && invoiceStatus !== '') {
+                        invoiceStatusMatch = invoice.status === invoiceStatus;
+                    }
+                    
+                    // 高级筛选条件
+                    let advancedMatch = true;
+                    
+                    // 发票状态
+                    if (advancedFilters.status && advancedFilters.status !== '') {
+                        advancedMatch = advancedMatch && (invoice.status === advancedFilters.status);
+                    }
+                    
+                    // 付款状态
+                    if (advancedFilters.paymentStatus && advancedFilters.paymentStatus !== '') {
+                        if (advancedFilters.paymentStatus === '已付款') {
+                            advancedMatch = advancedMatch && !!invoice.paymentDate && invoice.paymentDate !== '';
+                        } else if (advancedFilters.paymentStatus === '未付款') {
+                            advancedMatch = advancedMatch && (!invoice.paymentDate || invoice.paymentDate === '');
+                        }
+                    }
+                    
+                    // 税率
+                    if (advancedFilters.taxRate && advancedFilters.taxRate !== '') {
+                        if (advancedFilters.taxRate === '其他') {
+                            advancedMatch = advancedMatch && !(['0', '3', '6', '9', '13'].includes(String(invoice.taxRate || '')));
+                        } else {
+                            advancedMatch = advancedMatch && (String(invoice.taxRate || '') === advancedFilters.taxRate);
+                        }
+                    }
+                    
+                    // 发票号码范围
+                    if (advancedFilters.invoiceNoFrom && advancedFilters.invoiceNoFrom !== '') {
+                        advancedMatch = advancedMatch && (invoice.invoiceNo >= advancedFilters.invoiceNoFrom);
+                    }
+                    if (advancedFilters.invoiceNoTo && advancedFilters.invoiceNoTo !== '') {
+                        advancedMatch = advancedMatch && (invoice.invoiceNo <= advancedFilters.invoiceNoTo);
+                    }
+                    
+                    // 销售方名称
+                    if (advancedFilters.sellerName && advancedFilters.sellerName !== '') {
+                        advancedMatch = advancedMatch && String(invoice.seller || '').toLowerCase().includes(advancedFilters.sellerName);
+                    }
+                    
+                    // 购买方名称
+                    if (advancedFilters.buyerName && advancedFilters.buyerName !== '') {
+                        advancedMatch = advancedMatch && String(invoice.buyer || '').toLowerCase().includes(advancedFilters.buyerName);
+                    }
+                    
+                    // 金额范围
+                    if (advancedFilters.amountFrom && advancedFilters.amountFrom !== '') {
+                        advancedMatch = advancedMatch && (invoice.amount >= parseFloat(advancedFilters.amountFrom));
+                    }
+                    if (advancedFilters.amountTo && advancedFilters.amountTo !== '') {
+                        advancedMatch = advancedMatch && (invoice.amount <= parseFloat(advancedFilters.amountTo));
+                    }
+                    
+                    // 商品名称
+                    if (advancedFilters.itemName && advancedFilters.itemName !== '') {
+                        const itemNameMatch = invoice.items && invoice.items.some(item => 
+                            String(item.name || '').toLowerCase().includes(advancedFilters.itemName)
+                        );
+                        advancedMatch = advancedMatch && itemNameMatch;
+                    }
+                    
+                    // 商品类别
+                    if (advancedFilters.category && advancedFilters.category !== '') {
+                        advancedMatch = advancedMatch && (String(invoice.category || '') === advancedFilters.category);
+                    }
+                    
+                    // 发票日期范围
+                    if (advancedFilters.invoiceDateFrom && advancedFilters.invoiceDateFrom !== '') {
+                        const invoiceDate = invoice.date ? new Date(invoice.date) : null;
+                        const filterDate = new Date(advancedFilters.invoiceDateFrom);
+                        advancedMatch = advancedMatch && invoiceDate && invoiceDate >= filterDate;
+                    }
+                    if (advancedFilters.invoiceDateTo && advancedFilters.invoiceDateTo !== '') {
+                        const invoiceDate = invoice.date ? new Date(invoice.date) : null;
+                        const filterDate = new Date(advancedFilters.invoiceDateTo);
+                        advancedMatch = advancedMatch && invoiceDate && invoiceDate <= filterDate;
+                    }
+                    
+                    // 登记日期范围
+                    if (advancedFilters.registerDateFrom && advancedFilters.registerDateFrom !== '') {
+                        const registerDate = invoice.registerDate ? new Date(invoice.registerDate) : null;
+                        const filterDate = new Date(advancedFilters.registerDateFrom);
+                        advancedMatch = advancedMatch && registerDate && registerDate >= filterDate;
+                    }
+                    if (advancedFilters.registerDateTo && advancedFilters.registerDateTo !== '') {
+                        const registerDate = invoice.registerDate ? new Date(invoice.registerDate) : null;
+                        const filterDate = new Date(advancedFilters.registerDateTo);
+                        advancedMatch = advancedMatch && registerDate && registerDate <= filterDate;
+                    }
+                    
+                    // 付款日期范围
+                    if (advancedFilters.paymentDateFrom && advancedFilters.paymentDateFrom !== '') {
+                        const paymentDate = invoice.paymentDate ? new Date(invoice.paymentDate) : null;
+                        const filterDate = new Date(advancedFilters.paymentDateFrom);
+                        advancedMatch = advancedMatch && paymentDate && paymentDate >= filterDate;
+                    }
+                    if (advancedFilters.paymentDateTo && advancedFilters.paymentDateTo !== '') {
+                        const paymentDate = invoice.paymentDate ? new Date(invoice.paymentDate) : null;
+                        const filterDate = new Date(advancedFilters.paymentDateTo);
+                        advancedMatch = advancedMatch && paymentDate && paymentDate <= filterDate;
+                    }
+                    
+                    return searchMatch && paymentStatusMatch && invoiceStatusMatch && advancedMatch;
+                });
+                
+                // 生成Excel内容，添加UTF-8 BOM以解决中文乱码问题
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+                
+                // 添加表头
+                csvContent += "序号,发票类型,发票代码,发票号码,销售方名称,销售方税号,购买方名称,购买方税号,发票日期,登记日期,付款日期,金额,税率,税额,发票状态,商品名称,商品类别\n";
+                
+                // 添加数据行
+                filteredInvoices.forEach((invoice, index) => {
+                    const row = [
+                        index + 1,
+                        invoice.type || '',
+                        invoice.invoiceCode || '',
+                        invoice.invoiceNo || '',
+                        invoice.seller || '',
+                        invoice.sellerTaxNo || '',
+                        invoice.buyer || '',
+                        invoice.buyerTaxNo || '',
+                        invoice.date || '',
+                        invoice.registerDate || '',
+                        invoice.paymentDate || '',
+                        (invoice.amount || 0).toFixed(2),
+                        invoice.taxRate || '',
+                        (invoice.taxAmount || 0).toFixed(2),
+                        invoice.status || '',
+                        invoice.items ? invoice.items[0].name || '' : '',
+                        invoice.category || ''
+                    ];
+                    
+                    // 将数组转换为CSV行，处理逗号和引号
+                    const csvRow = row.map(field => {
+                        // 如果字段包含逗号、引号或换行符，需要用引号括起来
+                        if (field.toString().indexOf(',') !== -1 || 
+                            field.toString().indexOf('"') !== -1 || 
+                            field.toString().indexOf('\n') !== -1) {
+                            return '"' + field.toString().replace(/"/g, '""') + '"';
+                        }
+                        return field;
+                    }).join(',');
+                    
+                    csvContent += csvRow + '\n';
+                });
+                
+                // 创建下载链接
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `发票列表_${new Date().toISOString().slice(0, 10)}.csv`);
+                document.body.appendChild(link);
+                
+                // 触发下载
+                link.click();
+                
+                // 清理
+                document.body.removeChild(link);
+            }
+            
+            // 编辑按钮点击事件
+            const editRecognitionBtn = document.getElementById('edit-recognition');
+            if (editRecognitionBtn) {
+                editRecognitionBtn.addEventListener('click', function() {
+                    const recognitionInputs = document.querySelectorAll('#recognition-table input');
+                    let isEditing = false;
+                    
+                    // 检查当前是否有可编辑的字段
+                    recognitionInputs.forEach(input => {
+                        if (!input.hasAttribute('readonly')) {
+                            isEditing = true;
+                        }
+                    });
+                    
+                    if (isEditing) {
+                        // 切换到只读状态
+                        recognitionInputs.forEach(input => {
+                            input.setAttribute('readonly', 'readonly');
+                        });
+                        this.innerHTML = '<i class="fa fa-pencil mr-2"></i> 编辑';
+                    } else {
+                        // 切换到可编辑状态
+                        recognitionInputs.forEach(input => {
+                            input.removeAttribute('readonly');
+                        });
+                        this.innerHTML = '<i class="fa fa-lock mr-2"></i> 锁定';
+                    }
+                });
+            }
+            
+            // 保存识别结果按钮点击事件
+            const saveRecognitionBtn = document.getElementById('save-recognition');
+            if (saveRecognitionBtn) {
+                saveRecognitionBtn.addEventListener('click', function() {
+                    // 获取表单数据
+                    const invoiceNumber = document.getElementById('recognition-invoice-number').value;
+                    
+                    // 检查发票号码是否重复
+                    if (checkDuplicateInvoiceNumber(invoiceNumber)) {
+                        alert('发票号已存在，请检查后重新输入。');
+                        return;
+                    }
+                    
+                    // 保存发票数据
+        const invoiceDate = document.getElementById('recognition-invoice-date').value;
+        const seller = document.getElementById('recognition-seller').value;
+        const buyer = document.getElementById('recognition-buyer').value;
+        const amount = document.getElementById('recognition-amount').value;
+        const taxRate = document.getElementById('recognition-tax-rate').value;
+        const taxAmount = document.getElementById('recognition-tax-amount').value;
+        const itemName = document.getElementById('recognition-item-name').value;
+        const itemCategory = document.getElementById('recognition-item-category').value;
+                    
+                    // 创建新发票对象，确保与现有发票结构完全匹配
+                    // 处理税率，确保即使为空或格式不正确也不会保存NaN
+                    let parsedTaxRate = 0;
+                    if (taxRate) {
+                        // 移除%符号并转换为数字
+                        const taxRateWithoutPercent = taxRate.replace('%', '');
+                        parsedTaxRate = parseFloat(taxRateWithoutPercent) / 100;
+                        // 如果转换失败，使用默认值0
+                        if (isNaN(parsedTaxRate)) {
+                            parsedTaxRate = 0;
+                        }
+                    }
+                    
+                    const newInvoice = {
+                        id: "INV" + Date.now(),
+                        invoiceNo: invoiceNumber,
+                        date: invoiceDate,
+                        amount: parseFloat(amount),
+                        seller: seller,
+                        sellerTaxId: "", // 销售方税号（识别结果中没有，默认留空）
+                        sellerAddress: "", // 销售方地址（识别结果中没有，默认留空）
+                        sellerPhone: "", // 销售方电话（识别结果中没有，默认留空）
+                        sellerBank: "", // 销售方银行账户（识别结果中没有，默认留空）
+                        buyer: buyer,
+                        buyerTaxId: "", // 购买方税号（识别结果中没有，默认留空）
+                        category: itemCategory || '其他', // 使用用户选择的项目分类，如果没有选择则使用默认分类
+                        taxRate: parsedTaxRate,
+                        taxAmount: parseFloat(taxAmount),
+                        items: [{ 
+                            name: itemName, 
+                            category: itemCategory, 
+                            quantity: 1, 
+                            unitPrice: parseFloat(amount), 
+                            amount: parseFloat(amount) 
+                        }],
+                        status: '待验证',
+                        imageUrl: "", // 图片URL（识别结果中没有，默认留空）
+                        paymentDate: "", // 付款日期初始为空，后续由用户在列表中选择
+                        registerDate: new Date().toISOString().split('T')[0] // 登记日期，点击保存当日
+                    };
+                    
+                    // 添加到发票数组
+                    mockInvoices.push(newInvoice);
+                    
+                    // 保存到localStorage
+                    localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    
+                    // 显示成功消息
+                    alert('发票保存成功！');
+                    
+                    // 刷新发票列表，保持当前筛选状态
+                    filterInvoices(currentSearchTerm);
+                    
+                    // 隐藏识别结果区域
+                    document.getElementById('recognition-result').classList.add('hidden');
+                });
+            }
+        }
+
+        // 显示指定页面
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // 移除所有菜单按钮的激活状态
+            document.querySelectorAll('.nav-btn, .mobile-nav-btn').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            
+            // 为当前页面的菜单按钮添加激活状态
+            document.querySelectorAll(`[data-page="${pageId}"]`).forEach(btn => {
+                btn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                btn.classList.add('bg-primary', 'text-white');
+            });
+            
+            // 显示指定页面
+            const targetPage = document.getElementById(`${pageId}-page`);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                
+                // 添加页面切换动画
+                targetPage.classList.add('page-enter');
+                setTimeout(() => {
+                    targetPage.classList.add('page-enter-active');
+                }, 10);
+                setTimeout(() => {
+                    targetPage.classList.remove('page-enter', 'page-enter-active');
+                }, 300);
+            }
+        }
+
+        // 文件处理函数已经在下方重新实现
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+
+
+        // 存储当前上传的文件
+        let currentFiles = [];
+
+        // 处理选择的文件
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            // 存储当前文件
+            currentFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+            
+            // 显示文件列表
+            const uploadList = document.getElementById('upload-list');
+            uploadList.classList.remove('hidden');
+            
+            // 清空文件列表
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            
+            // 添加文件到列表
+            currentFiles.forEach(file => {
+                const listItem = document.createElement('li');
+                listItem.className = 'py-3 flex items-center justify-between';
+                listItem.innerHTML = `
+                    <div class="flex items-center">
+                        <i class="fa fa-file-pdf-o text-red-500 mr-3"></i>
+                        <span class="text-sm text-gray-900 truncate max-w-xs">${file.name}</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500">${formatFileSize(file.size)}</span>
+                        <button class="text-gray-400 hover:text-gray-500 remove-file" data-filename="${file.name}">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                fileList.appendChild(listItem);
+                
+
+            });
+        }
+
+        // 使用PDF.js提取PDF文本内容
+        async function extractTextFromPDF(file) {
+            const fileReader = new FileReader();
+            
+            // 调试：检查文件信息
+            console.log('文件信息:', {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+            
+            return new Promise((resolve, reject) => {
+                fileReader.onload = async function() {
+                    console.log('文件读取完成，开始提取PDF文本');
+                    const typedArray = new Uint8Array(this.result);
+                    try {
+                        // 尝试获取PDF.js对象 - cdnjs版本通常挂载到window.pdfjsLib
+                        let pdfjs = window.pdfjsLib;
+                        if (!pdfjs) {
+                            // 如果仍然无法获取，尝试直接使用import()动态加载
+                            console.log('尝试动态加载PDF.js...');
+                            try {
+                                // 动态加载cdnjs版本的PDF.js
+                                await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+                                // 动态加载后，PDF.js对象应该在window.pdfjsLib上可用
+                                pdfjs = window.pdfjsLib;
+                                
+                                if (!pdfjs) {
+                                    throw new Error('动态加载PDF.js后仍然无法获取对象');
+                                }
+                                
+                                console.log('动态加载PDF.js成功:', pdfjs);
+                            } catch (importError) {
+                                console.error('动态加载PDF.js失败:', importError);
+                                throw new Error('PDF.js库未正确加载，动态加载也失败了');
+                            }
+                        }
+                        
+                        // 使用processPDF函数处理PDF文档
+                        processPDF(pdfjs, typedArray, resolve, reject);
+                    } catch (error) {
+                        console.error('PDF提取错误:', error);
+                        console.error('错误堆栈:', error.stack);
+                        reject(error);
+                    }
+                };
+                
+                fileReader.onerror = function(error) {
+                    console.error('读取文件失败:', error);
+                    reject(new Error('读取文件失败'));
+                };
+                
+                console.log('开始读取文件...');
+                fileReader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // 处理PDF文档的通用函数
+        async function processPDF(pdfjs, typedArray, resolve, reject) {
+            console.log('PDF.js对象获取成功:', pdfjs);
+            console.log('PDF.js版本:', pdfjs.version);
+            
+            // 确保设置workerSrc
+            if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+                pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                console.log('已设置workerSrc:', pdfjs.GlobalWorkerOptions.workerSrc);
+            }
+            
+            console.log('调用getDocument方法...');
+            console.log('typedArray大小:', typedArray.length, 'bytes');
+            
+            try {
+                // 调用getDocument方法，检查返回结果
+                const pdfDoc = pdfjs.getDocument(typedArray);
+                console.log('getDocument返回结果类型:', typeof pdfDoc);
+                console.log('getDocument返回结果:', pdfDoc);
+                
+                // 检查是否有promise属性
+                if (!pdfDoc.promise) {
+                    // 如果没有promise属性，尝试使用旧版本的回调方式
+                    console.log('使用回调方式获取PDF文档');
+                    pdfDoc.then(function(pdf) {
+                        console.log('PDF文档加载成功，页面数:', pdf.numPages);
+                        
+                        // 提取所有页面的文本
+                        const pagePromises = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            pagePromises.push(pdf.getPage(i));
+                        }
+                        
+                        Promise.all(pagePromises)
+                            .then(function(pages) {
+                                console.log('获取所有页面成功，页面数量:', pages.length);
+                                const textPromises = pages.map(page => page.getTextContent());
+                                return Promise.all(textPromises);
+                            })
+                            .then(function(textContents) {
+                                console.log('获取所有页面文本内容成功，文本内容数量:', textContents.length);
+                                let text = '';
+                                textContents.forEach((content, index) => {
+                                    console.log('页面', index + 1, '文本项数量:', content.items.length);
+                                    const pageText = content.items.map(item => item.str).join('\n');
+                                    console.log('页面', index + 1, '文本内容:', pageText.length > 100 ? pageText.substring(0, 100) + '...' : pageText);
+                                    text += pageText + '\n';
+                                });
+                                console.log('提取的总文本长度:', text.length);
+                                console.log('提取的总文本内容:', text.length > 200 ? text.substring(0, 200) + '...' : text);
+                                resolve(text);
+                            })
+                            .catch(function(error) {
+                                console.error('处理页面文本失败:', error);
+                                console.error('错误堆栈:', error.stack);
+                                reject(error);
+                            });
+                    }, function(error) {
+                        console.error('加载PDF文档失败:', error);
+                        console.error('错误堆栈:', error.stack);
+                        reject(error);
+                    });
+                } else {
+                    // 使用新版本的promise方式
+                    console.log('使用Promise方式获取PDF文档');
+                    const pdf = await pdfDoc.promise;
+                    console.log('PDF文档加载成功，页面数:', pdf.numPages);
+                    
+                    let text = '';
+                    
+                    // 提取所有页面的文本
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        console.log('处理页面:', i);
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        console.log('页面', i, '文本项数量:', content.items.length);
+                        const pageText = content.items.map(item => item.str).join('\n');
+                        console.log('页面', i, '文本内容:', pageText.length > 100 ? pageText.substring(0, 100) + '...' : pageText);
+                        text += pageText + '\n';
+                    }
+                    
+                    console.log('提取的总文本长度:', text.length);
+                    console.log('提取的总文本内容:', text.length > 200 ? text.substring(0, 200) + '...' : text);
+                    resolve(text);
+                }
+            } catch (error) {
+                console.error('处理PDF文档失败:', error);
+                console.error('错误堆栈:', error.stack);
+                reject(error);
+            }
+        }
+
+        // 解析发票文本，提取关键信息
+        /**
+     * 解析发票文本，提取关键信息
+     * 注：发票号码、日期、销售方和购买方的提取逻辑已更新为使用test_invoice_fix.html中的方法
+     * @param {string} text - 发票文本内容
+     * @returns {Object} - 包含发票关键信息的对象
+     */
+    function parseInvoiceText(text) {
+            console.log('开始解析发票文本:', text.length > 100 ? text.substring(0, 100) + '...' : text);
+            console.log('完整发票文本:', text);
+            
+            // 预处理文本：
+            // 1. 将分行显示的中文日期合并成连续的字符串
+            let processedText = text.replace(/(20\d{2})\n+年\n*(\d{1,2})\n+月\n*(\d{1,2})\n+日/g, '$1年$2月$3日');
+            // 2. 移除日期中可能存在的空格，如"2025年 12月 24日"转为"2025年12月24日"
+            processedText = processedText.replace(/(20\d{2})年\s*(\d{1,2})月\s*(\d{1,2})日/g, '$1年$2月$3日');
+            // 3. 修复公司名称中可能存在的换行或空格，如"普利美（常州）环境工程科 技有限公司"转为"普利美（常州）环境工程科技有限公司"
+            processedText = processedText.replace(/([\u4e00-\u9fa5\(（])\s*([\u4e00-\u9fa5\)）])/g, '$1$2');
+            processedText = processedText.replace(/([\u4e00-\u9fa5\)）])\s*([\u4e00-\u9fa5\(（])/g, '$1$2');
+            // 4. 修复产品名称分行的问题（将被分行的中文词合并）
+            processedText = processedText.replace(/(^|\*|\s)([\u4e00-\u9fa5])\n+([\u4e00-\u9fa5])/g, '$1$2$3');
+            // 5. 处理金额可能的换行情况，如截图中的格式：¥
+            // 9
+            // 8
+            // 58
+            // 315.
+            // 04
+            // 首先识别可能的金额分隔行
+            const lines = processedText.split('\n');
+            let mergedLines = [];
+            let isInAmount = false;
+            let currentAmount = '';
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                // 如果遇到¥符号，开始收集金额部分
+                if (line.includes('¥') || line.includes('￥')) {
+                    isInAmount = true;
+                    currentAmount = line;
+                } 
+                // 如果已经在收集金额，且当前行是纯数字或带有小数点的数字
+                else if (isInAmount && (line.match(/^\d+$/) || line.match(/^\d+\.\d+$/))) {
+                    currentAmount += line;
+                    // 如果当前行包含小数点，可能是金额的最后一部分
+                    if (line.includes('.')) {
+                        mergedLines.push(currentAmount);
+                        isInAmount = false;
+                        currentAmount = '';
+                    }
+                } 
+                // 否则添加普通行
+                else {
+                    if (isInAmount && currentAmount) {
+                        mergedLines.push(currentAmount);
+                        isInAmount = false;
+                        currentAmount = '';
+                    }
+                    mergedLines.push(line);
+                }
+            }
+            
+            // 如果循环结束时还在收集金额，添加到结果中
+            if (isInAmount && currentAmount) {
+                mergedLines.push(currentAmount);
+            }
+            
+            // 重建处理后的文本
+            processedText = mergedLines.join('\n');
+            // 6. 将多个换行符替换为单个换行符，以便更好地匹配
+            processedText = processedText.replace(/\n+/g, '\n');
+            console.log('预处理后的文本:', processedText);
+            
+            // 发票号码 - 修复：匹配任何位置的16-20位数字，而不仅限于开头
+            // 同时支持有标签和无标签的情况，如"发票号码：123456"或单独一行的"123456"
+            const invoiceNumberMatch = processedText.match(/(?:发票号码[：:]?\s*)?(\d{16,20})/i);
+            const invoiceNumber = invoiceNumberMatch ? invoiceNumberMatch[1] : '';
+            console.log('发票号码匹配结果:', invoiceNumberMatch, '提取值:', invoiceNumber);
+            
+            // 发票日期 - 使用test_invoice_fix.html中的方法，匹配中文格式日期
+            const dateMatch = processedText.match(/\d{4}年\d{1,2}月\d{1,2}日/);
+            let invoiceDate = '';
+            if (dateMatch) {
+                invoiceDate = dateMatch[0].replace(/年|月/g, '-').replace(/日/g, '');
+            }
+            console.log('最终发票日期:', invoiceDate);
+            
+            // 根据用户需求：在预处理后的文本中提取所有单位名称，将第一个单位名称作为"购买方"，第二个单位名称作为"销售方"
+            let buyer = '';
+            let seller = '';
+            
+            // 提取公司名称 - 使用test_invoice_fix.html中的改进版方法
+            const companyLines = processedText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            // 查找公司名称（带税号的情况）
+            let companyFound = 0;
+            
+            for (let i = 0; i < companyLines.length; i++) {
+                const line = companyLines[i];
+                
+                // 跳过数字行（可能是发票号、金额等）
+                if (/^\d+$/.test(line)) continue;
+                
+                // 跳过金额符号行
+                if (line.includes('¥')) continue;
+                
+                // 跳过中文大写金额行
+                if (/[壹贰叁肆伍陆柒捌玖拾佰仟万亿圆整]/.test(line)) continue;
+                
+                // 跳过小数行
+                if (/^\d*\.\d+$/.test(line)) continue;
+                
+                // 公司名称通常包含"公司"字样
+                if (line.includes('公司')) {
+                    if (companyFound === 0) {
+                        // 销售方（第一家公司）
+                        seller = line;
+                        companyFound++;
+                    } else if (companyFound === 1) {
+                        // 购买方（第二家公司）
+                        buyer = line;
+                        companyFound++;
+                        break; // 通常只有两家公司
+                    }
+                }
+            }
+            
+            // 清理公司名称（移除税号和其他无关信息）
+            const cleanCompanyName = (name) => {
+                // 移除91开头的18位税号
+                name = name.replace(/91\d{17}/g, '').trim();
+                // 移除发票号
+                name = name.replace(/\d{16,20}/g, '').trim();
+                // 移除日期
+                name = name.replace(/\d{4}年\d{1,2}月\d{1,2}日/g, '').trim();
+                // 去除文字之间的空格
+                name = name.replace(/\s+/g, '');
+                return name;
+            };
+            
+            seller = cleanCompanyName(seller);
+            buyer = cleanCompanyName(buyer);
+            
+            // 直接匹配备用方案：如果直接提取失败，尝试更宽松的匹配
+            if (!buyer) {
+                const looseBuyerMatch = processedText.match(/购买方[\s：:]*([\u4e00-\u9fa5\w-（）]+(?:公司|有限|集团|厂|店|中心|院|所|局|经营部|部|行|馆|坊|铺|站))/i);
+                if (looseBuyerMatch) {
+                    buyer = looseBuyerMatch[1].trim();
+                }
+            }
+            
+            if (!seller) {
+                const looseSellerMatch = processedText.match(/销售方[\s：:]*([\u4e00-\u9fa5\w-（）]+(?:公司|有限|集团|厂|店|中心|院|所|局|经营部|部|行|馆|坊|铺|站))/i);
+                if (looseSellerMatch) {
+                    seller = looseSellerMatch[1].trim();
+                }
+            }
+            
+            // 最终备用方案：如果仍然无法提取，尝试从整行中提取
+            if (!buyer || !seller) {
+                // 找到包含购买方和销售方的行
+                const buyerLine = processedText.split('\n').find(line => line.includes('购买方'));
+                const sellerLine = processedText.split('\n').find(line => line.includes('销售方'));
+                
+                if (buyerLine && !buyer) {
+                    // 从购买方行中提取并清理
+                    let extractedBuyer = buyerLine.replace(/购买方[\s：:]*/i, '').trim();
+                    // 移除无效信息
+                    extractedBuyer = extractedBuyer.replace(/(纳税人识别号|地址|电话|开户行|开户银行|税号|账号).*$/i, '').trim();
+                    extractedBuyer = extractedBuyer.split(/[，,：:]\s*/)[0].trim();
+                    // 验证有效性
+                    if (extractedBuyer && extractedBuyer !== '地址' && extractedBuyer !== '名称' && extractedBuyer.length > 2) {
+                        buyer = extractedBuyer;
+                    }
+                }
+                
+                if (sellerLine && !seller) {
+                    // 从销售方行中提取并清理
+                    let extractedSeller = sellerLine.replace(/销售方[\s：:]*/i, '').trim();
+                    // 移除无效信息
+                    extractedSeller = extractedSeller.replace(/(纳税人识别号|地址|电话|开户行|开户银行|税号|账号).*$/i, '').trim();
+                    extractedSeller = extractedSeller.split(/[，,：:]\s*/)[0].trim();
+                    // 验证有效性，不接受"地址"等无效内容
+                    if (extractedSeller && extractedSeller !== '地址' && extractedSeller !== '名称' && extractedSeller.length > 2) {
+                        seller = extractedSeller;
+                    }
+                }
+            }
+            
+            // 提取所有单位名称（包含公司、有限、集团、厂、店、中心、院、所、局、经营部、部、行、馆等关键词）
+            // 改进匹配条件，确保不会包含日期信息
+            const companyNamePattern = /(?:名称[\s：:]*)?([\u4e00-\u9fa5][\u4e00-\u9fa5\w-（）\s]*?(?:公司|有限|集团|厂|店|中心|院|所|局|经营部|部|行|馆|坊|铺|站)(?!.*[0-9]{4}年[0-9]{1,2}月[0-9]{1,2}日))[^\n]{0,50}/g;
+            const companies = [...processedText.matchAll(companyNamePattern)];
+            
+            // 清理单位名称，移除无关信息
+            const cleanCompanyNames = companies.map(match => {
+                let name = match[1].trim();
+                // 清理名称，移除纳税人识别号、地址、电话、开户行等信息
+                name = name.replace(/(纳税人识别号|地址|电话|开户行|开户银行|税号|账号).*$/i, '').trim();
+                name = name.replace(/[：:].*$/g, '').trim(); // 移除所有冒号后的内容
+                // 移除名称中可能存在的空格，确保完整识别
+                name = name.replace(/\s+/g, '');
+                
+                // 验证不是无效内容
+                if (name.includes('规格型号') || name.includes('单位') || name.includes('数量') || 
+                    name.includes('单价') || name.includes('金额') || name.includes('税率') || 
+                    name.includes('税额') || name.length < 2 || 
+                    name === '地址' || name === '名称') {
+                    return '';
+                }
+                
+                return name;
+            }).filter(name => name.length > 0 && name.length > 3); // 过滤掉空值和过短的名称（至少4个字符）
+            
+            // 备用方案：如果没有提取到足够的单位名称，使用更广泛的匹配模式
+            if (cleanCompanyNames.length < 2) {
+                const backupPattern = /(?:购买方|销售方)[\s：:]*([\u4e00-\u9fa5\w-（）]+(?:公司|有限|集团|厂|店|中心|院|所|局|经营部|部|行|馆|坊|铺|站)[^\n]{0,50})/g;
+                const backupMatches = [...processedText.matchAll(backupPattern)];
+                
+                if (backupMatches.length >= 2) {
+                    // 从购买方和销售方行中提取
+                    const backupBuyer = backupMatches[0][1].trim().split(/[，,：:]\s*/)[0];
+                    const backupSeller = backupMatches[1][1].trim().split(/[，,：:]\s*/)[0];
+                    
+                    // 清理并添加到单位名称列表
+                    const cleanedBackupBuyer = backupBuyer.replace(/(纳税人识别号|地址|电话|开户行|开户银行|税号|账号).*$/i, '').trim();
+                    const cleanedBackupSeller = backupSeller.replace(/(纳税人识别号|地址|电话|开户行|开户银行|税号|账号).*$/i, '').trim();
+                    
+                    if (cleanedBackupBuyer && !cleanCompanyNames.includes(cleanedBackupBuyer)) {
+                        cleanCompanyNames.push(cleanedBackupBuyer);
+                    }
+                    if (cleanedBackupSeller && !cleanCompanyNames.includes(cleanedBackupSeller)) {
+                        cleanCompanyNames.push(cleanedBackupSeller);
+                    }
+                }
+            }
+            
+            // 去重处理并确保没有空值
+            const uniqueCompanyNames = [...new Set(cleanCompanyNames.filter(name => name.length > 0))];
+            
+            // 如果通过关键字提取失败或提取不完整，尝试从文本中提取所有单位名称
+            if (!buyer || !seller) {
+                
+                // 如果已经通过关键字提取了一个，另一个从单位名称列表中寻找不同的
+                if (buyer && !seller) {
+                    // 找一个与buyer不同的单位名称作为seller
+                    seller = uniqueCompanyNames.find(name => name !== buyer) || '';
+                } else if (seller && !buyer) {
+                    // 找一个与seller不同的单位名称作为buyer
+                    buyer = uniqueCompanyNames.find(name => name !== seller) || '';
+                } else if (!buyer && !seller && uniqueCompanyNames.length > 0) {
+                    // 如果都没有提取到，使用单位名称列表，确保buyer和seller不同
+                    // 根据用户需求：将第一个单位名称作为"购买方"，第二个单位名称作为"销售方"
+                    buyer = uniqueCompanyNames[0];
+                    if (uniqueCompanyNames.length > 1) {
+                        seller = uniqueCompanyNames[1];
+                    } else if (uniqueCompanyNames.length > 0) {
+                        // 只有一个单位名称时，根据发票逻辑判断
+                        // 通常发票中销售方信息在下方，购买方在上方
+                        // 尝试根据文本位置判断
+                        const buyerPos = processedText.indexOf(buyer);
+                        const sellerPos = processedText.lastIndexOf(buyer);
+                        if (buyerPos !== sellerPos) {
+                            // 如果同一名称出现多次，可能是识别问题，尝试其他方式
+                            seller = buyer;
+                        }
+                    }
+                }
+            }
+            
+            // 最终检查：确保buyer和seller不同
+            if (buyer && buyer === seller) {
+                // 如果两者相同，尝试从文本中寻找其他可能的单位名称
+                const alternativePattern = /(?:购买方|销售方)[\s：:]*\n*[\u4e00-\u9fa5]+[^\n]{0,30}/g;
+                const alternatives = [...processedText.matchAll(alternativePattern)];
+                
+                if (alternatives.length >= 2) {
+                    // 从两个不同的行中提取单位名称
+                    const firstLine = alternatives[0][0].replace(/(购买方|销售方|名称)[\s：:]*\n*/i, '').trim();
+                    const secondLine = alternatives[1][0].replace(/(购买方|销售方|名称)[\s：:]*\n*/i, '').trim();
+                    
+                    // 清理并设置为buyer和seller
+                    buyer = firstLine.replace(/(纳税人识别号|地址|电话|开户行|开户银行|税号|账号).*$/i, '').trim();
+                    seller = secondLine.replace(/(纳税人识别号|地址|电话|开户行|开户银行|税号|账号).*$/i, '').trim();
+                }
+            }
+            
+            console.log('提取的所有单位名称:', cleanCompanyNames);
+            console.log('购买方:', buyer);
+            console.log('销售方:', seller);
+            
+            // 修复后的中文大写金额转小写函数
+            // 中文大写金额转换函数（修复版，支持空格、大额金额和角分）
+            function chineseToNumber(chineseNum) {
+                // 先移除无关字符和空格
+                chineseNum = chineseNum.replace(/[整\s]/g, '');
+                
+                const digits = {
+                    '零': 0,
+                    '壹': 1,
+                    '贰': 2,
+                    '叁': 3,
+                    '肆': 4,
+                    '伍': 5,
+                    '陆': 6,
+                    '柒': 7,
+                    '捌': 8,
+                    '玖': 9
+                };
+                
+                const units = {
+                    '拾': 10,
+                    '佰': 100,
+                    '仟': 1000,
+                    '万': 10000,
+                    '亿': 100000000,
+                    '元': 1,
+                    '角': 0.1,
+                    '分': 0.01
+                };
+                
+                // 特殊处理：如果只有一个单位（如"拾圆"），表示10
+                if (chineseNum.length === 1 && units[chineseNum]) {
+                    return units[chineseNum];
+                }
+                
+                let result = 0;
+                let current = 0;
+                let tenThousand = 0;
+                let hundredMillion = 0;
+                let temp = 0; // 保存当前级别的积累值
+                let isAfterYuan = false; // 标记是否已经处理到元及以下单位
+                
+                for (let i = 0; i < chineseNum.length; i++) {
+                    const char = chineseNum[i];
+                    
+                    if (digits[char] !== undefined) {
+                        // 是数字
+                        if (current > 0 && !isAfterYuan) {
+                            // 如果current已经有值且在元以上单位，说明之前是千、百、十等单位
+                            temp += current;
+                        }
+                        current = digits[char];
+                    } else if (units[char] !== undefined) {
+                        // 是单位
+                        const unit = units[char];
+                        
+                        if (char === '元') {
+                            // 处理元单位
+                            temp += current;
+                            result += hundredMillion + tenThousand + temp;
+                            // 重置高位单位的积累值
+                            hundredMillion = 0;
+                            tenThousand = 0;
+                            temp = 0;
+                            current = 0;
+                            isAfterYuan = true;
+                        } else if (char === '角' || char === '分') {
+                            // 处理角分单位
+                            if (current === 0) {
+                                // 处理类似"角"前面没有数字的情况
+                                current = 0;
+                            }
+                            result += current * unit;
+                            current = 0;
+                        } else if (unit === 100000000) {
+                            // 亿级单位
+                            temp += current;
+                            hundredMillion = (hundredMillion + tenThousand + temp) * unit;
+                            tenThousand = 0;
+                            temp = 0;
+                            current = 0;
+                        } else if (unit === 10000) {
+                            // 万级单位
+                            temp += current;
+                            tenThousand = (tenThousand + temp) * unit;
+                            temp = 0;
+                            current = 0;
+                        } else {
+                            // 千、百、十级单位
+                            if (current === 0) {
+                                // 处理类似"拾"前面没有数字的情况，如"拾万"
+                                current = 1;
+                            }
+                            current = current * unit;
+                        }
+                    }
+                }
+                
+                // 如果没有明确的元单位，加上剩余的数字
+                if (!isAfterYuan) {
+                    temp += current;
+                    result += hundredMillion + tenThousand + temp;
+                }
+                
+                return result;
+            }
+            
+            // 金额 - 重新设计匹配逻辑，优先使用中文大写金额转换，然后匹配价税合计和小写金额
+            // 1. 首先尝试匹配任何位置的中文大写金额
+            let amount = '';
+            // 修改正则表达式，支持带空格的中文大写金额格式
+            const chineseAmountMatch = processedText.match(/([\u4e00-\u9fa5\s]+[元角分整正])/);
+            
+            if (chineseAmountMatch) {
+                // 将中文大写金额转换为数字
+                const chineseAmount = chineseAmountMatch[1].trim();
+                try {
+                    const numericAmount = chineseToNumber(chineseAmount);
+                    amount = numericAmount.toFixed(2);
+                    console.log('中文大写金额:', chineseAmount, '转换后:', amount);
+                    // 如果中文金额转换成功，直接使用该结果
+                } catch (error) {
+                    console.error('中文大写金额转换失败:', error);
+                    amount = '';
+                }
+            }
+            
+            // 2. 如果中文大写金额转换失败，尝试匹配明确的金额字段
+            if (!amount) {
+                // 尝试匹配价税合计、合计金额、发票金额等字段后面的数字
+                // 增强支持¥符号后的数字分行显示的情况
+                const amountMatch = processedText.match(/价税合计[\s：:]*\n*[¥￥]?\n*([\d,]+(?:\n*\d+)*\.\d{2})/) ||
+                                  processedText.match(/[（(]小写[）)]\s*[¥￥]?\n*([\d,]+(?:\n*\d+)*\.\d{2})/) ||
+                                  processedText.match(/合计金额[\s：:]*\n*[¥￥]?\n*([\d,]+(?:\n*\d+)*\.\d{2})/) ||
+                                  processedText.match(/发票金额[\s：:]*\n*[¥￥]?\n*([\d,]+(?:\n*\d+)*\.\d{2})/) ||
+                                  processedText.match(/金额[\s：:]*\n*[¥￥]?\n*([\d,]+(?:\n*\d+)*\.\d{2})/) ||
+                                  processedText.match(/不含税金额[\s：:]*\n*[¥￥]?\n*([\d,]+(?:\n*\d+)*\.\d{2})/);
+                
+                if (amountMatch) {
+                    // 移除金额中的换行符和逗号
+                    amount = amountMatch[1].replace(/[\n,]/g, '');
+                    console.log('匹配到明确金额字段:', amountMatch[0], '提取值:', amount);
+                } else {
+                    // 3. 最后尝试找出所有可能的金额值，并分析哪个最可能是正确的
+                    // 增强支持¥符号后的数字分行显示的情况
+                    const allAmounts = processedText.match(/[¥￥]?\n*([\d,]+(?:\n*\d+)*\.\d{2})/g) || [];
+                    console.log('找到的所有可能金额:', allAmounts);
+                    
+                    if (allAmounts.length > 0) {
+                        // 转换为数字并排序
+                        const numericAmounts = allAmounts
+                            .map(amt => parseFloat(amt.replace(/[¥￥\n,]/g, '')))
+                            .filter(num => !isNaN(num));
+                            
+                        if (numericAmounts.length > 0) {
+                            // 选择最可能的金额：
+                            // 1. 如果有多个金额，优先选择大于1000的（通常发票金额较大）
+                            // 2. 否则选择最大的金额
+                            const largeAmounts = numericAmounts.filter(num => num >= 1000);
+                            const selectedAmount = largeAmounts.length > 0 ? Math.max(...largeAmounts) : Math.max(...numericAmounts);
+                            amount = selectedAmount.toFixed(2);
+                            console.log('选择的最可能金额:', amount);
+                        }
+                    }
+                }
+            }
+            console.log('最终金额提取结果:', amount);
+            
+            // 税率 - 优化匹配，支持字段名后有多个换行符的情况
+            const taxRateMatch = processedText.match(/税率[\s：:]*\n*([\d.]+%)/) ||
+                               processedText.match(/([\d.]+%)/) ||
+                               processedText.match(/税率[\s：:]*\n*([\d.]+)/) ||
+                               processedText.match(/([\d.]+)[\s：:]*%/);
+            let taxRate = taxRateMatch ? taxRateMatch[1] : '';
+            // 如果税率没有%符号，添加一个
+            if (taxRate && !taxRate.includes('%')) {
+                taxRate += '%';
+            }
+            console.log('税率匹配结果:', taxRateMatch, '提取值:', taxRate);
+            
+            // 税额 - 根据金额计算，金额/1.13*0.13，保留两位小数且向上取整（如2.142或2.146都显示为2.15）
+            let taxAmount = '';
+            if (amount) {
+                const parsedAmount = parseFloat(amount);
+                // 金额/1.13*0.13计算税额
+                const calculatedTax = (parsedAmount / 1.13) * 0.13;
+                // 保留两位小数且向上取整
+                taxAmount = (Math.ceil(calculatedTax * 100) / 100).toFixed(2);
+            }
+            console.log('税额计算结果:', taxAmount);
+            
+            // 项目名称 - 优化匹配，避免匹配字段名本身和空内容
+            // 新增匹配模式：支持更多发票格式，包括截图中的格式
+            const itemNameMatch = processedText.match(/货物或应税劳务、服务名称[\s：:]*\n*([^\n]+)/) ||
+                                processedText.match(/货物或应税劳务名称[\s：:]*\n*([^\n]+)/) ||
+                                processedText.match(/商品名称[\s：:]*\n*([^\n]+)/) ||
+                                processedText.match(/名称[\s：:]*\n+([^\n]+)\n*\s*规格型号/) || // 优化：处理"名称：\n项目名称\n规格型号"格式
+                                processedText.match(/服务名称[\s：:]*\n*([^\n]+)/) ||
+                                processedText.match(/项目[\s：:]*\n*([^\n]+)/) ||
+                                // 新增：匹配截图中的格式，支持*号分隔的产品名称
+                                processedText.match(/(^|\n)\s*\*\s*([^\n]+?)\s*(\n\s*[\d\*]+|$)/) ||
+                                // 新增：更通用的产品名称匹配
+                                processedText.match(/(^|\n)\s*([\u4e00-\u9fa5]+[\u4e00-\u9fa5\s]*[\u4e00-\u9fa5]+)\s*(\n\s*[\d\*]+|$)/);
+            
+            let itemName = '';
+            if (itemNameMatch) {
+                // 根据不同的匹配模式获取正确的捕获组
+                if (itemNameMatch.length > 2 && (itemNameMatch[0].includes('*') || itemNameMatch[0].match(/^|\n/))) {
+                    // 处理新增的匹配模式
+                    itemName = itemNameMatch[2].trim();
+                } else {
+                    // 处理原有匹配模式
+                    itemName = itemNameMatch[1].trim();
+                }
+                
+                // 检查是否匹配到了字段名本身或空内容
+                // 注意：不再将"项目名称"视为字段名，因为用户发票中这是实际项目内容
+                if (itemName === '货物或应税劳务、服务名称' || 
+                    itemName === '货物或应税劳务名称' || 
+                    itemName === '商品名称' || 
+                    itemName === '项目' || 
+                    // itemName === '项目名称' || // 移除：不再将"项目名称"视为字段名
+                    itemName === '服务名称' || 
+                    itemName === '' ||
+                    itemName === '名称' ||
+                    itemName === '规格型号') { // 新增：明确排除"规格型号"
+                    itemName = '';
+                }
+            }
+            
+            // 根据需求，项目名称默认为空，不进行自动提取
+            itemName = '';
+            
+            console.log('项目名称匹配结果:', itemNameMatch, '提取值:', itemName);
+            
+            // 检查是否为负数发票
+        const isNegativeInvoice = processedText.includes('负数');
+        
+        // 如果是负数发票，给金额和税额添加负号
+        if (isNegativeInvoice && amount) {
+            amount = '-' + amount;
+        }
+        
+        if (isNegativeInvoice && taxAmount) {
+            taxAmount = '-' + taxAmount;
+        }
+        
+        const result = {
+                invoiceNumber,
+                invoiceDate,
+                seller,
+                buyer,
+                amount,
+                taxRate,
+                taxAmount,
+                itemName
+            };
+            
+            console.log('最终解析结果:', result);
+            return result;
+        }
+
+        // 实际处理上传的PDF文件
+        async function processUpload() {
+            if (currentFiles.length === 0) {
+                alert('请先选择PDF文件');
+                return;
+            }
+            
+            const startUploadBtn = document.getElementById('start-upload');
+            const originalText = startUploadBtn.innerHTML;
+            
+            // 禁用上传按钮
+            startUploadBtn.disabled = true;
+            startUploadBtn.innerHTML = '<div class="loader mr-2"></div> 处理中...';
+            
+            try {
+                // 处理第一个文件
+                const file = currentFiles[0];
+                
+                // 提取PDF文本
+                const text = await extractTextFromPDF(file);
+                console.log('提取到的PDF原始文本:', text);
+                
+                // 解析发票信息
+                const invoiceInfo = parseInvoiceText(text);
+                console.log('解析后的发票信息:', invoiceInfo);
+                
+                // 显示识别结果
+                showRecognitionResult(invoiceInfo);
+                
+            } catch (error) {
+                console.error('处理失败:', error);
+                alert('处理发票失败：' + error.message);
+            } finally {
+                // 恢复上传按钮
+                startUploadBtn.disabled = false;
+                startUploadBtn.innerHTML = originalText;
+            }
+        }
+
+        // 显示识别结果
+        function showRecognitionResult(invoiceInfo) {
+            const recognitionResult = document.getElementById('recognition-result');
+            recognitionResult.classList.remove('hidden');
+            
+            // 填充识别结果表格
+            const recognitionTable = document.getElementById('recognition-table');
+            recognitionTable.innerHTML = `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-1/4">发票号码</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 w-3/4">
+                        <input type="text" id="recognition-invoice-number" value="${invoiceInfo.invoiceNumber}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <div id="duplicate-warning" class="hidden text-xs text-red-500 mt-1">发票号已存在，请检查</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">发票日期</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="date" id="recognition-invoice-date" value="${invoiceInfo.invoiceDate}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">销售方</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="text" id="recognition-seller" value="${invoiceInfo.seller}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">购买方</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="text" id="recognition-buyer" value="${invoiceInfo.buyer}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">金额</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="text" id="recognition-amount" value="${invoiceInfo.amount}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">税率</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="text" id="recognition-tax-rate" value="${invoiceInfo.taxRate}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">税额</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="text" id="recognition-tax-amount" value="${invoiceInfo.taxAmount}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">项目名称</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <input type="text" id="recognition-item-name" value="${invoiceInfo.itemName}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">项目分类</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <select id="recognition-item-category" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">请选择项目分类</option>
+                            <option value="模具加工">模具加工</option>
+                            <option value="办公用品">办公用品</option>
+                            <option value="汽油">汽油</option>
+                            <option value="餐费">餐费</option>
+                            <option value="差旅费">差旅费</option>
+                        </select>
+                    </td>
+                </tr>
+
+            `;
+            
+            // 添加发票号码输入监听，实时检查重复
+            const invoiceNumberInput = document.getElementById('recognition-invoice-number');
+            invoiceNumberInput.addEventListener('input', function() {
+                checkDuplicateInvoiceNumber(this.value);
+            });
+        }
+        
+        // 检查发票号码是否重复
+        function checkDuplicateInvoiceNumber(invoiceNumber) {
+            const duplicateWarning = document.getElementById('duplicate-warning');
+            const invoiceNumberInput = document.getElementById('recognition-invoice-number');
+            
+            // 清除之前的样式和警告
+            duplicateWarning.classList.add('hidden');
+            invoiceNumberInput.classList.remove('border-red-500');
+            
+            if (!invoiceNumber) return false;
+            
+            // 检查mockInvoices数组中是否已存在相同的发票号码
+            const isDuplicate = mockInvoices.some(invoice => invoice.invoiceNo === invoiceNumber);
+            
+            if (isDuplicate) {
+                duplicateWarning.classList.remove('hidden');
+                invoiceNumberInput.classList.add('border-red-500');
+                return true;
+            }
+            
+            return false;
+        }
+
+        // 更新汇总合计
+        function updateTotalSummary() {
+            const checkboxes = document.querySelectorAll('.invoice-checkbox:checked');
+            let totalAmount = 0;
+            let totalTaxAmount = 0;
+            
+            // 遍历所有选中的行
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('tr');
+                const invoiceNo = row.querySelector('td:nth-child(6)').textContent.trim();
+                
+                // 查找对应的发票数据
+                const invoice = mockInvoices.find(inv => inv.invoiceNo === invoiceNo);
+                if (invoice) {
+                    totalAmount += (invoice.amount || 0);
+                    totalTaxAmount += (invoice.taxAmount || 0);
+                }
+            });
+            
+            // 更新显示
+            document.getElementById('total-amount').textContent = `¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalAmount)}`;
+            document.getElementById('total-tax-amount').textContent = `¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalTaxAmount)}`;
+        }
+        
+        // 清空发票数据
+        function clearInvoices() {
+            // 清空mockInvoices数组
+            mockInvoices.length = 0;
+            
+            // 更新localStorage
+            localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+            
+            // 更新表格显示
+            const tableBody = document.getElementById('invoice-table-body');
+            if (tableBody) {
+                tableBody.innerHTML = '';
+            }
+            
+            // 更新汇总合计
+            updateTotalSummary();
+            
+            // 添加付款日期输入框的事件监听器
+            document.querySelectorAll('[id^="payment-date-"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    // 获取发票ID
+                    const invoiceId = this.id.replace('payment-date-', '');
+                    // 获取新的付款日期
+                    const newPaymentDate = this.value;
+                    
+                    // 更新发票数据
+                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+                    if (invoice) {
+                        invoice.paymentDate = newPaymentDate;
+                        // 保存到localStorage
+                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    }
+                    
+                    // 更新行背景色
+                    const row = this.closest('tr');
+                    if (newPaymentDate && newPaymentDate !== '') {
+                        row.style.backgroundColor = '#d4edda'; // 浅绿色
+                    } else {
+                        row.style.backgroundColor = ''; // 恢复默认背景色
+                    }
+                });
+            });
+        }
+        
+        // 排序功能
+        let sortField = '';
+        let sortOrder = 'asc';
+        
+        function sortInvoices(field) {
+            if (sortField === field) {
+                // 点击同一字段，切换排序顺序
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                // 点击不同字段，设置新的排序字段和默认顺序
+                sortField = field;
+                sortOrder = 'asc';
+            }
+            
+            // 根据字段类型进行排序
+            mockInvoices.sort((a, b) => {
+                let valueA, valueB;
+                
+                switch (field) {
+                    case 'date':
+                        valueA = new Date(a.date);
+                        valueB = new Date(b.date);
+                        break;
+                    case 'invoiceNo':
+                        // 发票号码按数字排序
+                        valueA = parseInt(a.invoiceNo.replace(/\D/g, ''));
+                        valueB = parseInt(b.invoiceNo.replace(/\D/g, ''));
+                        break;
+                    case 'amount':
+                    case 'taxRate':
+                    case 'taxAmount':
+                        // 数字字段直接比较
+                        valueA = a[field];
+                        valueB = b[field];
+                        break;
+                    default:
+                        // 字符串字段转换为小写后比较
+                        valueA = a[field] ? a[field].toLowerCase() : '';
+                        valueB = b[field] ? b[field].toLowerCase() : '';
+                }
+                
+                // 根据排序顺序返回比较结果
+                if (sortOrder === 'asc') {
+                    return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+                } else {
+                    return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+                }
+            });
+            
+            // 更新排序指示器
+            updateSortIndicators();
+            
+            // 重新加载表格数据
+            loadInvoiceData();
+        }
+        
+        // 更新排序指示器
+        function updateSortIndicators() {
+            // 清空所有排序指示器
+            const sortIndicators = document.querySelectorAll('[id^="sort-"]');
+            sortIndicators.forEach(indicator => {
+                indicator.innerHTML = '';
+            });
+            
+            // 如果有排序字段，显示对应的排序指示器
+            if (sortField) {
+                let indicatorId = `sort-${sortField}`;
+                // 特殊处理发票日期，它和登记日期使用相同的字段名
+                if (sortField === 'date' && document.getElementById('sort-date2')) {
+                    // 同时更新两个日期列的排序指示器
+                    document.getElementById('sort-date').innerHTML = sortOrder === 'asc' ? '↑' : '↓';
+                    document.getElementById('sort-date2').innerHTML = sortOrder === 'asc' ? '↑' : '↓';
+                } else {
+                    const indicator = document.getElementById(indicatorId);
+                    if (indicator) {
+                        indicator.innerHTML = sortOrder === 'asc' ? '↑' : '↓';
+                    }
+                }
+            }
+        }
+        
+        // 加载发票数据
+        function loadInvoiceData() {
+            const tableBody = document.getElementById('invoice-table-body');
+            if (!tableBody) return;
+            
+            // 清空表格
+            tableBody.innerHTML = '';
+            
+            // 填充表格数据
+            mockInvoices.forEach(invoice => {
+                const row = document.createElement('tr');
+                
+                // 设置状态样式
+                let statusClass = '';
+                switch (invoice.status) {
+                    case '已提交':
+                        statusClass = 'bg-green-800 text-white';
+                        break;
+                    case '待验证':
+                        statusClass = 'bg-yellow-800 text-white';
+                        break;
+                    default:
+                        statusClass = 'bg-gray-100 text-gray-800';
+                }
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded invoice-checkbox" value="${invoice.id}">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
+                            ${invoice.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.registerDate || invoice.date}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="date" id="payment-date-${invoice.id}" value="${invoice.paymentDate || ''}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.date}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${invoice.invoiceNo}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.seller}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.buyer}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoice.amount || 0)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${((invoice.taxRate || 0) * 100).toFixed(0)}%</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoice.taxAmount || 0)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.items[0].name}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.category}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-primary hover:text-primary-dark edit-invoice mr-2" data-id="${invoice.id}"><i class="fa fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-800 delete-invoice" data-id="${invoice.id}"><i class="fa fa-trash"></i></button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // 移除了查看发票详情功能
+            
+            // 添加编辑发票事件
+            document.querySelectorAll('.edit-invoice').forEach(button => {
+                button.addEventListener('click', function() {
+                    const invoiceId = this.getAttribute('data-id');
+                    editInvoice(invoiceId);
+                });
+            });
+            
+            // 添加删除发票事件
+            document.querySelectorAll('.delete-invoice').forEach(button => {
+                button.addEventListener('click', function() {
+                    const invoiceId = this.getAttribute('data-id');
+                    deleteInvoice(invoiceId);
+                });
+            });
+            
+            // 更新汇总合计
+            updateTotalSummary();
+            
+            // 添加付款日期输入框的事件监听器
+            document.querySelectorAll('[id^="payment-date-"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    // 获取发票ID
+                    const invoiceId = this.id.replace('payment-date-', '');
+                    // 获取新的付款日期
+                    const newPaymentDate = this.value;
+                    
+                    // 更新发票数据
+                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+                    if (invoice) {
+                        invoice.paymentDate = newPaymentDate;
+                        // 保存到localStorage
+                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    }
+                    
+                    // 更新当前行的背景色
+                    const row = this.closest('tr');
+                    if (row) {
+                        if (newPaymentDate && newPaymentDate !== '') {
+                            row.style.backgroundColor = '#d4edda'; // 浅绿色
+                        } else {
+                            row.style.backgroundColor = ''; // 恢复默认背景色
+                        }
+                    }
+                });
+            });
+            
+            // 添加状态切换事件监听器
+            document.querySelectorAll('.status-toggle').forEach(span => {
+                span.addEventListener('click', function() {
+                    const invoiceId = this.getAttribute('data-id');
+                    const currentStatus = this.getAttribute('data-status');
+                    
+                    // 切换状态
+                    const newStatus = currentStatus === '已提交' ? '待验证' : '已提交';
+                    
+                    // 更新发票数据
+                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+                    if (invoice) {
+                        invoice.status = newStatus;
+                        // 保存到localStorage
+                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    }
+                    
+                    // 更新状态显示
+                    let newStatusClass = '';
+                    if (newStatus === '已提交') {
+                        newStatusClass = 'bg-green-800 text-white';
+                    } else {
+                        newStatusClass = 'bg-yellow-800 text-white';
+                    }
+                    
+                    this.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${newStatusClass} cursor-pointer status-toggle`;
+                    this.textContent = newStatus;
+                    this.setAttribute('data-status', newStatus);
+                    
+                    // 重新筛选表格以保持当前筛选状态
+                    filterInvoices(currentSearchTerm);
+                });
+            });
+            
+            // 更新统计信息和分页控件
+            updatePaginationAndStats(mockInvoices);
+        }
+
+        // 删除发票
+        function deleteInvoice(invoiceId) {
+            if (confirm('确定要删除这张发票吗？')) {
+                // 从数组中删除发票
+                const index = mockInvoices.findIndex(inv => inv.id === invoiceId);
+                if (index !== -1) {
+                    mockInvoices.splice(index, 1);
+                    // 更新localStorage
+                    localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    // 重新加载表格数据
+                    loadInvoiceData();
+                }
+            }
+        }
+        
+        // 编辑发票
+        function editInvoice(invoiceId) {
+            // 查找发票数据
+            const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+            if (!invoice) return;
+            
+            // 填充编辑表单
+            document.getElementById('edit-date').value = invoice.date;
+            document.getElementById('edit-item-name').value = invoice.items ? invoice.items[0].name : '';
+            document.getElementById('edit-category').value = invoice.category;
+            
+            // 显示编辑模态框
+            document.getElementById('edit-invoice-modal').classList.remove('hidden');
+            
+            // 保存当前编辑的发票ID
+            document.getElementById('edit-invoice-modal').dataset.invoiceId = invoiceId;
+        }
+        
+        // 显示发票详情
+        function showInvoiceDetail(invoiceId) {
+            // 查找发票数据
+            const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+            if (!invoice) return;
+            
+            // 填充模态框数据
+            document.getElementById('modal-invoice-no').textContent = invoice.invoiceNo;
+            document.getElementById('modal-invoice-date').textContent = invoice.date;
+            document.getElementById('modal-invoice-type').textContent = invoice.category === '服务类' ? '增值税电子普通发票' : '增值税专用发票';
+            document.getElementById('modal-invoice-amount').textContent = `¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoice.amount || 0)}`;
+            document.getElementById('modal-invoice-tax-rate').textContent = `${((invoice.taxRate || 0) * 100).toFixed(0)}%`;
+            document.getElementById('modal-invoice-tax-amount').textContent = `¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoice.taxAmount || 0)}`;
+            
+            document.getElementById('modal-seller-name').textContent = invoice.seller;
+            document.getElementById('modal-seller-tax-id').textContent = invoice.sellerTaxId;
+            document.getElementById('modal-seller-address').textContent = invoice.sellerAddress;
+            document.getElementById('modal-seller-phone').textContent = invoice.sellerPhone;
+            document.getElementById('modal-seller-bank').textContent = invoice.sellerBank;
+            
+            document.getElementById('modal-buyer-name').textContent = invoice.buyer;
+            document.getElementById('modal-buyer-tax-id').textContent = invoice.buyerTaxId;
+            
+            // 填充发票项目
+            const itemsContainer = document.getElementById('modal-items');
+            itemsContainer.innerHTML = '';
+            
+            invoice.items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        ${item.name}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                        ${item.quantity}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-500">
+                        ¥${item.unitPrice.toFixed(2)}
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        ¥${item.amount.toFixed(2)}
+                    </td>
+                `;
+                itemsContainer.appendChild(row);
+            });
+            
+            // 设置发票图片
+            document.getElementById('modal-invoice-image').src = invoice.imageUrl;
+            
+            // 显示模态框
+            document.getElementById('invoice-detail-modal').classList.remove('hidden');
+        }
+
+        // 筛选发票
+        function filterInvoices(searchTerm) {
+            const tableBody = document.getElementById('invoice-table-body');
+            if (!tableBody) return;
+            
+            // 清空表格
+            tableBody.innerHTML = '';
+            
+            // 获取付款状态筛选值
+            const paymentStatus = document.getElementById('payment-status-filter').value;
+            // 获取发票状态筛选值
+            const invoiceStatus = document.getElementById('invoice-status-filter').value;
+            // 获取天数筛选值
+            const daysFilter = document.getElementById('days-filter').value;
+            
+            // 计算日期范围
+            const now = new Date();
+            let startDate = null;
+            let endDate = null;
+            
+            // 根据选择的天数筛选条件设置日期范围
+            switch (daysFilter) {
+                case '最近30天':
+                    startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    break;
+                case '最近90天':
+                    startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                    break;
+                case '今年':
+                    startDate = new Date(now.getFullYear(), 0, 1);
+                    break;
+                case '去年':
+                    startDate = new Date(now.getFullYear() - 1, 0, 1);
+                    endDate = new Date(now.getFullYear(), 0, 0);
+                    break;
+            }
+            
+            // 筛选发票
+            const filteredInvoices = mockInvoices.filter(invoice => {
+                // 将搜索词转换为小写，确保不区分大小写搜索
+                const lowerSearchTerm = searchTerm.toLowerCase();
+                
+                // 搜索条件
+                const searchMatch = String(invoice.invoiceNo || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.seller || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.buyer || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.date || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.registerDate || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.paymentDate || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.amount || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.taxRate || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.taxAmount || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.items ? invoice.items[0].name || '' : '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(invoice.category || '').toLowerCase().includes(lowerSearchTerm);
+                
+                // 付款状态筛选条件
+                let paymentStatusMatch = true;
+                if (paymentStatus === '未付款') {
+                    paymentStatusMatch = !invoice.paymentDate || invoice.paymentDate === '';
+                } else if (paymentStatus === '已付款') {
+                    paymentStatusMatch = !!invoice.paymentDate && invoice.paymentDate !== '';
+                }
+                
+                // 发票状态筛选条件
+                let invoiceStatusMatch = true;
+                if (invoiceStatus && invoiceStatus !== '') {
+                    invoiceStatusMatch = invoice.status === invoiceStatus;
+                }
+                
+                // 登记日期筛选条件
+                let dateMatch = true;
+                if (daysFilter) {
+                    const invoiceDate = invoice.registerDate ? new Date(invoice.registerDate) : (invoice.date ? new Date(invoice.date) : null);
+                    if (invoiceDate) {
+                        if (daysFilter === '自定义') {
+                            // 自定义日期范围筛选
+                            const startDateInput = document.getElementById('start-date');
+                            const endDateInput = document.getElementById('end-date');
+                            
+                            if (startDateInput && endDateInput) {
+                                const customStartDate = startDateInput.value ? new Date(startDateInput.value) : null;
+                                const customEndDate = endDateInput.value ? new Date(endDateInput.value) : null;
+                                
+                                if (customStartDate && invoiceDate < customStartDate) {
+                                    dateMatch = false;
+                                }
+                                if (customEndDate) {
+                                    // 设置结束日期为当天的最后一刻
+                                    customEndDate.setHours(23, 59, 59, 999);
+                                    if (invoiceDate > customEndDate) {
+                                        dateMatch = false;
+                                    }
+                                }
+                            }
+                        } else {
+                            // 预设日期范围筛选
+                            if (startDate && invoiceDate < startDate) {
+                                dateMatch = false;
+                            }
+                            if (endDate && invoiceDate > endDate) {
+                                dateMatch = false;
+                            }
+                        }
+                    } else {
+                        dateMatch = false;
+                    }
+                }
+                
+                // 高级筛选条件
+                let advancedMatch = true;
+                const advancedFilters = JSON.parse(localStorage.getItem('advancedFilters') || '{}');
+                
+                // 发票状态
+                if (advancedFilters.status && advancedFilters.status !== '') {
+                    advancedMatch = advancedMatch && (invoice.status === advancedFilters.status);
+                }
+                
+                // 付款状态
+                if (advancedFilters.paymentStatus && advancedFilters.paymentStatus !== '') {
+                    if (advancedFilters.paymentStatus === '已付款') {
+                        advancedMatch = advancedMatch && !!invoice.paymentDate && invoice.paymentDate !== '';
+                    } else if (advancedFilters.paymentStatus === '未付款') {
+                        advancedMatch = advancedMatch && (!invoice.paymentDate || invoice.paymentDate === '');
+                    }
+                }
+                
+                // 税率
+                if (advancedFilters.taxRate && advancedFilters.taxRate !== '') {
+                    if (advancedFilters.taxRate === '其他') {
+                        advancedMatch = advancedMatch && !(['0', '3', '6', '9', '13'].includes(String(invoice.taxRate || '')));
+                    } else {
+                        advancedMatch = advancedMatch && (String(invoice.taxRate || '') === advancedFilters.taxRate);
+                    }
+                }
+                
+                // 发票号码范围
+                if (advancedFilters.invoiceNoFrom && advancedFilters.invoiceNoFrom !== '') {
+                    advancedMatch = advancedMatch && (invoice.invoiceNo >= advancedFilters.invoiceNoFrom);
+                }
+                if (advancedFilters.invoiceNoTo && advancedFilters.invoiceNoTo !== '') {
+                    advancedMatch = advancedMatch && (invoice.invoiceNo <= advancedFilters.invoiceNoTo);
+                }
+                
+                // 销售方名称
+                if (advancedFilters.sellerName && advancedFilters.sellerName !== '') {
+                    advancedMatch = advancedMatch && String(invoice.seller || '').toLowerCase().includes(advancedFilters.sellerName);
+                }
+                
+                // 购买方名称
+                if (advancedFilters.buyerName && advancedFilters.buyerName !== '') {
+                    advancedMatch = advancedMatch && String(invoice.buyer || '').toLowerCase().includes(advancedFilters.buyerName);
+                }
+                
+                // 金额范围
+                if (advancedFilters.amountFrom && advancedFilters.amountFrom !== '') {
+                    advancedMatch = advancedMatch && (invoice.amount >= parseFloat(advancedFilters.amountFrom));
+                }
+                if (advancedFilters.amountTo && advancedFilters.amountTo !== '') {
+                    advancedMatch = advancedMatch && (invoice.amount <= parseFloat(advancedFilters.amountTo));
+                }
+                
+                // 商品名称
+                if (advancedFilters.itemName && advancedFilters.itemName !== '') {
+                    const itemNameMatch = invoice.items && invoice.items.some(item => 
+                        String(item.name || '').toLowerCase().includes(advancedFilters.itemName)
+                    );
+                    advancedMatch = advancedMatch && itemNameMatch;
+                }
+                
+                // 商品类别
+                if (advancedFilters.category && advancedFilters.category !== '') {
+                    advancedMatch = advancedMatch && (String(invoice.category || '') === advancedFilters.category);
+                }
+                
+                // 发票日期范围
+                if (advancedFilters.invoiceDateFrom && advancedFilters.invoiceDateFrom !== '') {
+                    const invoiceDate = invoice.date ? new Date(invoice.date) : null;
+                    const filterDate = new Date(advancedFilters.invoiceDateFrom);
+                    advancedMatch = advancedMatch && invoiceDate && invoiceDate >= filterDate;
+                }
+                if (advancedFilters.invoiceDateTo && advancedFilters.invoiceDateTo !== '') {
+                    const invoiceDate = invoice.date ? new Date(invoice.date) : null;
+                    const filterDate = new Date(advancedFilters.invoiceDateTo);
+                    advancedMatch = advancedMatch && invoiceDate && invoiceDate <= filterDate;
+                }
+                
+                // 登记日期范围
+                if (advancedFilters.registerDateFrom && advancedFilters.registerDateFrom !== '') {
+                    const registerDate = invoice.registerDate ? new Date(invoice.registerDate) : null;
+                    const filterDate = new Date(advancedFilters.registerDateFrom);
+                    advancedMatch = advancedMatch && registerDate && registerDate >= filterDate;
+                }
+                if (advancedFilters.registerDateTo && advancedFilters.registerDateTo !== '') {
+                    const registerDate = invoice.registerDate ? new Date(invoice.registerDate) : null;
+                    const filterDate = new Date(advancedFilters.registerDateTo);
+                    advancedMatch = advancedMatch && registerDate && registerDate <= filterDate;
+                }
+                
+                // 付款日期范围
+                if (advancedFilters.paymentDateFrom && advancedFilters.paymentDateFrom !== '') {
+                    const paymentDate = invoice.paymentDate ? new Date(invoice.paymentDate) : null;
+                    const filterDate = new Date(advancedFilters.paymentDateFrom);
+                    advancedMatch = advancedMatch && paymentDate && paymentDate >= filterDate;
+                }
+                if (advancedFilters.paymentDateTo && advancedFilters.paymentDateTo !== '') {
+                    const paymentDate = invoice.paymentDate ? new Date(invoice.paymentDate) : null;
+                    const filterDate = new Date(advancedFilters.paymentDateTo);
+                    advancedMatch = advancedMatch && paymentDate && paymentDate <= filterDate;
+                }
+                
+                return searchMatch && paymentStatusMatch && invoiceStatusMatch && dateMatch && advancedMatch;
+            });
+            
+            // 计算总页数
+            const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+            
+            // 确保当前页码不超出范围
+            if (currentPage > totalPages) {
+                currentPage = totalPages || 1;
+            }
+            
+            // 计算当前页显示的数据范围
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
+            
+            // 填充表格数据
+            paginatedInvoices.forEach(invoice => {
+                const row = document.createElement('tr');
+                
+                // 设置状态样式
+                let statusClass = '';
+                switch (invoice.status) {
+                    case '已提交':
+                        statusClass = 'bg-green-800 text-white';
+                        break;
+                    case '待验证':
+                        statusClass = 'bg-yellow-800 text-white';
+                        break;
+                    default:
+                        statusClass = 'bg-gray-100 text-gray-800';
+                }
+                
+                // 设置行背景色：如果有付款日期，添加浅绿色背景
+                if (invoice.paymentDate && invoice.paymentDate !== '') {
+                    row.style.backgroundColor = '#d4edda'; // 浅绿色
+                }
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="invoice-checkbox h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" value="${invoice.id}">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
+                            ${invoice.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.registerDate || invoice.date}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <input type="date" id="payment-date-${invoice.id}" value="${invoice.paymentDate || ''}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.date}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${invoice.invoiceNo}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.seller}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.buyer}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoice.amount || 0)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${((invoice.taxRate || 0) * 100).toFixed(0)}%</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(invoice.taxAmount || 0)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.items ? invoice.items[0].name : ''}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.category}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="text-primary hover:text-primary-dark edit-invoice mr-2" data-id="${invoice.id}"><i class="fa fa-edit"></i></button>
+                        <button class="text-red-600 hover:text-red-800 delete-invoice" data-id="${invoice.id}"><i class="fa fa-trash"></i></button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // 添加编辑发票事件
+            document.querySelectorAll('.edit-invoice').forEach(button => {
+                button.addEventListener('click', function() {
+                    const invoiceId = this.getAttribute('data-id');
+                    editInvoice(invoiceId);
+                });
+            });
+            
+            // 添加删除发票事件
+            document.querySelectorAll('.delete-invoice').forEach(button => {
+                button.addEventListener('click', function() {
+                    const invoiceId = this.getAttribute('data-id');
+                    deleteInvoice(invoiceId);
+                });
+            });
+            
+            // 添加付款日期输入框的事件监听器
+            document.querySelectorAll('[id^="payment-date-"]').forEach(input => {
+                input.addEventListener('change', function() {
+                    // 获取发票ID
+                    const invoiceId = this.id.replace('payment-date-', '');
+                    // 获取新的付款日期
+                    const newPaymentDate = this.value;
+                    
+                    // 更新发票数据
+                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+                    if (invoice) {
+                        invoice.paymentDate = newPaymentDate;
+                        // 保存到localStorage
+                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    }
+                    
+                    // 更新行背景色
+                    const row = this.closest('tr');
+                    if (row) {
+                        if (newPaymentDate && newPaymentDate !== '') {
+                            row.style.backgroundColor = '#d4edda'; // 浅绿色
+                        } else {
+                            row.style.backgroundColor = ''; // 恢复默认背景色
+                        }
+                    }
+                });
+            });
+            
+            // 添加状态切换事件监听器
+            document.querySelectorAll('.status-toggle').forEach(span => {
+                span.addEventListener('click', function() {
+                    const invoiceId = this.getAttribute('data-id');
+                    const currentStatus = this.getAttribute('data-status');
+                    
+                    // 切换状态
+                    const newStatus = currentStatus === '已提交' ? '待验证' : '已提交';
+                    
+                    // 更新发票数据
+                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
+                    if (invoice) {
+                        invoice.status = newStatus;
+                        // 保存到localStorage
+                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
+                    }
+                    
+                    // 更新状态显示
+                    let newStatusClass = '';
+                    if (newStatus === '已提交') {
+                        newStatusClass = 'bg-green-800 text-white';
+                    } else {
+                        newStatusClass = 'bg-yellow-800 text-white';
+                    }
+                    
+                    this.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${newStatusClass} cursor-pointer status-toggle`;
+                    this.textContent = newStatus;
+                    this.setAttribute('data-status', newStatus);
+                    
+                    // 重新筛选表格以保持当前筛选状态
+                    filterInvoices(currentSearchTerm);
+                });
+            });
+            
+            // 更新统计信息和分页控件
+            updatePaginationAndStats(filteredInvoices);
+        }
+        
+        // 更新分页和统计信息
+        function updatePaginationAndStats(filteredInvoices) {
+            const totalInvoices = filteredInvoices.length;
+            const totalAmount = filteredInvoices.reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
+            const totalTaxAmount = filteredInvoices.reduce((sum, invoice) => sum + (invoice.taxAmount || 0), 0);
+            const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+            
+            // 调试信息
+            console.log('过滤后的发票数量:', totalInvoices);
+            console.log('总计金额:', totalAmount);
+            console.log('总计税额:', totalTaxAmount);
+            
+            // 更新总计摘要
+            document.getElementById('total-amount').textContent = `¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalAmount)}`;
+            document.getElementById('total-tax-amount').textContent = `¥${new Intl.NumberFormat('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalTaxAmount)}`;
+            
+            // 移除旧的容器（如果存在）
+            const oldStatsContainer = document.getElementById('invoice-stats');
+            if (oldStatsContainer) oldStatsContainer.remove();
+            
+            const oldPaginationContainer = document.getElementById('invoice-pagination');
+            if (oldPaginationContainer) oldPaginationContainer.remove();
+            
+            // 获取预先定义的容器
+            let mainContainer = document.getElementById('invoice-pagination-stats');
+            // 清空容器内容
+            mainContainer.innerHTML = '';
+            
+            // 生成分页按钮
+            let paginationHTML = '';
+            
+            // 首页按钮
+            paginationHTML += `<button id="first-page" class="px-3 py-1 rounded-l-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === 1 ? 'disabled:opacity-50' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
+                首页
+            </button>`;
+            
+            // 上一页按钮
+            paginationHTML += `<button id="prev-page" class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === 1 ? 'disabled:opacity-50' : ''}" ${currentPage === 1 ? 'disabled' : ''}>
+                上一页
+            </button>`;
+            
+            // 页码按钮
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `<button class="page-btn px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${i === currentPage ? 'bg-primary text-white' : ''}" data-page="${i}">
+                    ${i}
+                </button>`;
+            }
+            
+            // 下一页按钮
+            paginationHTML += `<button id="next-page" class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === totalPages ? 'disabled:opacity-50' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>
+                下一页
+            </button>`;
+            
+            // 末页按钮
+            paginationHTML += `<button id="last-page" class="px-3 py-1 rounded-r-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 ${currentPage === totalPages ? 'disabled:opacity-50' : ''}" ${currentPage === totalPages ? 'disabled' : ''}>
+                末页
+            </button>`;
+            
+            // 更新主容器内容
+            mainContainer.innerHTML = `
+                <div class="flex flex-wrap justify-between items-center">
+                    <div class="text-sm text-gray-500 mb-2 sm:mb-0">
+                        显示 ${(currentPage - 1) * itemsPerPage + 1} 到 ${Math.min(currentPage * itemsPerPage, totalInvoices)} 条，共 ${totalInvoices} 条记录
+                    </div>
+                    <div class="flex items-center space-x-4 w-full sm:w-auto">
+                        <div class="flex items-center mb-2 sm:mb-0">
+                            <label for="items-per-page" class="mr-2 text-sm text-gray-600">每页显示：</label>
+                            <select id="items-per-page" class="border border-gray-300 rounded-md px-2 py-1 text-sm">
+                                <option value="5" ${itemsPerPage === 5 ? 'selected' : ''}>5条</option>
+                                <option value="10" ${itemsPerPage === 10 ? 'selected' : ''}>10条</option>
+                                <option value="20" ${itemsPerPage === 20 ? 'selected' : ''}>20条</option>
+                                <option value="50" ${itemsPerPage === 50 ? 'selected' : ''}>50条</option>
+                                <option value="100" ${itemsPerPage === 100 ? 'selected' : ''}>100条</option>
+                                <option value="200" ${itemsPerPage === 200 ? 'selected' : ''}>200条</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-center">
+                            ${paginationHTML}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加每页显示条数变化事件
+            document.getElementById('items-per-page').addEventListener('change', function() {
+                itemsPerPage = parseInt(this.value);
+                currentPage = 1; // 重置为第一页
+                filterInvoices(document.getElementById('search-input').value);
+            });
+            
+            // 添加分页按钮事件
+            document.getElementById('first-page').addEventListener('click', function() {
+                currentPage = 1;
+                filterInvoices(document.getElementById('search-input').value);
+            });
+            
+            document.getElementById('prev-page').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    currentPage--;
+                    filterInvoices(document.getElementById('search-input').value);
+                }
+            });
+            
+            document.getElementById('next-page').addEventListener('click', function() {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    filterInvoices(document.getElementById('search-input').value);
+                }
+            });
+            
+            document.getElementById('last-page').addEventListener('click', function() {
+                currentPage = totalPages;
+                filterInvoices(document.getElementById('search-input').value);
+            });
+            
+            // 添加页码按钮事件
+            document.querySelectorAll('.page-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    currentPage = parseInt(this.getAttribute('data-page'));
+                    filterInvoices(document.getElementById('search-input').value);
+                });
+            });
+        }
+        
+        // 数据管理功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 下拉菜单交互
+            const dataManagementBtn = document.getElementById('data-management-btn');
+            const dataManagementDropdown = document.getElementById('data-management-dropdown');
+            
+            // 点击按钮显示/隐藏下拉菜单
+            dataManagementBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dataManagementDropdown.classList.toggle('show');
+            });
+            
+            // 点击页面其他地方隐藏下拉菜单
+            document.addEventListener('click', function() {
+                dataManagementDropdown.classList.remove('show');
+            });
+            
+            // 防止点击下拉菜单内部时关闭菜单
+            dataManagementDropdown.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // 备份数据功能
+            document.getElementById('backup-data-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                backupData();
+            });
+            
+            // 恢复数据功能
+            document.getElementById('restore-data-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                restoreData();
+            });
+        });
+        
+        // 备份数据函数
+        function backupData() {
+            try {
+                // 获取localStorage中的所有数据
+                const allData = {
+                    invoices: JSON.parse(localStorage.getItem('invoices') || '[]'),
+                    backupDate: new Date().toISOString(),
+                    version: '1.0'
+                };
+                
+                // 创建备份文件名
+                const backupFileName = `invoice_backup_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+                
+                // 创建Blob并下载
+                const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = backupFileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                // 显示成功提示
+                alert('数据备份成功！');
+            } catch (error) {
+                console.error('备份数据失败:', error);
+                alert('数据备份失败，请重试！');
+            }
+        }
+        
+        // 恢复数据函数
+        function restoreData() {
+            try {
+                // 创建文件输入元素
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                // 监听文件选择
+                input.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            // 解析备份数据
+                            const backupData = JSON.parse(e.target.result);
+                            
+                            // 验证备份数据格式
+                            if (!backupData.invoices || !Array.isArray(backupData.invoices)) {
+                                throw new Error('备份文件格式不正确！');
+                            }
+                            
+                            // 确认恢复
+                            if (confirm('确定要恢复数据吗？这将覆盖当前所有数据！')) {
+                                // 恢复数据到localStorage
+                                localStorage.setItem('invoices', JSON.stringify(backupData.invoices));
+                                
+                                // 重新加载页面以显示恢复后的数据
+                                location.reload();
+                            }
+                        } catch (error) {
+                            console.error('恢复数据失败:', error);
+                            alert('恢复数据失败，备份文件格式不正确！');
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                });
+                
+                // 触发文件选择对话框
+                input.click();
+            } catch (error) {
+                console.error('恢复数据失败:', error);
+                alert('恢复数据失败，请重试！');
+            }
+        }
+    </script>
+
+    <!-- 高级筛选模态框 -->
+    <div id="advanced-filter-modal" class="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <!-- 模态框头部 -->
+                <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-900">高级筛选</h3>
+                    <button id="close-advanced-filter" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- 模态框内容 -->
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 发票状态 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">发票状态</label>
+                            <select id="advanced-status" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <option value="">全部</option>
+                                <option value="待验证">待验证</option>
+                                <option value="已提交">已提交</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 付款状态 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">付款状态</label>
+                            <select id="advanced-payment-status" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <option value="">全部</option>
+                                <option value="已付款">已付款</option>
+                                <option value="未付款">未付款</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 税率 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">税率</label>
+                            <select id="advanced-tax-rate" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 发票号码范围 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">发票号码范围</label>
+                            <div class="flex space-x-2">
+                                <input type="text" id="advanced-invoice-no-from" placeholder="起始号码" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <input type="text" id="advanced-invoice-no-to" placeholder="结束号码" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                            </div>
+                        </div>
+                        
+                        <!-- 销售方名称 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">销售方名称</label>
+                            <input type="text" id="advanced-seller-name" placeholder="请输入销售方名称" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                        </div>
+                        
+                        <!-- 购买方名称 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">购买方名称</label>
+                            <input type="text" id="advanced-buyer-name" placeholder="请输入购买方名称" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                        </div>
+                        
+                        <!-- 金额范围 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">金额范围</label>
+                            <div class="flex space-x-2">
+                                <input type="number" id="advanced-amount-from" placeholder="起始金额" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" step="0.01">
+                                <input type="number" id="advanced-amount-to" placeholder="结束金额" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" step="0.01">
+                            </div>
+                        </div>
+                        
+                        <!-- 商品名称 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">商品名称</label>
+                            <input type="text" id="advanced-item-name" placeholder="请输入商品名称" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                        </div>
+                        
+                        <!-- 商品类别 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">商品类别</label>
+                            <select id="advanced-category" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <option value="">全部</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 发票日期范围 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">发票日期范围</label>
+                            <div class="flex space-x-2">
+                                <input type="date" id="advanced-invoice-date-from" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <input type="date" id="advanced-invoice-date-to" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                            </div>
+                        </div>
+                        
+                        <!-- 登记日期范围 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">登记日期范围</label>
+                            <div class="flex space-x-2">
+                                <input type="date" id="advanced-register-date-from" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <input type="date" id="advanced-register-date-to" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                            </div>
+                        </div>
+                        
+                        <!-- 付款日期范围 -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">付款日期范围</label>
+                            <div class="flex space-x-2">
+                                <input type="date" id="advanced-payment-date-from" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                                <input type="date" id="advanced-payment-date-to" class="block flex-1 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 模态框底部 -->
+                <div class="flex justify-between items-center p-6 border-t border-gray-200">
+                    <div class="flex space-x-3">
+                        <button id="export-excel" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-success-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
+                            <i class="fa fa-file-excel-o mr-2"></i>导出EXCEL
+                        </button>
+                        <button id="reset-advanced-filter" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            <i class="fa fa-refresh mr-2"></i>重置
+                        </button>
+                    </div>
+                    <button id="apply-advanced-filter" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <i class="fa fa-search mr-2"></i>应用筛选
+                    </button>
+                </div>
+            </div>
+        </div>
+</body>
+</html>

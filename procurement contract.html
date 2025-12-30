@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采购合同</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* A4 纸张样式 */
+        @page {
+            size: A4 portrait;
+            margin: 0.8cm;
+        }
+        
+        /* 打印样式 */
+        @media print {
+            * {
+                box-shadow: none !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .a4-container {
+                box-shadow: none !important;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+            line-height: 1.3;
+            font-size: 14px;
+        }
+        
+        .a4-container {
+            width: 21cm;
+            height: 29.7cm;
+            margin: 0 auto;
+            padding: 0.5cm 1cm;
+            background-color: white;
+        }
+        
+        .buyer-header {
+            text-align: justify;
+            margin-bottom: 5px;
+        }
+        
+        .buyer-header h2 {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            text-align: justify;
+        }
+        
+        .buyer-header h2::after {
+            content: '';
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .buyer-header .underline {
+            width: 100%;
+            margin: 0 auto;
+            height: 2px;
+            background-color: #000;
+        }
+        
+        /* 印章样式 */
+        .seal {
+            width: 35mm;
+            height: 35mm;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            opacity: 0.8;
+            background: transparent;
+            z-index: 2;
+        }
+        
+        .seal svg {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .seal .circle-line {
+            fill: none;
+            stroke: #ff0000;
+            stroke-width: 2; /* 使用SVG相对单位 */
+        }
+        
+        .seal .star {
+            fill: #ff0000;
+            transform: scale(1);
+        }
+        
+        /* 移除CSS中的字体大小和字间距设置，让SVG内部样式生效 */
+        .seal .company-name {
+            fill: #ff0000;
+            font-weight: bold;
+        }
+        
+        .seal .contract-seal {
+            fill: #ff0000;
+            font-weight: bold;
+            text-anchor: middle;
+            font-size: 14pt;
+        }
+        
+        /* 印章容器，用于调整位置 */
+        .seal-container {
+            position: absolute;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: start;
+         }
+        
+        .contract-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+        
+        .contract-info {
+            margin-bottom: 15px;
+        }
+        
+        .contract-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .contract-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .contract-table th,
+        .contract-table td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: center;
+            font-size: 13px;
+        }
+        
+        .contract-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .total-amount {
+            text-align: right;
+            font-size: 15px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        .party-info {
+            margin-bottom: 15px;
+        }
+        
+        .party-info h3 {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .party-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .party-details {
+            font-size: 13px;
+            flex: 1;
+            margin-right: 20px;
+        }
+        
+        .party-details:last-child {
+            margin-right: 0;
+        }
+        
+        .contract-terms {
+            margin-bottom: 15px;
+        }
+        
+        .contract-terms h3 {
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .contract-terms ol {
+            list-style-type: decimal;
+            margin-left: 18px;
+        }
+        
+        .contract-terms li {
+            margin-bottom: 6px;
+        }
+        
+        .sign-section {
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .sign-party {
+            text-align: center;
+        }
+        
+        .sign-party h4 {
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="a4-container">
+        <div class="buyer-header">
+            <h2 id="buyerCompanyHeader"></h2>
+            <div class="underline"></div>
+        </div>
+        <h1 class="contract-title">采购合同</h1>
+        
+        <div class="contract-info" style="text-align: right;">
+            <div style="display: inline-block; text-align: left; width: 250px;">
+                <div style="margin-bottom: 8px;"><strong>合同号：</strong><span id="contractNumber"></span></div>
+                <div style="margin-bottom: 8px;"><strong>签约地：</strong>常州</div>
+                <div><strong>合同日期：</strong><span id="orderDate"></span></div>
+            </div>
+        </div>
+        
+        <div class="party-info">
+            <div class="party-container">
+                <div class="party-details">
+                    <p><strong>买方：</strong><span id="buyerCompanyName"></span></p>
+                    <p>地址：<span id="buyerCompanyAddress"></span></p>
+                    <p>联系人：<span id="buyerContactPerson"></span></p>
+                    <p>联系电话：<span id="buyerPhoneNumber"></span></p>
+                </div>
+                <div class="party-details">
+                    <p><strong>卖方：</strong><span id="supplierName"></span></p>
+                    <p>地址：<span id="companyAddress"></span></p>
+                    <p>联系人：<span id="contactPerson"></span></p>
+                    <p>联系电话：<span id="phoneNumber"></span></p>
+                    <p>邮箱：<span id="email"></span></p>
+                    <p>开户行：<span id="bankName"></span></p>
+                    <p>行号：<span id="bankCode"></span></p>
+                    <p>账号：<span id="bankAccount"></span></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="contract-terms">
+            <h3>二、产品清单</h3>
+            <table class="contract-table">
+                <thead>
+                    <tr>
+                        <th>产品名称</th>
+                        <th>规格型号</th>
+                        <th>单价</th>
+                        <th>数量</th>
+                        <th>单位</th>
+                        <th>金额</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                </tbody>
+            </table>
+            
+            <!-- 订单备注区域 -->
+            <div class="mt-4">
+                <p class="font-bold mb-2">订单备注：</p>
+                <textarea id="orderRemark" rows="3" class="w-full border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="在此处输入订单备注..."></textarea>
+            </div>
+            
+            <div class="total-amount">
+                <strong>数量合计：</strong><span id="totalQuantity"></span>
+            </div>
+            
+            <div class="total-amount">
+                <strong>总金额（含税）：</strong><span id="totalAmount"></span>
+            </div>
+        </div>
+        
+        <!-- 通用的金额千分位格式化函数 -->
+        <script>
+            function formatCurrency(amount) {
+                const num = parseFloat(amount);
+                if (isNaN(num)) return '¥0.00';
+                const numStr = num.toFixed(2);
+                const parts = numStr.split('.');
+                parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                return `¥${parts.join('.')}`;
+            }
+        </script>
+        
+        <div class="contract-terms">
+            <h3>三、合同条款</h3>
+            <ol>
+                <li>合同有效期：自合同签订之日起至全部货物交付并验收合格之日止。</li>
+                <li>交货地点：买方工厂或指定仓库。</li>
+                <li>交货期：<span contenteditable="true" id="deliveryDate" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 min-w-[80px]" style="display: inline-block; min-width: 80px;"></span>前完成全部货物交付。</li>
+                <li>交货方式：<span contenteditable="true" id="deliveryMethod" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 min-w-[80px]" style="display: inline-block; min-width: 80px;">卖方安排并承担所有包装和运输费用</span>。</li>
+                <li>货物验收：买方在收到货物后7个工作日内完成验收，如发现质量问题需及时通知卖方。</li>
+                <li>付款方式：<span contenteditable="true" id="paymentMethod" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 min-w-[80px]" style="display: inline-block; min-width: 80px;">验收合格后30个工作日内支付全额货款</span>。</li>
+                <li>违约责任：<span contenteditable="true" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1">如一方违约，需承担合同总金额5%的违约金。</span></li>
+                <li>争议解决：双方协商解决，协商不成的提交合同签订地法院诉讼解决。</li>
+                <li>其他：本合同一式两份，买卖双方各执一份，具有同等法律效力。</li>
+            </ol>
+        </div>
+        
+        <div class="sign-section">
+            <div class="sign-party" style="position: relative;">
+                <h4>买方（盖章）：</h4>
+                <!-- 印章容器 -->
+                <div class="seal-container absolute inset-0 flex justify-center items-start" style="transform: translateY(5px);">
+                    <div class="seal">
+                        <svg width="42mm" height="42mm" viewBox="0 0 200 200">
+                               <!-- 圆形背景 - 加粗边框 -->
+                               <circle cx="100" cy="100" r="90" fill="none" stroke="#ff0000" stroke-width="4" />
+                               
+                               <!-- 公司名称环形路径 - 减小半径防止溢出 -->
+                               <path id="buyerCompanyNamePath" d="M 100 35 A 65 65 0 1 1 99.999 35" fill="none" />
+                               
+                               <!-- 公司名称文字 - 调整字体大小防止溢出 -->
+                               <text fill="#ff0000" font-size="20" font-weight="bold" font-family="SimHei, Arial, sans-serif" transform="rotate(-115 100 100)">
+                                   <textPath id="buyerSealCompanyName" href="#buyerCompanyNamePath" startOffset="0%" text-anchor="start" side="top" letter-spacing="0.5">
+                                       <!-- 公司名称将通过JavaScript动态填充 -->
+                                   </textPath>
+                               </text>
+                               
+                               <!-- 中心红色五角星 - 增大尺寸 -->
+                               <polygon points="100,60 108,80 130,80 115,95 122,115 100,103 78,115 85,95 70,80 92,80" fill="#ff0000" />
+                               
+                               <!-- 合同专用章文字 - 添加在五角星下方 -->
+                               <text fill="#ff0000" font-size="16" font-weight="bold" font-family="SimHei, Arial, sans-serif" x="100" y="135" text-anchor="middle">
+                                   合同专用章
+                               </text>
+
+                           </svg>
+                    </div>
+                </div>
+                <p>授权代表：</p>
+                <p>日期：______年______月______日</p>
+            </div>
+            <div class="sign-party">
+                <h4>卖方（盖章）：</h4>
+                <p>授权代表：</p>
+                <p>日期：______年______月______日</p>
+            </div>
+        </div>
+        
+        <div class="mt-8">
+            <p class="text-right">合同生成日期：<span id="generateDate"></span></p>
+        </div>
+    </div>
+    
+    <script>
+        // 从URL参数获取合同数据
+        const urlParams = new URLSearchParams(window.location.search);
+        const contractData = JSON.parse(decodeURIComponent(urlParams.get('data')));
+        
+        // 填充合同信息
+        document.getElementById('contractNumber').textContent = contractData.contractNumber;
+        document.getElementById('orderDate').textContent = contractData.orderDate;
+        
+        // 填充买方公司名称
+        document.getElementById('buyerCompanyName').textContent = contractData.companyName || 'XX公司';
+        document.getElementById('buyerCompanyHeader').textContent = contractData.companyName || 'XX公司';
+        
+        // 填充买方公司地址、联系人和电话
+        document.getElementById('buyerCompanyAddress').textContent = contractData.buyerCompanyAddress || 'XX省XX市XX区XX路XX号';
+        document.getElementById('buyerContactPerson').textContent = contractData.buyerContactPerson || 'Alon Zhang';
+        document.getElementById('buyerPhoneNumber').textContent = contractData.buyerPhoneNumber || '136 6511 9291';
+        
+        // 填充供应商信息
+        const supplierInfo = contractData.supplierInfo || {};
+        document.getElementById('supplierName').textContent = supplierInfo.supplierName || contractData.supplier;
+        document.getElementById('companyAddress').textContent = supplierInfo.companyAddress || '';
+        document.getElementById('contactPerson').textContent = supplierInfo.contactPerson || '';
+        document.getElementById('phoneNumber').textContent = supplierInfo.phoneNumber || '';
+        document.getElementById('email').textContent = supplierInfo.email || '';
+        document.getElementById('bankName').textContent = supplierInfo.bankName || '';
+        document.getElementById('bankCode').textContent = supplierInfo.bankCode || '';
+        document.getElementById('bankAccount').textContent = supplierInfo.bankAccount || '';
+        
+        // 填充交货期，现在是span元素而不是input元素
+        const deliveryDateElement = document.getElementById('deliveryDate');
+        if (deliveryDateElement && contractData.deliveryDate) {
+            deliveryDateElement.textContent = contractData.deliveryDate;
+        }
+        
+        // 填充产品列表并计算数量合计
+        const productsTableBody = document.getElementById('productsTableBody');
+        let totalQuantity = 0;
+        
+        contractData.products.forEach(product => {
+            // 累加数量
+            const quantity = parseFloat(product.quantity) || 0;
+            totalQuantity += quantity;
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${product.productName}</td>
+                <td>${product.specification}</td>
+                <td>${formatCurrency(product.unitPrice)}</td>
+                <td>${quantity.toLocaleString()}</td>
+                <td>${product.unit || '只'}</td>
+                <td>${formatCurrency(product.amount)}</td>
+                <td><input type="text" value="${product.remark || ''}" class="border-b border-gray-500 focus:outline-none focus:border-blue-500 px-1 w-full" /></td>
+            `;
+            productsTableBody.appendChild(row);
+        });
+        
+        // 填充数量合计
+        document.getElementById('totalQuantity').textContent = totalQuantity.toLocaleString();
+        
+        // 填充总金额
+        document.getElementById('totalAmount').textContent = formatCurrency(contractData.totalAmount);
+        
+
+        
+        // 设置订单备注
+        document.getElementById('orderRemark').value = contractData.orderRemark || '';
+        
+        // 设置生成日期
+        document.getElementById('generateDate').textContent = new Date().toISOString().split('T')[0];
+        
+        // 更新买方印章中的公司名称
+        function updateBuyerSealCompanyName(companyName) {
+            // 获取文本路径元素
+            const textPathElement = document.getElementById('buyerSealCompanyName');
+            if (textPathElement) {
+                // 设置公司名称
+                textPathElement.textContent = companyName;
+            }
+        }
+        
+        // 更新买方印章公司名称
+        updateBuyerSealCompanyName(contractData.companyName || 'XX公司');
+        
+
+        
+        // 自动打印
+        // window.print();
+    </script>
+</body>
+</html>
