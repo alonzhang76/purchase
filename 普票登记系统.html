@@ -417,6 +417,9 @@
                                     
                                     <div class="mt-6 flex justify-end space-x-3">
 
+                                        <button id="edit-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                            <i class="fa fa-pencil mr-2"></i> 编辑
+                                        </button>
                                         <button id="save-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
                                             <i class="fa fa-save mr-2"></i> 保存
                                         </button>
@@ -1288,35 +1291,7 @@
                 document.body.removeChild(link);
             }
             
-            // 编辑按钮点击事件
-            const editRecognitionBtn = document.getElementById('edit-recognition');
-            if (editRecognitionBtn) {
-                editRecognitionBtn.addEventListener('click', function() {
-                    const recognitionInputs = document.querySelectorAll('#recognition-table input');
-                    let isEditing = false;
-                    
-                    // 检查当前是否有可编辑的字段
-                    recognitionInputs.forEach(input => {
-                        if (!input.hasAttribute('readonly')) {
-                            isEditing = true;
-                        }
-                    });
-                    
-                    if (isEditing) {
-                        // 切换到只读状态
-                        recognitionInputs.forEach(input => {
-                            input.setAttribute('readonly', 'readonly');
-                        });
-                        this.innerHTML = '<i class="fa fa-pencil mr-2"></i> 编辑';
-                    } else {
-                        // 切换到可编辑状态
-                        recognitionInputs.forEach(input => {
-                            input.removeAttribute('readonly');
-                        });
-                        this.innerHTML = '<i class="fa fa-lock mr-2"></i> 锁定';
-                    }
-                });
-            }
+            // 编辑按钮点击事件已在showRecognitionResult函数中处理，避免重复绑定
             
             // 保存识别结果按钮点击事件
             const saveRecognitionBtn = document.getElementById('save-recognition');
@@ -1650,6 +1625,19 @@
             console.log('开始解析发票文本:', text.length > 100 ? text.substring(0, 100) + '...' : text);
             console.log('完整发票文本:', text);
             
+            // 直接测试中文大写金额转换函数
+            console.log('=== 直接测试中文大写金额转换 ===');
+            const testCases = ['壹仟圆整', '壹仟元整', '贰佰伍拾圆', '叁拾圆伍角'];
+            testCases.forEach(testCase => {
+                try {
+                    const result = chineseToNumber(testCase);
+                    console.log('测试用例:', testCase, '结果:', result);
+                } catch (error) {
+                    console.error('测试用例', testCase, '失败:', error);
+                }
+            });
+            console.log('=== 测试结束 ===');
+            
             // 预处理文本：
             // 1. 将分行显示的中文日期合并成连续的字符串
             let processedText = text.replace(/(20\d{2})\n+年\n*(\d{1,2})\n+月\n*(\d{1,2})\n+日/g, '$1年$2月$3日');
@@ -1933,8 +1921,10 @@
             // 修复后的中文大写金额转小写函数
             // 中文大写金额转换函数（修复版，支持空格、大额金额和角分）
             function chineseToNumber(chineseNum) {
-                // 先移除无关字符和空格
-                chineseNum = chineseNum.replace(/[整\s]/g, '');
+                console.log('开始转换中文大写金额:', chineseNum);
+                // 先移除无关字符和空格，将"圆"转换为"元"
+                chineseNum = chineseNum.replace(/[整\s]/g, '').replace(/圆/g, '元');
+                console.log('预处理后的中文大写金额:', chineseNum);
                 
                 const digits = {
                     '零': 0,
@@ -1962,6 +1952,7 @@
                 
                 // 特殊处理：如果只有一个单位（如"拾圆"），表示10
                 if (chineseNum.length === 1 && units[chineseNum]) {
+                    console.log('特殊处理单个单位:', chineseNum, '结果:', units[chineseNum]);
                     return units[chineseNum];
                 }
                 
@@ -1974,86 +1965,140 @@
                 
                 for (let i = 0; i < chineseNum.length; i++) {
                     const char = chineseNum[i];
+                    console.log('处理字符:', char, '位置:', i);
                     
                     if (digits[char] !== undefined) {
                         // 是数字
+                        console.log('发现数字:', char, '值:', digits[char]);
                         if (current > 0 && !isAfterYuan) {
                             // 如果current已经有值且在元以上单位，说明之前是千、百、十等单位
                             temp += current;
+                            console.log('累加当前值到temp:', current, 'temp变为:', temp);
                         }
                         current = digits[char];
+                        console.log('current更新为:', current);
                     } else if (units[char] !== undefined) {
                         // 是单位
                         const unit = units[char];
+                        console.log('发现单位:', char, '值:', unit);
                         
                         if (char === '元') {
                             // 处理元单位
+                            console.log('处理元单位，current:', current, 'temp:', temp, 'tenThousand:', tenThousand, 'hundredMillion:', hundredMillion);
                             temp += current;
+                            console.log('temp += current:', temp);
                             result += hundredMillion + tenThousand + temp;
+                            console.log('result += (hundredMillion + tenThousand + temp):', result);
                             // 重置高位单位的积累值
                             hundredMillion = 0;
                             tenThousand = 0;
                             temp = 0;
                             current = 0;
                             isAfterYuan = true;
+                            console.log('重置后的值: hundredMillion:', hundredMillion, 'tenThousand:', tenThousand, 'temp:', temp, 'current:', current, 'isAfterYuan:', isAfterYuan);
                         } else if (char === '角' || char === '分') {
                             // 处理角分单位
+                            console.log('处理角分单位:', char, 'current:', current);
                             if (current === 0) {
                                 // 处理类似"角"前面没有数字的情况
                                 current = 0;
+                                console.log('角分前没有数字，current设为:', current);
                             }
                             result += current * unit;
+                            console.log('result += current * unit:', result);
                             current = 0;
+                            console.log('current重置为:', current);
                         } else if (unit === 100000000) {
                             // 亿级单位
+                            console.log('处理亿级单位，current:', current, 'temp:', temp, 'tenThousand:', tenThousand, 'hundredMillion:', hundredMillion);
                             temp += current;
+                            console.log('temp += current:', temp);
                             hundredMillion = (hundredMillion + tenThousand + temp) * unit;
+                            console.log('hundredMillion = (hundredMillion + tenThousand + temp) * unit:', hundredMillion);
                             tenThousand = 0;
                             temp = 0;
                             current = 0;
+                            console.log('重置后的值: hundredMillion:', hundredMillion, 'tenThousand:', tenThousand, 'temp:', temp, 'current:', current);
                         } else if (unit === 10000) {
                             // 万级单位
+                            console.log('处理万级单位，current:', current, 'temp:', temp, 'tenThousand:', tenThousand);
                             temp += current;
+                            console.log('temp += current:', temp);
                             tenThousand = (tenThousand + temp) * unit;
+                            console.log('tenThousand = (tenThousand + temp) * unit:', tenThousand);
                             temp = 0;
                             current = 0;
+                            console.log('重置后的值: tenThousand:', tenThousand, 'temp:', temp, 'current:', current);
                         } else {
                             // 千、百、十级单位
+                            console.log('处理千、百、十级单位:', char, 'current:', current);
                             if (current === 0) {
                                 // 处理类似"拾"前面没有数字的情况，如"拾万"
                                 current = 1;
+                                console.log('单位前没有数字，current设为:', current);
                             }
                             current = current * unit;
+                            console.log('current = current * unit:', current);
                         }
+                    } else {
+                        console.log('未知字符:', char);
                     }
                 }
                 
                 // 如果没有明确的元单位，加上剩余的数字
                 if (!isAfterYuan) {
+                    console.log('没有明确的元单位，处理剩余数字，current:', current, 'temp:', temp, 'tenThousand:', tenThousand, 'hundredMillion:', hundredMillion);
                     temp += current;
+                    console.log('temp += current:', temp);
                     result += hundredMillion + tenThousand + temp;
+                    console.log('result += (hundredMillion + tenThousand + temp):', result);
                 }
                 
+                console.log('最终转换结果:', result);
                 return result;
             }
             
             // 金额 - 重新设计匹配逻辑，优先使用中文大写金额转换，然后匹配价税合计和小写金额
             // 1. 首先尝试匹配任何位置的中文大写金额
             let amount = '';
-            // 修改正则表达式，支持带空格的中文大写金额格式
-            const chineseAmountMatch = processedText.match(/([\u4e00-\u9fa5\s]+[元角分整正])/);
+            // 提取所有包含圆或元的中文大写金额
+            console.log('开始查找中文大写金额...');
             
-            if (chineseAmountMatch) {
-                // 将中文大写金额转换为数字
-                const chineseAmount = chineseAmountMatch[1].trim();
+            // 匹配中文大写金额的正则表达式，支持各种格式
+            const chineseAmountRegex = /([\u4e00-\u9fa5]+(?:圆|元)(?:整|正)?)/g;
+            const chineseAmountMatches = processedText.match(chineseAmountRegex);
+            console.log('所有中文大写金额匹配结果:', chineseAmountMatches);
+            
+            if (chineseAmountMatches && chineseAmountMatches.length > 0) {
+                // 处理第一个匹配到的中文大写金额
+                const chineseAmount = chineseAmountMatches[0].trim();
+                console.log('选择的中文大写金额:', chineseAmount);
                 try {
                     const numericAmount = chineseToNumber(chineseAmount);
+                    console.log('转换后的数字金额:', numericAmount);
                     amount = numericAmount.toFixed(2);
                     console.log('中文大写金额:', chineseAmount, '转换后:', amount);
-                    // 如果中文金额转换成功，直接使用该结果
                 } catch (error) {
                     console.error('中文大写金额转换失败:', error);
+                    console.error('转换失败的中文金额:', chineseAmount);
                     amount = '';
+                }
+            } 
+            
+            // 特殊处理：如果没有匹配到，尝试直接查找包含"仟"的金额
+            if (!amount) {
+                const qianMatch = processedText.match(/(壹仟圆整|壹仟元整|壹仟圆|壹仟元)/);
+                if (qianMatch) {
+                    console.log('特殊匹配到仟金额:', qianMatch[0]);
+                    try {
+                        const numericAmount = chineseToNumber(qianMatch[0]);
+                        amount = numericAmount.toFixed(2);
+                        console.log('特殊匹配转换后:', amount);
+                    } catch (error) {
+                        console.error('特殊匹配转换失败:', error);
+                    }
+                } else {
+                    console.log('未匹配到中文大写金额');
                 }
             }
             
@@ -2165,7 +2210,16 @@
             
             console.log('项目名称匹配结果:', itemNameMatch, '提取值:', itemName);
             
-            // 检查是否为负数发票
+            // 测试中文大写金额转换函数
+        try {
+            const testAmount = '壹仟圆整';
+            const convertedAmount = chineseToNumber(testAmount);
+            console.log('测试中文大写金额转换:', testAmount, '->', convertedAmount);
+        } catch (error) {
+            console.error('中文大写金额转换测试失败:', error);
+        }
+        
+        // 检查是否为负数发票
         const isNegativeInvoice = processedText.includes('负数');
         
         // 如果是负数发票，给金额和税额添加负号
@@ -2286,7 +2340,7 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">项目名称</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" id="recognition-item-name" value="${invoiceInfo.itemName}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        <input type="text" id="recognition-item-name" value="${invoiceInfo.itemName}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
                     </td>
                 </tr>
                 <tr>
@@ -2310,6 +2364,46 @@
             invoiceNumberInput.addEventListener('input', function() {
                 checkDuplicateInvoiceNumber(this.value);
             });
+            
+            // 添加编辑按钮事件监听器
+            const editRecognitionBtn = document.getElementById('edit-recognition');
+            if (editRecognitionBtn) {
+                // 移除可能存在的旧监听器，避免重复绑定
+                editRecognitionBtn.onclick = null;
+                
+                editRecognitionBtn.addEventListener('click', function() {
+                    // 获取所有输入框和选择框
+                    const recognitionInputs = document.querySelectorAll('#recognition-table input, #recognition-table select');
+                    let isEditing = false;
+                    
+                    // 检查当前是否处于编辑状态（即是否有输入框是可编辑的）
+                    recognitionInputs.forEach(input => {
+                        if (input.type !== 'select' && !input.hasAttribute('readonly')) {
+                            isEditing = true;
+                        }
+                    });
+                    
+                    if (isEditing) {
+                        // 切换到只读状态：为所有输入框添加readonly属性
+                        recognitionInputs.forEach(input => {
+                            if (input.type !== 'select') {
+                                input.setAttribute('readonly', 'readonly');
+                            }
+                        });
+                        // 更新按钮文本和图标
+                        this.innerHTML = '<i class="fa fa-pencil mr-2"></i> 编辑';
+                    } else {
+                        // 切换到可编辑状态：移除所有输入框的readonly属性
+                        recognitionInputs.forEach(input => {
+                            if (input.type !== 'select') {
+                                input.removeAttribute('readonly');
+                            }
+                        });
+                        // 更新按钮文本和图标
+                        this.innerHTML = '<i class="fa fa-lock mr-2"></i> 锁定';
+                    }
+                });
+            }
         }
         
         // 检查发票号码是否重复
