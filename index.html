@@ -8431,41 +8431,41 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                             // 为每个公司恢复数据
                             backupCompanies.forEach(company => {
                                 // 恢复待办事项数据（按公司）
-                                if (data.todos && data.todos[company] && data.todos[company].length > 0) {
+                                if (data.todos && data.todos[company] !== undefined) {
                                     localStorage.setItem(`procurementTodos_${company}`, JSON.stringify(data.todos[company]));
                                 }
                                 
                                 // 恢复记事本数据（按公司）
-                                if (data.notepad && data.notepad[company] && data.notepad[company].trim() !== '') {
+                                if (data.notepad && data.notepad[company] !== undefined) {
                                     localStorage.setItem(`procurement-notepad-content_${company}`, data.notepad[company]);
                                 }
                                 
                                 // 恢复采购订单数据（按公司）
-                                if (data.purchaseOrders && data.purchaseOrders[company] && data.purchaseOrders[company].length > 0) {
+                                if (data.purchaseOrders && data.purchaseOrders[company] !== undefined) {
                                     localStorage.setItem(`purchaseOrders_${company}`, JSON.stringify(data.purchaseOrders[company]));
                                 }
                                 
                                 // 恢复发票数据（按公司）
-                                if (data.invoices && data.invoices[company] && data.invoices[company].length > 0) {
+                                if (data.invoices && data.invoices[company] !== undefined) {
                                     localStorage.setItem(`${company}-invoices`, JSON.stringify(data.invoices[company]));
                                 }
                                 
                                 // 恢复付款记录数据（按公司）
-                                if (data.payments && data.payments[company] && data.payments[company].length > 0) {
+                                if (data.payments && data.payments[company] !== undefined) {
                                     localStorage.setItem(`${company}-payments`, JSON.stringify(data.payments[company]));
                                 }
                                 
                                 // 恢复合同数据（按公司）
-                                if (data.contracts && data.contracts[company] && data.contracts[company].length > 0) {
+                                if (data.contracts && data.contracts[company] !== undefined) {
                                     localStorage.setItem(`${company}-contracts`, JSON.stringify(data.contracts[company]));
                                 }
                                 
                                 // 恢复收支表数据（按公司）
-                                if (data.balanceSheet && data.balanceSheet.transactions && data.balanceSheet.transactions[company]) {
+                                if (data.balanceSheet && data.balanceSheet.transactions && data.balanceSheet.transactions[company] !== undefined) {
                                     localStorage.setItem(`transactions_${company}`, JSON.stringify(data.balanceSheet.transactions[company]));
                                 }
                                 
-                                if (data.balanceSheet && data.balanceSheet.lastUpdated && data.balanceSheet.lastUpdated[company]) {
+                                if (data.balanceSheet && data.balanceSheet.lastUpdated && data.balanceSheet.lastUpdated[company] !== undefined) {
                                     localStorage.setItem(`lastUpdated_${company}`, data.balanceSheet.lastUpdated[company]);
                                 }
                             });
