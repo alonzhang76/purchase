@@ -299,13 +299,19 @@
                     location.reload();
                 });
             }
-            // 页面加载完成后重新渲染采购订单列表 - 安全检查
+            // 页面加载完成后重新渲染所有列表 - 安全检查
             try {
                 if (typeof renderPurchaseOrderList === 'function') {
                     renderPurchaseOrderList();
                 }
+                if (typeof renderInvoiceList === 'function') {
+                    renderInvoiceList();
+                }
+                if (typeof renderPaymentList === 'function') {
+                    renderPaymentList('');
+                }
             } catch (e) {
-                console.log('未找到采购订单列表渲染函数，跳过初始化');
+                console.log('初始化渲染函数时出错:', e);
             }
             
             // 初始化备份数据下拉菜单
@@ -1668,6 +1674,10 @@
                         // 更新页面标题
                         pageTitle.textContent = this.querySelector('span').textContent;
                         
+                        // 如果是采购管理页面，渲染采购订单列表
+                        if (targetPageId === 'procurement' && typeof renderPurchaseOrderList === 'function') {
+                            renderPurchaseOrderList();
+                        }
                         // 如果是发票页面，渲染发票列表
                         if (targetPageId === 'invoices' && typeof renderInvoiceList === 'function') {
                             renderInvoiceList();
@@ -1708,6 +1718,10 @@
                         // 更新页面标题
                         pageTitle.textContent = savedNavLink.querySelector('span').textContent;
                         
+                        // 如果是采购管理页面，渲染采购订单列表
+                        if (savedPage === 'procurement' && typeof renderPurchaseOrderList === 'function') {
+                            renderPurchaseOrderList();
+                        }
                         // 如果是发票页面，渲染发票列表
                         if (savedPage === 'invoices' && typeof renderInvoiceList === 'function') {
                             renderInvoiceList();
