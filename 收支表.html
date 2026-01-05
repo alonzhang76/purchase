@@ -97,15 +97,35 @@
                 min-width: 140px;
                 max-width: 180px;
             }
+            /* 模态框中的输入框，占满整个宽度 */
+            #transaction-modal .input-field {
+                max-width: none;
+            }
+            /* 金额和支付方式输入框保持原有宽度 */
+            #transaction-modal .flex-1 .input-field {
+                max-width: 180px;
+            }
             @screen md {
                 .input-field {
                     min-width: 140px;
+                    max-width: 180px;
+                }
+                #transaction-modal .input-field {
+                    max-width: none;
+                }
+                #transaction-modal .flex-1 .input-field {
                     max-width: 180px;
                 }
             }
             @screen lg {
                 .input-field {
                     min-width: 140px;
+                    max-width: 180px;
+                }
+                #transaction-modal .input-field {
+                    max-width: none;
+                }
+                #transaction-modal .flex-1 .input-field {
                     max-width: 180px;
                 }
             }
@@ -216,8 +236,8 @@
                         <a href="#" id="account-settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">清空所有交易记录</a>
                         <a href="#" id="export-excel" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">导出Excel</a>
                         <a href="#" id="import-excel" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">导入Excel</a>
-
-                        <a href="#" id="backup-restore" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">备份与恢复</a>
+                        <a href="#" id="export-json" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">导出JSON</a>
+                        <a href="#" id="import-json" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">导入JSON</a>
                         <div class="border-t border-gray-200 my-1"></div>
 
                     </div>
@@ -705,33 +725,7 @@
         </div>
     </div>
     
-    <!-- 备份与恢复模态框 -->
-    <div id="backup-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4 animate-slide-in max-h-[80vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">数据备份与恢复</h3>
-                <button id="close-backup-modal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fa fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <div class="mb-6">
-                <h4 class="text-sm font-medium text-gray-700 mb-2">自动备份设置</h4>
-                <p class="text-sm text-gray-600">系统会在页面关闭时自动备份数据到浏览器本地存储，最多保留最近5个备份。</p>
-            </div>
-            
-            <div class="mb-6">
-                <h4 class="text-sm font-medium text-gray-700 mb-3">备份历史</h4>
-                <div id="backup-list" class="space-y-3">
-                    <!-- 备份列表将通过JavaScript动态生成 -->
-                </div>
-            </div>
-            
-            <div class="flex justify-end space-x-3">
-                <button type="button" id="close-backup-modal-btn" class="btn-secondary px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">关闭</button>
-            </div>
-        </div>
-    </div>
+
     
     <!-- 通知提示 -->
     <div id="notification" class="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 max-w-sm transform translate-x-full transition-transform duration-300 z-50 flex items-center space-x-3">
@@ -1220,59 +1214,7 @@
         }
         
         // 初始化事件监听
-        // 创建自动备份功能
-        function createAutoBackup() {
-            try {
-                // 获取当前公司信息
-                const currentCompany = localStorage.getItem('currentCompany') || 'company1';
-                
-                // 获取所有公司列表
-                const companies = ['company1', 'company2'];
-                
-                // 收集所有需要备份的数据
-                const backupData = {
-                    version: '2.0',
-                    exportDate: new Date().toISOString(),
-                    currentCompany: currentCompany,
-                    companies: companies,
-                    data: {
-                        // 待办事项数据
-                        todos: JSON.parse(localStorage.getItem('todos') || '[]'),
-                        // 交易记录数据（按公司分组）
-                        transactions: {},
-                        // 最后更新时间（按公司分组）
-                        lastUpdated: {}
-                    }
-                };
-                
-                // 为每个公司收集数据
-                companies.forEach(company => {
-                    backupData.data.transactions[company] = JSON.parse(localStorage.getItem(`transactions_${company}`) || '[]');
-                    backupData.data.lastUpdated[company] = localStorage.getItem(`lastUpdated_${company}`) || new Date().toISOString().split('T')[0];
-                });
-                
-                // 生成备份键名
-                const timestamp = new Date().getTime();
-                const backupKey = `backup_${timestamp}`;
-                
-                // 保存备份数据
-                localStorage.setItem(backupKey, JSON.stringify(backupData));
-                
-                // 清理旧备份，最多保留5个
-                const allKeys = Object.keys(localStorage);
-                const backupKeys = allKeys.filter(key => key.startsWith('backup_'))
-                                         .sort((a, b) => parseInt(b.split('_')[1]) - parseInt(a.split('_')[1]));
-                
-                // 删除超过5个的旧备份
-                if (backupKeys.length > 5) {
-                    for (let i = 5; i < backupKeys.length; i++) {
-                        localStorage.removeItem(backupKeys[i]);
-                    }
-                }
-            } catch (error) {
-                console.error('自动备份失败:', error);
-            }
-        }
+
         
         function initializeEventListeners() {
             // 账户菜单下拉
@@ -1280,10 +1222,7 @@
                 document.getElementById('account-dropdown').classList.toggle('hidden');
             });
             
-            // 添加页面关闭事件监听器，实现自动备份
-            window.addEventListener('beforeunload', function() {
-                createAutoBackup();
-            });
+
             
             // 清空所有交易记录按钮点击事件
             document.getElementById('account-settings').addEventListener('click', function(e) {
@@ -1369,19 +1308,33 @@
             document.getElementById('close-modal').addEventListener('click', closeTransactionModal);
             document.getElementById('cancel-transaction').addEventListener('click', closeTransactionModal);
             
-            // 备份与恢复功能
-            document.getElementById('backup-restore').addEventListener('click', function(e) {
+            // 导出JSON功能
+            document.getElementById('export-json').addEventListener('click', function(e) {
                 e.preventDefault();
-                openBackupModal();
+                exportToJson();
                 document.getElementById('account-dropdown').classList.add('hidden');
             });
             
-            // 关闭备份模态框
-            document.getElementById('close-backup-modal').addEventListener('click', function() {
-                document.getElementById('backup-modal').classList.add('hidden');
-            });
-            document.getElementById('close-backup-modal-btn').addEventListener('click', function() {
-                document.getElementById('backup-modal').classList.add('hidden');
+            // 导入JSON功能
+            document.getElementById('import-json').addEventListener('click', function(e) {
+                e.preventDefault();
+                // 创建隐藏的文件输入框用于导入JSON
+                let jsonInput = document.getElementById('json-file-input');
+                if (!jsonInput) {
+                    jsonInput = document.createElement('input');
+                    jsonInput.type = 'file';
+                    jsonInput.id = 'json-file-input';
+                    jsonInput.accept = '.json';
+                    jsonInput.className = 'hidden';
+                    jsonInput.addEventListener('change', function(e) {
+                        importFromJson(e.target.files[0]);
+                        // 重置文件输入，以便可以重复导入同一文件
+                        this.value = '';
+                    });
+                    document.body.appendChild(jsonInput);
+                }
+                jsonInput.click();
+                document.getElementById('account-dropdown').classList.add('hidden');
             });
             
             // 交易表单提交
@@ -2092,200 +2045,152 @@
             document.getElementById('transaction-modal').classList.add('hidden');
         }
         
-        // 打开备份与恢复模态框
-        function openBackupModal() {
-            // 生成备份列表
-            generateBackupList();
-            
-            // 显示模态框
-            document.getElementById('backup-modal').classList.remove('hidden');
+
+        
+        // 导出JSON功能
+        function exportToJson() {
+            try {
+                // 收集所有需要备份的数据
+                const backupData = {
+                    version: '2.0',
+                    exportDate: new Date().toISOString(),
+                    data: {
+                        // 待办事项数据
+                        todos: JSON.parse(localStorage.getItem('todos') || '[]'),
+                        // 交易记录数据（按公司分组）
+                        transactions: {},
+                        // 最后更新时间（按公司分组）
+                        lastUpdated: {},
+                        // 当前公司设置
+                        currentCompany: localStorage.getItem('currentCompany') || 'company1'
+                    }
+                };
+                
+                // 收集所有公司的交易数据
+                const companies = ['company1', 'company2'];
+                companies.forEach(company => {
+                    backupData.data.transactions[company] = JSON.parse(localStorage.getItem(`transactions_${company}`) || '[]');
+                    backupData.data.lastUpdated[company] = localStorage.getItem(`lastUpdated_${company}`) || new Date().toISOString().split('T')[0];
+                });
+                
+                // 创建JSON字符串
+                const jsonString = JSON.stringify(backupData, null, 2);
+                
+                // 创建下载链接
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `收支表备份_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // 清理
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                // 显示成功提示
+                showNotification('导出成功', '数据已成功导出为JSON文件', 'success');
+            } catch (error) {
+                console.error('导出JSON失败:', error);
+                showNotification('导出失败', '数据导出失败，请重试', 'error');
+            }
         }
         
-        // 生成备份列表
-        function generateBackupList() {
-            const allKeys = Object.keys(localStorage);
-            const backupKeys = allKeys.filter(key => key.startsWith('backup_')).sort((a, b) => {
-                return parseInt(b.split('_')[1]) - parseInt(a.split('_')[1]);
-            });
-            
-            const backupList = document.getElementById('backup-list');
-            backupList.innerHTML = '';
-            
-            if (backupKeys.length === 0) {
-                backupList.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">暂无备份记录</p>';
+        // 导入JSON功能
+        function importFromJson(file) {
+            if (!file) {
+                showNotification('导入失败', '请选择一个JSON文件', 'error');
                 return;
             }
             
-            backupKeys.forEach((key, index) => {
-                const backupItem = document.createElement('div');
-                backupItem.className = 'border border-gray-200 rounded-lg p-3';
-                
-                try {
-                    const backupData = JSON.parse(localStorage.getItem(key));
-                    const exportDate = new Date(backupData.meta.exportDate);
-                    const formattedDate = exportDate.toLocaleString('zh-CN', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                    
-                    // 计算总记录数
-                    let totalTransactions = backupData.meta.totalTransactionCount || 0;
-                    let companyNames = '';
-                    
-                    if (backupData.companies && Array.isArray(backupData.companies)) {
-                        companyNames = backupData.companies.map(c => c.companyName).join('、');
-                    }
-                    
-                    backupItem.innerHTML = `
-                        <div class="flex justify-between items-start mb-2">
-                            <div>
-                                <div class="text-sm font-medium text-gray-800">备份 ${index + 1}</div>
-                                <div class="text-xs text-gray-500 mt-1">${formattedDate}</div>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button class="btn-secondary text-xs px-2 py-1 rounded hover:bg-gray-200 transition-colors restore-backup-btn" data-key="${key}">
-                                    恢复
-                                </button>
-                                <button class="btn-danger text-xs px-2 py-1 rounded hover:bg-red-200 transition-colors delete-backup-btn" data-key="${key}">
-                                    删除
-                                </button>
-                            </div>
-                        </div>
-                        <div class="text-xs text-gray-600">
-                            <div>公司：${companyNames || '未知'}</div>
-                            <div>交易记录数：${totalTransactions}</div>
-                            <div>待办事项数：${backupData.meta.totalTodoCount || 0}</div>
-                        </div>
-                    `;
-                    
-                } catch (error) {
-                    backupItem.innerHTML = `
-                        <div class="text-sm text-gray-800 mb-1">备份 ${index + 1}</div>
-                        <div class="text-xs text-gray-500 mb-2">无效的备份数据</div>
-                        <div class="flex justify-end">
-                            <button class="btn-danger text-xs px-2 py-1 rounded hover:bg-red-200 transition-colors delete-backup-btn" data-key="${key}">
-                                删除
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                backupList.appendChild(backupItem);
-            });
+            // 检查文件类型
+            const fileType = file.name.split('.').pop().toLowerCase();
+            if (fileType !== 'json') {
+                showNotification('导入失败', '请选择JSON文件(.json)', 'error');
+                return;
+            }
             
-            // 为恢复按钮添加事件监听
-            document.querySelectorAll('.restore-backup-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const backupKey = this.dataset.key;
-                    restoreBackup(backupKey);
-                });
-            });
-            
-            // 为删除按钮添加事件监听
-            document.querySelectorAll('.delete-backup-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const backupKey = this.dataset.key;
-                    deleteBackup(backupKey);
-                });
-            });
-        }
-        
-        // 恢复备份
-        function restoreBackup(backupKey) {
-            if (confirm('确定要恢复此备份吗？此操作将覆盖当前所有数据！')) {
+            if (confirm('确定要导入此JSON文件吗？此操作将覆盖当前所有数据！')) {
                 try {
-                    const backupData = JSON.parse(localStorage.getItem(backupKey));
+                    const reader = new FileReader();
                     
-                    // 检查备份数据格式
-                    if (backupData.version && backupData.version === '2.0' && backupData.data) {
-                        // 新格式（与index.html一致）
-                        const data = backupData.data;
-                        
-                        // 恢复待办事项数据
-                        if (data.todos && Array.isArray(data.todos)) {
-                            localStorage.setItem('todos', JSON.stringify(data.todos));
-                        }
-                        
-                        // 恢复交易记录和最后更新时间（按公司分组）
-                        if (data.transactions) {
-                            Object.keys(data.transactions).forEach(company => {
-                                localStorage.setItem(`transactions_${company}`, JSON.stringify(data.transactions[company] || []));
-                                
-                                // 恢复最后更新时间
-                                if (data.lastUpdated && data.lastUpdated[company]) {
-                                    localStorage.setItem(`lastUpdated_${company}`, data.lastUpdated[company]);
-                                } else {
-                                    const today = new Date().toISOString().split('T')[0];
-                                    localStorage.setItem(`lastUpdated_${company}`, today);
-                                }
-                            });
-                        }
-                        
-                        // 恢复当前公司设置
-                        if (backupData.currentCompany) {
-                            localStorage.setItem('currentCompany', backupData.currentCompany);
-                        }
-                    } else if (backupData.companies && Array.isArray(backupData.companies)) {
-                        // 中间格式：包含两个公司的数据
-                        backupData.companies.forEach(companyData => {
-                            const company = companyData.company;
-                            localStorage.setItem(`transactions_${company}`, JSON.stringify(companyData.transactions));
+                    reader.onload = function(e) {
+                        try {
+                            const backupData = JSON.parse(e.target.result);
                             
-                            // 更新最后更新时间
-                            const today = new Date().toISOString().split('T')[0];
-                            localStorage.setItem(`lastUpdated_${company}`, today);
-                        });
-                        
-                        // 恢复待办事项
-                        if (backupData.todos && Array.isArray(backupData.todos)) {
-                            localStorage.setItem('todos', JSON.stringify(backupData.todos));
+                            // 检查备份数据格式
+                            if (backupData.version && backupData.data) {
+                                const data = backupData.data;
+                                
+                                // 恢复待办事项数据
+                                if (data.todos && Array.isArray(data.todos)) {
+                                    localStorage.setItem('todos', JSON.stringify(data.todos));
+                                }
+                                
+                                // 恢复交易记录和最后更新时间（按公司分组）
+                                if (data.transactions) {
+                                    Object.keys(data.transactions).forEach(company => {
+                                        localStorage.setItem(`transactions_${company}`, JSON.stringify(data.transactions[company] || []));
+                                        
+                                        // 恢复最后更新时间
+                                        if (data.lastUpdated && data.lastUpdated[company]) {
+                                            localStorage.setItem(`lastUpdated_${company}`, data.lastUpdated[company]);
+                                        } else {
+                                            const today = new Date().toISOString().split('T')[0];
+                                            localStorage.setItem(`lastUpdated_${company}`, today);
+                                        }
+                                    });
+                                }
+                                
+                                // 恢复当前公司设置
+                                if (data.currentCompany) {
+                                    localStorage.setItem('currentCompany', data.currentCompany);
+                                }
+                                
+                                // 重新加载数据
+                                loadTransactions();
+                                
+                                // 重新加载待办事项
+                                if (typeof loadTodos === 'function') {
+                                    loadTodos();
+                                }
+                                
+                                // 更新财务概览
+                                updateFinancialSummary();
+                                
+                                // 更新图表
+                                updateDistributionChart(document.querySelector('.chart-period-btn.bg-primary').dataset.period);
+                                updateCategoryChart(document.querySelector('.category-type-btn.bg-danger, .category-type-btn.bg-secondary').dataset.type);
+                                
+                                // 显示成功提示
+                                showNotification('导入成功', '数据已成功导入', 'success');
+                            } else {
+                                throw new Error('无效的JSON文件格式');
+                            }
+                        } catch (error) {
+                            console.error('解析JSON文件失败:', error);
+                            showNotification('导入失败', 'JSON文件格式错误，请重试', 'error');
                         }
-                    } else if (backupData.transactions && Array.isArray(backupData.transactions)) {
-                        // 旧格式：仅包含当前公司的数据
-                        const company = getCurrentCompany();
-                        localStorage.setItem(`transactions_${company}`, JSON.stringify(backupData.transactions));
-                        
-                        // 更新最后更新时间
-                        const today = new Date().toISOString().split('T')[0];
-                        localStorage.setItem(`lastUpdated_${company}`, today);
-                    }
+                    };
                     
-                    // 关闭模态框
-                    document.getElementById('backup-modal').classList.add('hidden');
+                    reader.onerror = function(error) {
+                        console.error('读取JSON文件失败:', error);
+                        showNotification('导入失败', '文件读取失败，请重试', 'error');
+                    };
                     
-                    // 重新加载数据
-                    loadTransactions();
-                    
-                    // 重新加载待办事项
-                    if (typeof loadTodos === 'function') {
-                        loadTodos();
-                    }
-                    
-                    // 显示成功提示
-                    alert('数据恢复成功！');
+                    // 开始读取文件
+                    reader.readAsText(file);
                 } catch (error) {
-                    console.error('恢复备份失败:', error);
-                    alert('恢复备份失败，请重试！');
+                    console.error('导入JSON失败:', error);
+                    showNotification('导入失败', '数据导入失败，请重试', 'error');
                 }
             }
         }
         
-        // 删除备份
-        function deleteBackup(backupKey) {
-            if (confirm('确定要删除此备份吗？此操作无法撤销！')) {
-                localStorage.removeItem(backupKey);
-                
-                // 刷新备份列表
-                generateBackupList();
-                
-                // 显示成功提示
-                alert('备份已删除！');
-            }
-        }
+
 
         // 更新分类选项
         function updateCategoryOptions() {
@@ -2778,33 +2683,26 @@
         // 初始化年份下拉框
         function initYearSelect() {
             const yearSelect = document.getElementById('year-select');
-            const company = getCurrentCompany();
-            const transactions = JSON.parse(localStorage.getItem(`transactions_${company}`)) || [];
             const today = new Date();
             const currentYear = today.getFullYear();
+            const startYear = 2025;
+            const endYear = 3035;
             
-            // 找出所有交易记录中的年份
-            const years = new Set();
-            transactions.forEach(transaction => {
-                const transactionDate = new Date(transaction.date);
-                years.add(transactionDate.getFullYear());
-            });
-            
-            // 确保包含当前年份
-            years.add(currentYear);
-            
-            // 转换为数组并排序
-            const sortedYears = Array.from(years).sort((a, b) => b - a);
+            // 生成2025年到3035年的所有年份
+            const years = [];
+            for (let year = endYear; year >= startYear; year--) {
+                years.push(year);
+            }
             
             // 清空现有选项
             yearSelect.innerHTML = '';
             
             // 添加年份选项
-            sortedYears.forEach(year => {
+            years.forEach(year => {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = `${year}年`;
-                if (year === currentYear) {
+                if (year === currentYear && year >= startYear && year <= endYear) {
                     option.selected = true;
                 }
                 yearSelect.appendChild(option);
@@ -2826,42 +2724,26 @@
         function initDistributionYearSelect() {
             const yearSelect = document.getElementById('distribution-year-select');
             const monthSelect = document.getElementById('distribution-month-select');
-            const company = getCurrentCompany();
-            const transactions = JSON.parse(localStorage.getItem(`transactions_${company}`)) || [];
             const today = new Date();
             const currentYear = today.getFullYear();
-            const startYear = 2025; // 设置从2025年开始
+            const startYear = 2025;
+            const endYear = 3035;
             
-            // 找出所有交易记录中的年份
-            const years = new Set();
-            transactions.forEach(transaction => {
-                const transactionDate = new Date(transaction.date);
-                const year = transactionDate.getFullYear();
-                if (year >= startYear) {
-                    years.add(year);
-                }
-            });
-            
-            // 确保包含当前年份和开始年份
-            if (currentYear >= startYear) {
-                years.add(currentYear);
+            // 生成2025年到3035年的所有年份
+            const years = [];
+            for (let year = endYear; year >= startYear; year--) {
+                years.push(year);
             }
-            years.add(startYear);
-            
-            // 转换为数组并排序
-            const sortedYears = Array.from(years).sort((a, b) => b - a);
             
             // 清空现有选项
             yearSelect.innerHTML = '';
             
             // 添加年份选项
-            sortedYears.forEach(year => {
+            years.forEach(year => {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = `${year}年`;
-                if (year === currentYear && currentYear >= startYear) {
-                    option.selected = true;
-                } else if (year === startYear) {
+                if (year === currentYear && year >= startYear && year <= endYear) {
                     option.selected = true;
                 }
                 yearSelect.appendChild(option);
@@ -4562,19 +4444,47 @@
                             const description = row[4] !== undefined && row[4] !== null ? String(row[4]).trim() : '';
                             log(`  描述: ${description}`);
                             
-                            // 位置5: 收款单位
-                            let payeeUnit = '';
-                            if (row[5] !== undefined && row[5] !== null) {
-                                payeeUnit = String(row[5]).trim();
-                            }
-                            log(`  收款单位: ${payeeUnit}`);
+                            // 检查Excel文件的列结构，确定单位字段的位置
+                            // 支持两种格式：
+                            // 1. 模板格式：只有一个单位名称列（位置5）
+                            // 2. 完整格式：付款单位（位置5）和收款单位（位置6）
                             
-                            // 位置6: 付款单位
+                            // 尝试获取单位相关数据
                             let payerUnit = '';
-                            if (row[6] !== undefined && row[6] !== null) {
-                                payerUnit = String(row[6]).trim();
+                            let payeeUnit = '';
+                            let unitName = '';
+                            
+                            // 首先检查是否是完整格式（两列单位）
+                            if (row[5] !== undefined && row[5] !== null) {
+                                payerUnit = String(row[5]).trim();
+                                log(`  从位置5获取付款单位: ${payerUnit}`);
                             }
-                            log(`  付款单位: ${payerUnit}`);
+                            
+                            if (row[6] !== undefined && row[6] !== null) {
+                                payeeUnit = String(row[6]).trim();
+                                log(`  从位置6获取收款单位: ${payeeUnit}`);
+                            }
+                            
+                            // 如果只有一列单位数据，按模板格式处理
+                            if ((!payerUnit && payeeUnit) || (payerUnit && !payeeUnit)) {
+                                // 只有一列有数据，判断哪一列是单位名称
+                                unitName = payerUnit || payeeUnit;
+                                payerUnit = '';
+                                payeeUnit = '';
+                                log(`  检测到模板格式，只有一列单位数据: ${unitName}`);
+                            }
+                            
+                            // 兼容处理：如果只提供了一个单位名称字段（模板格式）
+                            // 根据交易类型将该字段的值设置为对应的单位
+                            if (unitName) {
+                                if (type === 'income') {
+                                    payerUnit = unitName;
+                                    log(`  兼容处理: 收入类型使用单位名称作为付款单位`);
+                                } else {
+                                    payeeUnit = unitName;
+                                    log(`  兼容处理: 支出类型使用单位名称作为收款单位`);
+                                }
+                            }
                             
                             // 根据交易类型使用对应的单位
                             let unit = type === 'income' ? payerUnit : payeeUnit;
