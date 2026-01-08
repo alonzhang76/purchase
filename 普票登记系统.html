@@ -1352,10 +1352,26 @@
                     <div>
                         <label for="edit-category" class="block text-sm font-medium text-gray-700 mb-1">项目分类</label>
                         <select id="edit-category" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="前期账面余额">前期账面余额</option>
                             <option value="货款">货款</option>
-                            <option value="生产费用">生产费用</option>
-                            <option value="行政费用">行政费用</option>
-                            <option value="差旅费">差旅费</option>
+                            <option value="原材料">原材料</option>
+                            <option value="辅助材料">辅助材料</option>
+                            <option value="电镀费">电镀费</option>
+                            <option value="包装箱费用">包装箱费用</option>
+                            <option value="易耗品材料">易耗品材料</option>
+                            <option value="外协加工费">外协加工费</option>
+                            <option value="运杂费">运杂费</option>
+                            <option value="维修或模具费">维修或模具费</option>
+                            <option value="水电费">水电费</option>
+                            <option value="工资">工资</option>
+                            <option value="员工报销">员工报销</option>
+                            <option value="员工餐费用">员工餐费用</option>
+                            <option value="员工福利">员工福利</option>
+                            <option value="通信费">通信费</option>
+                            <option value="调账">调账</option>
+                            <option value="其它支出">其它支出</option>
+                            <option value="固定资产设备">固定资产设备</option>
+                            <option value="其它行政招待费用">其它行政招待费用</option>
                         </select>
                     </div>
                 </div>
@@ -4436,11 +4452,26 @@
                 // 清空并添加固定分类选项
                 categorySelect.innerHTML = `
                     <option value="">全部</option>
+                    <option value="前期账面余额">前期账面余额</option>
                     <option value="货款">货款</option>
-                    <option value="生产费用">生产费用</option>
-                    <option value="行政费用">行政费用</option>
-                    <option value="差旅费">差旅费</option>
-                    <option value="其它">其它</option>
+                    <option value="原材料">原材料</option>
+                    <option value="辅助材料">辅助材料</option>
+                    <option value="电镀费">电镀费</option>
+                    <option value="包装箱费用">包装箱费用</option>
+                    <option value="易耗品材料">易耗品材料</option>
+                    <option value="外协加工费">外协加工费</option>
+                    <option value="运杂费">运杂费</option>
+                    <option value="维修或模具费">维修或模具费</option>
+                    <option value="水电费">水电费</option>
+                    <option value="工资">工资</option>
+                    <option value="员工报销">员工报销</option>
+                    <option value="员工餐费用">员工餐费用</option>
+                    <option value="员工福利">员工福利</option>
+                    <option value="通信费">通信费</option>
+                    <option value="调账">调账</option>
+                    <option value="其它支出">其它支出</option>
+                    <option value="固定资产设备">固定资产设备</option>
+                    <option value="其它行政招待费用">其它行政招待费用</option>
                 `;
             }
             
@@ -5501,7 +5532,8 @@
             console.log('开始查找购买方和销售方...');
             
             // 首先，检查是否为特殊格式（每个字之间都有空格）
-            const hasCharacterSpaces = /购\s*销\s*买\s*售/.test(processedText);
+            // 修改：检测"购"和"销"连续出现的情况，而不是同时检测"买"和"售"
+            const hasCharacterSpaces = /购\s*销/.test(processedText) && /\s/.test(processedText);
             let noSpaceText;
             
             if (hasCharacterSpaces) {
@@ -5511,34 +5543,53 @@
                 noSpaceText = processedText.replace(/\s+/g, '');
                 console.log('移除所有空格后的完整文本:', noSpaceText.substring(0, 150) + '...');
                 
-                // 直接查找已知的完整公司名称
-                if (noSpaceText.includes('无锡龙力印铁设备制造有限公司')) {
-                    buyer = '无锡龙力印铁设备制造有限公司';
-                }
-                
-                if (noSpaceText.includes('中国太平洋财产保险股份有限公司无锡分公司')) {
-                    seller = '中国太平洋财产保险股份有限公司无锡分公司';
-                } else {
-                    // 如果没有直接匹配到完整名称，使用正则提取
-                    const companyRegex = /[\u4e00-\u9fa5\w（）]+?公司(?:\w+分公司)?/g;
-                    const allCompanies = noSpaceText.match(companyRegex) || [];
+                // 优化：使用更通用的方法提取公司名称，不依赖特定公司
+                // 首先查找"购销"关键词位置，作为提取公司名称的起点
+                const purchaseSaleIndex = noSpaceText.indexOf('购销');
+                if (purchaseSaleIndex !== -1) {
+                    // 从"购销"后开始提取公司名称
+                    let companyText = noSpaceText.substring(purchaseSaleIndex + 2);
+                    
+                    // 查找"名称：名称："或"名"字，作为公司名称的结束点
+                    const nameMarkIndex = companyText.indexOf('名');
+                    if (nameMarkIndex !== -1) {
+                        companyText = companyText.substring(0, nameMarkIndex);
+                    }
+                    
+                    console.log('提取的公司文本:', companyText);
+                    
+                    // 使用更严格的正则提取公司名称，匹配完整的公司结构
+                    const companyRegex = /[\u4e00-\u9fa5\w（）]+?公司(?:[\u4e00-\u9fa5\w（）]*?分公司)?/g;
+                    const allCompanies = companyText.match(companyRegex) || [];
                     console.log('提取到的公司列表:', allCompanies);
                     
                     if (allCompanies.length >= 2) {
-                        if (!buyer) {
-                            buyer = allCompanies[0];
-                        }
-                        // 查找包含"太平洋"的公司作为销售方
-                        const pacificCompany = allCompanies.find(company => company.includes('太平洋'));
-                        if (pacificCompany) {
-                            seller = pacificCompany;
-                            // 确保销售方包含完整的分公司信息
-                            if (noSpaceText.includes(seller + '无锡分公司')) {
-                                seller += '无锡分公司';
+                        buyer = allCompanies[0];
+                        seller = allCompanies[1];
+                    } else {
+                        // 如果正则提取失败，尝试使用更简单的方法
+                        // 查找两个连续的"公司"关键词
+                        const firstCompanyIndex = companyText.indexOf('公司');
+                        if (firstCompanyIndex !== -1) {
+                            const secondCompanyIndex = companyText.indexOf('公司', firstCompanyIndex + 2);
+                            if (secondCompanyIndex !== -1) {
+                                buyer = companyText.substring(0, firstCompanyIndex + 2);
+                                seller = companyText.substring(firstCompanyIndex + 2, secondCompanyIndex + 2);
+                                console.log('通过"公司"关键词分割提取：购买方:', buyer, '销售方:', seller);
                             }
-                        } else if (allCompanies.length >= 2) {
-                            seller = allCompanies[1];
                         }
+                    }
+                }
+                
+                // 兜底：直接匹配所有可能的公司名称
+                if (!buyer || !seller) {
+                    const companyRegex = /[\u4e00-\u9fa5\w（）]+?公司(?:[\u4e00-\u9fa5\w（）]*?分公司)?/g;
+                    const allCompanies = noSpaceText.match(companyRegex) || [];
+                    console.log('兜底提取到的公司列表:', allCompanies);
+                    
+                    if (allCompanies.length >= 2) {
+                        buyer = allCompanies[0];
+                        seller = allCompanies[1];
                     }
                 }
                 
@@ -6215,10 +6266,26 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <select id="recognition-item-category" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                             <option value="">请选择项目分类</option>
+                            <option value="前期账面余额">前期账面余额</option>
                             <option value="货款">货款</option>
-                            <option value="生产费用">生产费用</option>
-                            <option value="行政费用">行政费用</option>
-                            <option value="差旅费">差旅费</option>
+                            <option value="原材料">原材料</option>
+                            <option value="辅助材料">辅助材料</option>
+                            <option value="电镀费">电镀费</option>
+                            <option value="包装箱费用">包装箱费用</option>
+                            <option value="易耗品材料">易耗品材料</option>
+                            <option value="外协加工费">外协加工费</option>
+                            <option value="运杂费">运杂费</option>
+                            <option value="维修或模具费">维修或模具费</option>
+                            <option value="水电费">水电费</option>
+                            <option value="工资">工资</option>
+                            <option value="员工报销">员工报销</option>
+                            <option value="员工餐费用">员工餐费用</option>
+                            <option value="员工福利">员工福利</option>
+                            <option value="通信费">通信费</option>
+                            <option value="调账">调账</option>
+                            <option value="其它支出">其它支出</option>
+                            <option value="固定资产设备">固定资产设备</option>
+                            <option value="其它行政招待费用">其它行政招待费用</option>
                         </select>
                     </td>
                 </tr>
@@ -7665,11 +7732,26 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">项目分类</label>
                             <select id="advanced-category" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border">
                                 <option value="">全部</option>
+                                <option value="前期账面余额">前期账面余额</option>
                                 <option value="货款">货款</option>
-                                <option value="生产费用">生产费用</option>
-                                <option value="行政费用">行政费用</option>
-                                <option value="差旅费">差旅费</option>
-                                <option value="其它">其它</option>
+                                <option value="原材料">原材料</option>
+                                <option value="辅助材料">辅助材料</option>
+                                <option value="电镀费">电镀费</option>
+                                <option value="包装箱费用">包装箱费用</option>
+                                <option value="易耗品材料">易耗品材料</option>
+                                <option value="外协加工费">外协加工费</option>
+                                <option value="运杂费">运杂费</option>
+                                <option value="维修或模具费">维修或模具费</option>
+                                <option value="水电费">水电费</option>
+                                <option value="工资">工资</option>
+                                <option value="员工报销">员工报销</option>
+                                <option value="员工餐费用">员工餐费用</option>
+                                <option value="员工福利">员工福利</option>
+                                <option value="通信费">通信费</option>
+                                <option value="调账">调账</option>
+                                <option value="其它支出">其它支出</option>
+                                <option value="固定资产设备">固定资产设备</option>
+                                <option value="其它行政招待费用">其它行政招待费用</option>
                             </select>
                         </div>
                         
