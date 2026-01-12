@@ -7,10 +7,10 @@
     <!-- Tailwind CSS v3 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
-    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.8/chart.umd.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- 统一的 Tailwind 配置 -->
     <!-- 通用的金额格式化函数 -->
     <script>
@@ -148,7 +148,7 @@
         });
 
         // 公司选择状态管理 - 从localStorage读取保存的公司，默认使用第一个公司
-        let currentCompany = localStorage.getItem('currentCompany') || 'companyA';
+        let currentCompany = localStorage.getItem('currentCompany_procurement') || 'companyA';
         
         // 获取当前公司的函数
         function getCurrentCompany() {
@@ -289,7 +289,7 @@
                 // 监听公司选择变化
                 companySelect.addEventListener('change', function() {
                     currentCompany = this.value;
-                    localStorage.setItem('currentCompany', currentCompany);
+                    localStorage.setItem('currentCompany_index', currentCompany);
                     // 保存当前激活的页面
                     const activeNavLink = document.querySelector('.nav-link.active');
                     if (activeNavLink) {
@@ -4763,7 +4763,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                     // 直接获取公司选择下拉菜单的当前值，确保使用最新选择的公司
                     const companySelectElement = document.getElementById('company-select');
                     const currentCompanyFromSelect = companySelectElement ? companySelectElement.value : 'companyA';
-                    const currentCompanyFromStorage = localStorage.getItem('currentCompany') || 'companyA';
+                    const currentCompanyFromStorage = localStorage.getItem('currentCompany_index') || 'companyA';
                     
                     // 优先使用下拉菜单的当前值，避免localStorage可能未更新的问题
                     const currentCompany = currentCompanyFromSelect || currentCompanyFromStorage;
@@ -5545,7 +5545,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                  // 直接获取公司选择下拉菜单的当前值，确保使用最新选择的公司
                  const companySelectElement = document.getElementById('company-select');
                  const currentCompanyFromSelect = companySelectElement ? companySelectElement.value : 'companyA';
-                 const currentCompanyFromStorage = localStorage.getItem('currentCompany') || 'companyA';
+                 const currentCompanyFromStorage = localStorage.getItem('currentCompany_procurement') || 'companyA';
                  
                  // 优先使用下拉菜单的当前值，避免localStorage可能未更新的问题
                  const currentCompany = currentCompanyFromSelect || currentCompanyFromStorage;

@@ -778,15 +778,16 @@
                 { id: 'trade-transaction', name: '贸易往来', icon: 'fa-exchange', color: '#ec4899' },
                 { id: 'loan', name: '借款', icon: 'fa-handshake-o', color: '#f59e0b' },
                 { id: 'fixed-assets', name: '固定资产设备', icon: 'fa-building', color: '#ec4899' },
-                { id: 'trade-product', name: '贸易产品', icon: 'fa-shopping-cart', color: '#10b981' }
+                { id: 'trade-product', name: '贸易产品', icon: 'fa-shopping-cart', color: '#10b981' },
+                { id: 'administrative-entertainment', name: '其它行政招待费用', icon: 'fa-cutlery', color: '#ef4444' }
             ]
         };
 
         // 初始化应用
         function initializeApp() {
             // 确保本地存储中的公司信息已初始化
-            if (!localStorage.getItem('currentCompany')) {
-                localStorage.setItem('currentCompany', 'company1');
+            if (!localStorage.getItem('currentCompany_statement')) {
+                localStorage.setItem('currentCompany_statement', 'company1');
             }
             
             // 初始化默认公司
@@ -2147,7 +2148,7 @@
                                 
                                 // 恢复当前公司设置
                                 if (data.currentCompany) {
-                                    localStorage.setItem('currentCompany', data.currentCompany);
+                                    localStorage.setItem('currentCompany_statement', data.currentCompany);
                                 }
                                 
                                 // 重新加载数据
