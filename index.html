@@ -8344,6 +8344,9 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                 generalInvoices: JSON.parse(localStorage.getItem('invoices') || '[]'),
                                 // 普票登记系统高级过滤设置
                                 advancedFilters: JSON.parse(localStorage.getItem('advancedFilters') || '{}'),
+                                // 普票登记系统公司名称（上传发票页面的两个抬头公司名称）
+                                companyName1: localStorage.getItem('companyName1') || '',
+                                companyName2: localStorage.getItem('companyName2') || '',
                                 
                                 // 收支表页面数据
                                 balanceSheet: {
@@ -8530,6 +8533,15 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                             // 恢复普票登记系统高级过滤设置
                             if (data.advancedFilters !== undefined) {
                                 localStorage.setItem('advancedFilters', JSON.stringify(data.advancedFilters));
+                            }
+                            
+                            // 恢复普票登记系统公司名称（上传发票页面的两个抬头公司名称）
+                            if (data.companyName1 !== undefined) {
+                                localStorage.setItem('companyName1', data.companyName1);
+                            }
+                            
+                            if (data.companyName2 !== undefined) {
+                                localStorage.setItem('companyName2', data.companyName2);
                             }
                             
                             // 恢复收支表非公司特定数据
