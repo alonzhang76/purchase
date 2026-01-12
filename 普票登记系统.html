@@ -6475,6 +6475,10 @@
         let specialSortField = '';
         let specialSortOrder = 'asc';
         
+        // 普票明细排序相关变量
+        let ordinarySortField = '';
+        let ordinarySortOrder = 'asc';
+        
         // 普通发票排序函数
         function sortInvoices(field) {
             if (sortField === field) {
@@ -6629,6 +6633,85 @@
                     }
                 }
             }
+        }
+        
+        // 更新普票明细排序指示器
+        function updateOrdinarySortIndicators() {
+            // 清空所有排序指示器
+            const sortIndicators = document.querySelectorAll('[id^="ordinary-sort-"]');
+            sortIndicators.forEach(indicator => {
+                indicator.innerHTML = '';
+            });
+            
+            // 如果有排序字段，显示对应的排序指示器
+            if (ordinarySortField) {
+                let indicatorId = `ordinary-sort-${ordinarySortField}`;
+                // 特殊处理发票日期，它和登记日期使用相同的字段名
+                if (ordinarySortField === 'date' && document.getElementById('ordinary-sort-date2')) {
+                    // 同时更新两个日期列的排序指示器
+                    document.getElementById('ordinary-sort-date').innerHTML = ordinarySortOrder === 'asc' ? '↑' : '↓';
+                    document.getElementById('ordinary-sort-date2').innerHTML = ordinarySortOrder === 'asc' ? '↑' : '↓';
+                } else {
+                    const indicator = document.getElementById(indicatorId);
+                    if (indicator) {
+                        indicator.innerHTML = ordinarySortOrder === 'asc' ? '↑' : '↓';
+                    }
+                }
+            }
+        }
+        
+        // 普票明细排序函数
+        function sortOrdinaryInvoices(field) {
+            if (ordinarySortField === field) {
+                // 点击同一字段，切换排序顺序
+                ordinarySortOrder = ordinarySortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                // 点击不同字段，设置新的排序字段和默认顺序
+                ordinarySortField = field;
+                ordinarySortOrder = 'asc';
+            }
+            
+            // 根据字段类型进行排序
+            mockInvoices.sort((a, b) => {
+                let valueA, valueB;
+                
+                switch (field) {
+                    case 'date':
+                    case 'registerDate':
+                        valueA = new Date(a[field] || a.date);
+                        valueB = new Date(b[field] || b.date);
+                        break;
+                    case 'invoiceNo':
+                        // 发票号码按数字排序
+                        valueA = parseInt(a.invoiceNo.replace(/\D/g, ''));
+                        valueB = parseInt(b.invoiceNo.replace(/\D/g, ''));
+                        break;
+                    case 'amount':
+                    case 'taxRate':
+                    case 'taxAmount':
+                        // 数字字段直接比较
+                        valueA = a[field];
+                        valueB = b[field];
+                        break;
+                    default:
+                        // 字符串字段转换为小写后比较
+                        valueA = a[field] ? a[field].toLowerCase() : '';
+                        valueB = b[field] ? b[field].toLowerCase() : '';
+                }
+                
+                // 根据排序顺序返回比较结果
+                if (ordinarySortOrder === 'asc') {
+                    return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+                } else {
+                    return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+                }
+            });
+            
+            // 更新排序指示器
+            updateOrdinarySortIndicators();
+            
+            // 重新加载表格数据
+            filterOrdinaryInvoices(document.getElementById('ordinary-search-input').value.toLowerCase());
         }
         
         // 加载发票数据
