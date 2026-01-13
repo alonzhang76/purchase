@@ -338,6 +338,14 @@
                         </div>
                     </div>
                     
+                    <!-- 公司名称说明 -->
+                    <div class="bg-white rounded-lg shadow-card p-4 mb-4">
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">公司1：</span><span id="company1-fullname">公司1</span>
+                            <span class="ml-6 font-medium">公司2：</span><span id="company2-fullname">公司2</span>
+                        </p>
+                    </div>
+                    
                     <!-- 统计卡片 -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                         <!-- 发票总数卡片 -->
@@ -346,8 +354,34 @@
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">发票总数</p>
                                     <h3 id="total-invoices" class="text-2xl font-bold text-gray-900">0</h3>
+                                    <div class="space-y-1 mt-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司1-普票+专票-进项：</span>
+                                            <h3 id="total-company1-ordinary-input" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司1-专票-销项：</span>
+                                            <h3 id="total-company1-output" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司2-普票+专票-进项：</span>
+                                            <h3 id="total-company2-ordinary-input" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司2-专票-销项：</span>
+                                            <h3 id="total-company2-output" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                                            <span class="text-sm font-medium text-gray-500">总计-普票+专票-进项：</span>
+                                            <h3 id="total-ordinary-input" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-500">总计-专票-销项：</span>
+                                            <h3 id="total-output" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="p-3 rounded-full bg-blue-100">
+                                <div class="p-3 rounded-lg bg-blue-100">
                                     <i class="fa fa-file-text-o text-primary text-xl"></i>
                                 </div>
                             </div>
@@ -358,9 +392,9 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">待付款发票</p>
-                                    <h3 id="pending-invoices" class="text-2xl font-bold text-yellow-600">0</h3>
+                                    <h3 id="pending-invoices" class="text-xl font-bold text-yellow-600">0</h3>
                                 </div>
-                                <div class="p-3 rounded-full bg-yellow-100">
+                                <div class="p-3 rounded-lg bg-yellow-100">
                                     <i class="fa fa-clock-o text-yellow-600 text-xl"></i>
                                 </div>
                             </div>
@@ -371,9 +405,35 @@
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="text-sm font-medium text-gray-500">已付清发票</p>
-                                    <h3 id="paid-invoices" class="text-2xl font-bold text-green-600">0</h3>
+                                    <h3 id="paid-invoices" class="text-xl font-bold text-green-600">0</h3>
+                                    <div class="space-y-1 mt-2">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司1-普票+专票-进项：</span>
+                                            <h3 id="paid-company1-ordinary-input" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司1-专票-销项：</span>
+                                            <h3 id="paid-company1-output" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司2-普票+专票-进项：</span>
+                                            <h3 id="paid-company2-ordinary-input" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司2-专票-销项：</span>
+                                            <h3 id="paid-company2-output" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                                            <span class="text-sm font-medium text-gray-500">总计-普票+专票-进项：</span>
+                                            <h3 id="paid-total-ordinary-input" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-500">总计-专票-销项：</span>
+                                            <h3 id="paid-total-output" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="p-3 rounded-full bg-green-100">
+                                <div class="p-3 rounded-lg bg-green-100">
                                     <i class="fa fa-check-circle text-green-600 text-xl"></i>
                                 </div>
                             </div>
@@ -386,16 +446,32 @@
                                     <p class="text-sm font-medium text-gray-500">欠款金额</p>
                                     <div class="space-y-1 mt-2">
                                         <div class="flex justify-between items-center">
-                                            <span class="text-sm text-gray-500">普票+专票-进项：</span>
-                                            <h3 id="ordinary-input-owed" class="text-xl font-bold text-white bg-red-600 px-2 py-1 rounded">¥0.00</h3>
+                                            <span class="text-sm text-gray-500">公司1-普票+专票-进项：</span>
+                                            <h3 id="company1-ordinary-input-owed" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
                                         </div>
                                         <div class="flex justify-between items-center">
-                                            <span class="text-sm text-gray-500">专票-销项：</span>
-                                            <h3 id="output-owed" class="text-xl font-bold text-white bg-green-600 px-2 py-1 rounded">¥0.00</h3>
+                                            <span class="text-sm text-gray-500">公司1-专票-销项：</span>
+                                            <h3 id="company1-output-owed" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司2-普票+专票-进项：</span>
+                                            <h3 id="company2-ordinary-input-owed" class="text-lg font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm text-gray-500">公司2-专票-销项：</span>
+                                            <h3 id="company2-output-owed" class="text-lg font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                                            <span class="text-sm font-medium text-gray-500">总计-普票+专票-进项：</span>
+                                            <h3 id="ordinary-input-owed" class="text-xl font-bold text-white bg-red-600 px-3 py-1 rounded-lg">¥0.00</h3>
+                                        </div>
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-medium text-gray-500">总计-专票-销项：</span>
+                                            <h3 id="output-owed" class="text-xl font-bold text-white bg-green-600 px-3 py-1 rounded-lg">¥0.00</h3>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="p-3 rounded-full bg-red-100">
+                                <div class="p-3 rounded-lg bg-red-100">
                                     <i class="fa fa-credit-card text-red-600 text-xl"></i>
                                 </div>
                             </div>
@@ -439,11 +515,14 @@
                                 </tbody>
                                 <tfoot class="bg-gray-50">
                                     <tr>
-                                        <td class="px-6 py-3" colspan="6"></td>
-                                        <td class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                        <td class="px-6 py-3" colspan="5"></td>
+                                        <td class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                             合计：
                                         </td>
-                                        <td id="summary-total-owed" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                        <td id="summary-total-amount" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                            ¥0.00
+                                        </td>
+                                        <td id="summary-total-owed" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                             ¥0.00
                                         </td>
                                     </tr>
@@ -482,11 +561,31 @@
                             <div class="relative">
                                 <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" id="payment-category-filter">
                                     <option value="">所有分类</option>
-                                    <option value="材料款">材料款</option>
-                                    <option value="工程款">工程款</option>
-                                    <option value="设备款">设备款</option>
-                                    <option value="服务费">服务费</option>
-                                    <option value="其他">其他</option>
+                                    <option value="前期账面余额">前期账面余额</option>
+                                    <option value="货款">货款</option>
+                                    <option value="原材料">原材料</option>
+                                    <option value="辅助材料">辅助材料</option>
+                                    <option value="电镀费">电镀费</option>
+                                    <option value="包装箱费用">包装箱费用</option>
+                                    <option value="易耗品材料">易耗品材料</option>
+                                    <option value="外协加工费">外协加工费</option>
+                                    <option value="运杂费">运杂费</option>
+                                    <option value="维修或模具费">维修或模具费</option>
+                                    <option value="水电费">水电费</option>
+                                    <option value="工资">工资</option>
+                                    <option value="员工报销">员工报销</option>
+                                    <option value="员工餐费用">员工餐费用</option>
+                                    <option value="员工福利">员工福利</option>
+                                    <option value="通信费">通信费</option>
+                                    <option value="调账">调账</option>
+                                    <option value="其它支出">其它支出</option>
+                                    <option value="固定资产设备">固定资产设备</option>
+                                    <option value="其它行政招待费用">其它行政招待费用</option>
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" id="payment-reimburser-filter">
+                                    <option value="">所有报销人</option>
                                 </select>
                             </div>
                             <div class="relative">
@@ -562,6 +661,9 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortPaymentRecords('invoiceNo')">
                                             发票号码 <span id="payment-sort-invoiceNo"></span>
                                         </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortPaymentRecords('reimburser')">
+                                            报销人 <span id="payment-sort-reimburser"></span>
+                                        </th>
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             操作
                                         </th>
@@ -573,10 +675,10 @@
                                 <tfoot class="bg-gray-50">
                                     <tr>
                                         <td class="px-6 py-3" colspan="3"></td>
-                                        <td class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                        <td class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                             合计：
                                         </td>
-                                        <td id="payment-total-amount" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
+                                        <td id="payment-total-amount" class="px-6 py-3 text-left text-sm font-semibold text-gray-900">
                                             ¥0.00
                                         </td>
                                         <td class="px-6 py-3" colspan="6"></td>
@@ -664,9 +766,9 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortOrdinaryInvoices('status')">
                                             状态 <span id="ordinary-sort-status"></span>
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortOrdinaryInvoices('date')">
-                                            登记日期 <span id="ordinary-sort-date"></span>
-                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortOrdinaryInvoices('registerDate')">
+                    登记日期 <span id="ordinary-sort-date"></span>
+                </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortOrdinaryInvoices('date')">
                                             发票日期 <span id="ordinary-sort-date2"></span>
                                         </th>
@@ -697,6 +799,9 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortOrdinaryInvoices('category')">
                                             项目分类 <span id="ordinary-sort-category"></span>
                                         </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortOrdinaryInvoices('reimburser')">
+                                            报销人 <span id="ordinary-sort-reimburser"></span>
+                                        </th>
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             操作
                                         </th>
@@ -721,7 +826,7 @@
                                         <td id="ordinary-total-tax-amount" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
                                             ¥0.00
                                         </td>
-                                        <td class="px-6 py-3" colspan="3"></td>
+                                        <td class="px-6 py-3" colspan="4"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -859,9 +964,9 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortSpecialInvoices('status')">
                                             状态 <span id="special-sort-status"></span>
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortSpecialInvoices('date')">
-                                            登记日期 <span id="special-sort-date"></span>
-                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortSpecialInvoices('registerDate')">
+                    登记日期 <span id="special-sort-date"></span>
+                </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortSpecialInvoices('date')">
                                             发票日期 <span id="special-sort-date2"></span>
                                         </th>
@@ -892,6 +997,9 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortSpecialInvoices('category')">
                                             项目分类 <span id="special-sort-category"></span>
                                         </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortSpecialInvoices('reimburser')">
+                                            报销人 <span id="special-sort-reimburser"></span>
+                                        </th>
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             操作
                                         </th>
@@ -916,7 +1024,7 @@
                                         <td id="special-total-tax-amount" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
                                             ¥0.00
                                         </td>
-                                        <td class="px-6 py-3" colspan="3"></td>
+                                        <td class="px-6 py-3" colspan="4"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -950,6 +1058,11 @@
                                     <option value="待付款">待付款</option>
                                     <option value="部分付款">部分付款</option>
                                     <option value="已付清">已付清</option>
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <select class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md bg-white border" id="reimburser-filter">
+                                    <option value="">所有报销人</option>
                                 </select>
                             </div>
                             <div class="relative">
@@ -1014,9 +1127,9 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('status')">
                                             状态 <span id="sort-status"></span>
                                         </th>
-                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('date')">
-                                            登记日期 <span id="sort-date"></span>
-                                        </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('registerDate')">
+                    登记日期 <span id="sort-date"></span>
+                </th>
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('date')">
                                             发票日期 <span id="sort-date2"></span>
                                         </th>
@@ -1047,6 +1160,9 @@
                                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('category')">
                                             项目分类 <span id="sort-category"></span>
                                         </th>
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortInvoices('reimburser')">
+                                            报销人 <span id="sort-reimburser"></span>
+                                        </th>
                                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             操作
                                         </th>
@@ -1071,7 +1187,7 @@
                                         <td id="total-tax-amount" class="px-6 py-3 text-right text-sm font-semibold text-gray-900">
                                             ¥0.00
                                         </td>
-                                        <td class="px-6 py-3" colspan="3"></td>
+                                        <td class="px-6 py-3" colspan="4"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -1160,14 +1276,47 @@
                                         </table>
                                     </div>
                                     
-                                    <div class="mt-6 flex justify-end space-x-3">
-
-                                        <button id="edit-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                                            <i class="fa fa-pencil mr-2"></i> 编辑
+                                    <div class="mt-6 flex justify-between items-center">
+                                        <button id="manage-options-btn" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                            <i class="fa fa-cog mr-2"></i> 管理选项
                                         </button>
-                                        <button id="save-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
-                                            <i class="fa fa-save mr-2"></i> 保存
+                                        <div class="flex space-x-3">
+                                            <button id="edit-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                                <i class="fa fa-pencil mr-2"></i> 编辑
+                                            </button>
+                                            <button id="save-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
+                                                <i class="fa fa-save mr-2"></i> 保存
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 管理选项模态框 -->
+                            <div id="manage-options-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+                                <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 overflow-hidden">
+                                    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                                        <h3 class="text-lg font-medium text-gray-900">管理选项</h3>
+                                        <button id="close-manage-modal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                            <i class="fa fa-times"></i>
                                         </button>
+                                    </div>
+                                    <div class="px-6 py-4">
+                                        <!-- 项目分类管理 -->
+                                        <div class="mb-8">
+                                            <h4 class="text-md font-medium text-gray-900 mb-3">项目分类管理</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto" id="category-management-list">
+                                                <!-- 项目分类将通过JavaScript动态填充 -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 报销人管理 -->
+                                        <div>
+                                            <h4 class="text-md font-medium text-gray-900 mb-3">报销人管理</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto" id="reimburser-management-list">
+                                                <!-- 报销人将通过JavaScript动态填充 -->
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1374,6 +1523,13 @@
                             <option value="其它行政招待费用">其它行政招待费用</option>
                         </select>
                     </div>
+                    <div>
+                        <label for="edit-reimburser" class="block text-sm font-medium text-gray-700 mb-1">报销人</label>
+                        <select id="edit-reimburser" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="">请选择报销人</option>
+                            <!-- 报销人选项将通过JavaScript动态填充 -->
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
@@ -1551,31 +1707,128 @@
             const allInvoices = JSON.parse(localStorage.getItem('invoices')) || [];
             const paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
             
+            // 获取保存的公司名称
+            const companyName1 = localStorage.getItem('companyName1') || '公司1';
+            const companyName2 = localStorage.getItem('companyName2') || '公司2';
+            
+            // 更新公司名称说明
+            document.getElementById('company1-fullname').textContent = companyName1;
+            document.getElementById('company2-fullname').textContent = companyName2;
+            
             // 计算统计数据
             const totalInvoices = allInvoices.length;
             const pendingInvoices = allInvoices.filter(invoice => invoice.status === '待付款' || invoice.status === '部分付款').length;
             const paidInvoices = allInvoices.filter(invoice => invoice.status === '已付清').length;
             
+            // 初始化公司统计数据
+            let stats = {
+                '公司1': {
+                    pending: {
+                        ordinaryInput: 0,
+                        output: 0
+                    },
+                    paid: {
+                        ordinaryInput: 0,
+                        output: 0
+                    },
+                    owed: {
+                        ordinaryInput: 0,
+                        output: 0
+                    },
+                    total: {
+                        ordinaryInput: 0,
+                        output: 0
+                    }
+                },
+                '公司2': {
+                    pending: {
+                        ordinaryInput: 0,
+                        output: 0
+                    },
+                    paid: {
+                        ordinaryInput: 0,
+                        output: 0
+                    },
+                    owed: {
+                        ordinaryInput: 0,
+                        output: 0
+                    },
+                    total: {
+                        ordinaryInput: 0,
+                        output: 0
+                    }
+                }
+            };
+            
             // 计算总欠款金额和分类欠款金额
             let totalOwed = 0;
+            let totalAmount = 0;
             let ordinaryInputOwed = 0; // 普票+专票-进项欠款
             let outputOwed = 0; // 专票-销项欠款
             
             // 准备汇总数据
             const summaryData = allInvoices.map(invoice => {
                 const invoiceAmount = parseFloat(invoice.amount) || 0;
+                totalAmount += invoiceAmount;
                 // 计算已付款金额
                 const paidAmount = paymentRecords
                     .filter(record => record.invoiceNo === invoice.invoiceNo)
                     .reduce((sum, record) => sum + (parseFloat(record.amount) || 0), 0);
                 const owed = invoiceAmount - paidAmount;
+                
+                // 确定发票所属公司
+                let company = '公司1'; // 默认公司1
+                
+                // 获取购买方名称并标准化
+                const buyer = invoice.buyer || '';
+                const normalizedBuyer = buyer.replace(/（/g, '(').replace(/）/g, ')');
+                
+                // 标准化公司名称，用于比较
+                const normalizedCompanyName1 = companyName1.replace(/（/g, '(').replace(/）/g, ')');
+                const normalizedCompanyName2 = companyName2.replace(/（/g, '(').replace(/）/g, ')');
+                
+                // 根据购买方名称确定所属公司
+                if (normalizedBuyer === normalizedCompanyName2) {
+                    company = '公司2';
+                } else if (normalizedBuyer === normalizedCompanyName1) {
+                    company = '公司1';
+                }
+                
+                // 确定发票类型
+                const isOrdinaryInput = invoice.invoiceType === '普票' || invoice.invoiceType === '专票-进项';
+                const isOutput = invoice.invoiceType === '专票-销项';
+                
+                // 根据状态和类型计算金额
+                if (invoice.status === '待付款' || invoice.status === '部分付款') {
+                    if (isOrdinaryInput) {
+                        stats[company].pending.ordinaryInput += invoiceAmount;
+                    } else if (isOutput) {
+                        stats[company].pending.output += invoiceAmount;
+                    }
+                } else if (invoice.status === '已付清') {
+                    if (isOrdinaryInput) {
+                        stats[company].paid.ordinaryInput += invoiceAmount;
+                    } else if (isOutput) {
+                        stats[company].paid.output += invoiceAmount;
+                    }
+                }
+                
+                // 计算发票总数的各项金额统计
+                if (isOrdinaryInput) {
+                    stats[company].total.ordinaryInput += invoiceAmount;
+                } else if (isOutput) {
+                    stats[company].total.output += invoiceAmount;
+                }
+                
                 totalOwed += owed > 0 ? owed : 0;
                 
                 // 根据发票类型分类计算欠款
-                if (invoice.invoiceType === '普票' || invoice.invoiceType === '专票-进项') {
+                if (isOrdinaryInput) {
                     ordinaryInputOwed += owed > 0 ? owed : 0;
-                } else if (invoice.invoiceType === '专票-销项') {
+                    stats[company].owed.ordinaryInput += owed > 0 ? owed : 0;
+                } else if (isOutput) {
                     outputOwed += owed > 0 ? owed : 0;
+                    stats[company].owed.output += owed > 0 ? owed : 0;
                 }
                 
                 return {
@@ -1611,9 +1864,48 @@
             document.getElementById('total-invoices').textContent = totalInvoices;
             document.getElementById('pending-invoices').textContent = pendingInvoices;
             document.getElementById('paid-invoices').textContent = paidInvoices;
+            // 这里需要注意：ordinaryInputOwed和outputOwed是所有公司的汇总欠款
+            // 但我们已经在下面为每个公司分开显示了欠款金额
             document.getElementById('ordinary-input-owed').textContent = `¥${ordinaryInputOwed.toFixed(2)}`;
             document.getElementById('output-owed').textContent = `¥${outputOwed.toFixed(2)}`;
+            document.getElementById('summary-total-amount').textContent = `¥${totalAmount.toFixed(2)}`;
             document.getElementById('summary-total-owed').textContent = `¥${totalOwed.toFixed(2)}`;
+            
+            // 计算待付款和已付清的总合计
+            const pendingTotalOrdinaryInput = stats['公司1'].pending.ordinaryInput + stats['公司2'].pending.ordinaryInput;
+            const pendingTotalOutput = stats['公司1'].pending.output + stats['公司2'].pending.output;
+            const paidTotalOrdinaryInput = stats['公司1'].paid.ordinaryInput + stats['公司2'].paid.ordinaryInput;
+            const paidTotalOutput = stats['公司1'].paid.output + stats['公司2'].paid.output;
+            
+            // 计算发票总数的总合计
+            const totalTotalOrdinaryInput = stats['公司1'].total.ordinaryInput + stats['公司2'].total.ordinaryInput;
+            const totalTotalOutput = stats['公司1'].total.output + stats['公司2'].total.output;
+            
+            // 更新发票总数的公司统计
+            document.getElementById('total-company1-ordinary-input').textContent = `¥${stats['公司1'].total.ordinaryInput.toFixed(2)}`;
+            document.getElementById('total-company1-output').textContent = `¥${stats['公司1'].total.output.toFixed(2)}`;
+            document.getElementById('total-company2-ordinary-input').textContent = `¥${stats['公司2'].total.ordinaryInput.toFixed(2)}`;
+            document.getElementById('total-company2-output').textContent = `¥${stats['公司2'].total.output.toFixed(2)}`;
+            
+            // 更新发票总数的总合计
+            document.getElementById('total-ordinary-input').textContent = `¥${totalTotalOrdinaryInput.toFixed(2)}`;
+            document.getElementById('total-output').textContent = `¥${totalTotalOutput.toFixed(2)}`;
+            
+            // 更新已付清发票的公司统计
+            document.getElementById('paid-company1-ordinary-input').textContent = `¥${stats['公司1'].paid.ordinaryInput.toFixed(2)}`;
+            document.getElementById('paid-company1-output').textContent = `¥${stats['公司1'].paid.output.toFixed(2)}`;
+            document.getElementById('paid-company2-ordinary-input').textContent = `¥${stats['公司2'].paid.ordinaryInput.toFixed(2)}`;
+            document.getElementById('paid-company2-output').textContent = `¥${stats['公司2'].paid.output.toFixed(2)}`;
+            
+            // 更新已付清发票的总合计
+            document.getElementById('paid-total-ordinary-input').textContent = `¥${paidTotalOrdinaryInput.toFixed(2)}`;
+            document.getElementById('paid-total-output').textContent = `¥${paidTotalOutput.toFixed(2)}`;
+            
+            // 更新欠款金额的公司统计
+            document.getElementById('company1-ordinary-input-owed').textContent = `¥${stats['公司1'].owed.ordinaryInput.toFixed(2)}`;
+            document.getElementById('company1-output-owed').textContent = `¥${stats['公司1'].owed.output.toFixed(2)}`;
+            document.getElementById('company2-ordinary-input-owed').textContent = `¥${stats['公司2'].owed.ordinaryInput.toFixed(2)}`;
+            document.getElementById('company2-output-owed').textContent = `¥${stats['公司2'].owed.output.toFixed(2)}`;
             
             // 根据排序字段和顺序排序数据
             let sortedData = [...filteredData];
@@ -1675,7 +1967,7 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${invoice.status === '已付清' ? 'bg-green-100 text-green-800' : invoice.status === '部分付款' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${invoice.status === '已付清' ? 'bg-green-100 text-green-800' : invoice.status === '部分付款' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
                             ${invoice.status}
                         </span>
                     </td>
@@ -1684,8 +1976,8 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${invoice.invoiceNo || ''}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${invoice.seller || ''}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${invoice.buyer || ''}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${parseFloat(invoice.amount).toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">¥${invoice.owed > 0 ? invoice.owed.toFixed(2) : '0.00'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">¥${parseFloat(invoice.amount).toFixed(2)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-left ${invoice.status === '已付清' ? 'bg-green-800 text-white rounded-lg' : invoice.owed > 0 ? 'bg-red-600 text-white rounded-lg' : 'text-gray-900'}">¥${invoice.owed > 0 ? invoice.owed.toFixed(2) : '0.00'}</td>
                 `;
                 summaryTableBody.appendChild(row);
             });
@@ -1725,7 +2017,7 @@
             }
 
             // 准备导出的字段
-            const headers = ['状态', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额'];
+            const headers = ['状态', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额', '报销人'];
             const data = exportData.map(invoice => [
                 invoice.status,
                 invoice.date,
@@ -1734,7 +2026,8 @@
                 invoice.buyer,
                 (invoice.amount || 0).toFixed(2),
                 `${((invoice.taxRate || 0) * 100).toFixed(0)}%`,
-                (invoice.taxAmount || 0).toFixed(2)
+                (invoice.taxAmount || 0).toFixed(2),
+                invoice.reimburser || ''
             ]);
 
             // 创建CSV内容
@@ -1958,6 +2251,40 @@
             }
         }
         
+        // 更新付款记录的报销人筛选下拉框选项
+        function updatePaymentReimburserFilterOptions() {
+            const reimburserFilter = document.getElementById('payment-reimburser-filter');
+            if (!reimburserFilter) return;
+            
+            // 从所有付款记录中获取唯一的报销人
+            const paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+            const reimbursers = [...new Set(paymentRecords.map(record => record.reimburser).filter(reimburser => reimburser && reimburser !== ''))];
+            
+            // 从发票记录中获取唯一的报销人，补充到付款记录的报销人列表中
+            const invoices = JSON.parse(localStorage.getItem('invoices')) || [];
+            const invoiceReimbursers = [...new Set(invoices.map(invoice => invoice.reimburser).filter(reimburser => reimburser && reimburser !== ''))];
+            
+            // 合并两个数组并去重
+            const allReimbursers = [...new Set([...reimbursers, ...invoiceReimbursers])];
+            
+            // 保存当前选中的值
+            const currentValue = reimburserFilter.value;
+            
+            // 清空现有选项（保留第一个"所有报销人"选项）
+            reimburserFilter.innerHTML = '<option value="">所有报销人</option>';
+            
+            // 添加新的报销人选项
+            allReimbursers.forEach(reimburser => {
+                const option = document.createElement('option');
+                option.value = reimburser;
+                option.textContent = reimburser;
+                reimburserFilter.appendChild(option);
+            });
+            
+            // 恢复当前选中的值
+            reimburserFilter.value = currentValue;
+        }
+        
         // 初始化付款记录事件监听
         function initPaymentRecordsEventListeners() {
             // 搜索框输入事件
@@ -1981,6 +2308,14 @@
             const paymentCategoryFilter = document.getElementById('payment-category-filter');
             if (paymentCategoryFilter) {
                 paymentCategoryFilter.addEventListener('change', function() {
+                    filterPaymentRecords(document.getElementById('payment-search-input').value.toLowerCase());
+                });
+            }
+            
+            // 报销人筛选事件
+            const paymentReimburserFilter = document.getElementById('payment-reimburser-filter');
+            if (paymentReimburserFilter) {
+                paymentReimburserFilter.addEventListener('change', function() {
                     filterPaymentRecords(document.getElementById('payment-search-input').value.toLowerCase());
                 });
             }
@@ -2042,6 +2377,9 @@
                     }
                 });
             }
+            
+            // 初始化报销人筛选下拉框选项
+            updatePaymentReimburserFilterOptions();
         }
         
         // 筛选付款记录
@@ -2058,6 +2396,8 @@
             const daysFilter = document.getElementById('payment-days-filter').value;
             // 获取抬头公司筛选值
             const paymentCompany = document.getElementById('payment-company-filter').value;
+            // 获取报销人筛选值
+            const paymentReimburser = document.getElementById('payment-reimburser-filter').value;
             
             // 从localStorage加载付款记录
             let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
@@ -2097,6 +2437,12 @@
                     categoryMatch = record.category === paymentCategory;
                 }
                 
+                // 报销人筛选
+                let reimburserMatch = true;
+                if (paymentReimburser && paymentReimburser !== '') {
+                    reimburserMatch = record.reimburser === paymentReimburser;
+                }
+                
                 // 搜索条件
                 const lowerSearchTerm = searchTerm.toLowerCase();
                 const searchMatch = String(record.date || '').toLowerCase().includes(lowerSearchTerm) ||
@@ -2106,7 +2452,8 @@
                                    String(record.description || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(record.payer || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(record.payee || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(record.invoiceNo || '').toLowerCase().includes(lowerSearchTerm);
+                                   String(record.invoiceNo || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   String(record.reimburser || '').toLowerCase().includes(lowerSearchTerm);
                 
                 // 抬头公司筛选条件
                 let companyMatch = true;
@@ -2148,7 +2495,7 @@
                     dateMatch = false;
                 }
                 
-                return searchMatch && typeMatch && categoryMatch && companyMatch && dateMatch;
+                return searchMatch && typeMatch && categoryMatch && reimburserMatch && companyMatch && dateMatch;
             });
             
             // 实现分页逻辑
@@ -2167,7 +2514,7 @@
                         <div class="text-sm text-gray-500">${record.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${record.type === '付款' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${record.type === '付款' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
                             ${record.type}
                         </span>
                     </td>
@@ -2188,6 +2535,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-500">${record.invoiceNo || ''}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${record.reimburser || ''}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-primary hover:text-primary-dark mr-2 edit-payment-record" data-id="${record.id}"><i class="fa fa-edit"></i></button>
@@ -2218,6 +2568,9 @@
             
             // 更新分页和统计
             updatePaymentPaginationAndStats(filteredRecords);
+            
+            // 更新报销人筛选下拉框选项
+            updatePaymentReimburserFilterOptions();
         }
         
         // 更新付款记录合计
@@ -2323,7 +2676,7 @@
             
             // 生成CSV
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "日期,类型,分类,金额,描述,付款单位,收款单位,发票号码\n";
+            csvContent += "日期,类型,分类,金额,描述,付款单位,收款单位,发票号码,报销人\n";
             
             filteredRecords.forEach(record => {
                 const row = [
@@ -2334,7 +2687,8 @@
                     record.description || '',
                     record.payer || '',
                     record.payee || '',
-                    record.invoiceNo || ''
+                    record.invoiceNo || '',
+                    record.reimburser || ''
                 ];
                 
                 const csvRow = row.map(field => {
@@ -2392,6 +2746,32 @@
             const title = document.getElementById('payment-modal-title');
             const form = document.getElementById('payment-record-form');
             
+            // 获取报销人输入框
+            const reimburserInput = document.getElementById('payment-record-reimburser');
+            
+            // 添加发票号码输入事件监听，自动填充报销人
+            const invoiceNoInput = document.getElementById('payment-record-invoiceNo');
+            if (invoiceNoInput) {
+                invoiceNoInput.addEventListener('input', function() {
+                    const invoiceNo = this.value;
+                    if (invoiceNo) {
+                        // 从所有发票记录中查找匹配的发票号码
+                        const ordinaryInvoices = JSON.parse(localStorage.getItem('ordinaryInvoices') || '[]');
+                        const specialInvoices = JSON.parse(localStorage.getItem('specialInvoices') || '[]');
+                        const allInvoices = [...ordinaryInvoices, ...specialInvoices];
+                        
+                        const matchedInvoice = allInvoices.find(invoice => invoice.invoiceNo === invoiceNo);
+                        if (matchedInvoice && matchedInvoice.reimburser) {
+                            reimburserInput.value = matchedInvoice.reimburser;
+                        } else {
+                            reimburserInput.value = '';
+                        }
+                    } else {
+                        reimburserInput.value = '';
+                    }
+                });
+            }
+            
             if (id) {
                 const paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
                 const record = paymentRecords.find(r => r.id === id);
@@ -2406,12 +2786,14 @@
                     document.getElementById('payment-record-payer').value = record.payer || '';
                     document.getElementById('payment-record-payee').value = record.payee || '';
                     document.getElementById('payment-record-invoiceNo').value = record.invoiceNo || '';
+                    document.getElementById('payment-record-reimburser').value = record.reimburser || '';
                 }
             } else {
                 title.textContent = '新增账款记录';
                 form.reset();
                 document.getElementById('payment-record-id').value = '';
                 document.getElementById('payment-record-date').value = new Date().toISOString().split('T')[0];
+                document.getElementById('payment-record-reimburser').value = '';
             }
             
             modal.classList.remove('hidden');
@@ -2424,7 +2806,7 @@
                     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                         <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closePaymentRecordModal()"></div>
                         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
                             <div class="bg-white px-6 py-5 pb-4 sm:p-8 sm:pb-6">
                                 <div class="sm:flex sm:items-start">
                                     <div class="mt-3 text-center sm:mt-0 sm:ml-6 sm:text-left w-full">
@@ -2464,14 +2846,18 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="grid grid-cols-2 gap-5">
-                                                <div>
+                                            <div class="grid grid-cols-4 gap-5">
+                                                <div class="col-span-2">
                                                     <label class="block text-base font-medium text-gray-700 mb-2">发票号码</label>
                                                     <input type="text" id="payment-record-invoiceNo" list="invoice-numbers-list" class="mt-1 block w-full border-primary border-2 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-lg py-3 px-4">
                                                 </div>
                                                 <div>
                                                     <label class="block text-base font-medium text-gray-700 mb-2">金额 *</label>
                                                     <input type="number" id="payment-record-amount" required step="0.01" min="0" class="mt-1 block w-full border-primary border-2 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-lg py-3 px-4">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-base font-medium text-gray-700 mb-2">报销人</label>
+                                                    <input type="text" id="payment-record-reimburser" readonly class="mt-1 block w-full border-primary border-2 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-lg py-3 px-4 bg-gray-50">
                                                 </div>
                                             </div>
                                             <div class="grid grid-cols-1 gap-5">
@@ -2503,6 +2889,79 @@
             
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             
+            // 自动填充报销人函数
+            function autoFillReimburser() {
+                console.log('=== 开始自动填充报销人 ===');
+                
+                const invoiceNoInput = document.getElementById('payment-record-invoiceNo');
+                const reimburserInput = document.getElementById('payment-record-reimburser');
+                
+                console.log('元素获取结果:', {
+                    invoiceNoInput: !!invoiceNoInput,
+                    reimburserInput: !!reimburserInput
+                });
+                
+                if (invoiceNoInput && reimburserInput) {
+                    const invoiceNo = invoiceNoInput.value;
+                    console.log('当前发票号码:', invoiceNo);
+                    
+                    if (invoiceNo) {
+                        // 从发票列表中获取所有发票记录
+                        const allInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+                        
+                        console.log('发票数据获取结果:', {
+                            totalInvoices: allInvoices.length
+                        });
+                        
+                        // 尝试完全匹配和部分匹配
+                        console.log('开始查找匹配发票...');
+                        const matchedInvoice = allInvoices.find(invoice => {
+                            const invoiceNoStr = String(invoice.invoiceNo);
+                            const inputNoStr = String(invoiceNo);
+                            
+                            const isExactMatch = invoiceNoStr === inputNoStr;
+                            const isPartialMatch = invoiceNoStr.includes(inputNoStr) || inputNoStr.includes(invoiceNoStr);
+                            
+                            console.log('检查发票:', {
+                                invoiceNo: invoice.invoiceNo,
+                                invoiceNoType: typeof invoice.invoiceNo,
+                                inputNoType: typeof invoiceNo,
+                                invoiceNoStr,
+                                inputNoStr,
+                                isExactMatch,
+                                isPartialMatch
+                            });
+                            
+                            return isExactMatch || isPartialMatch;
+                        });
+                        
+                        if (matchedInvoice) {
+                            console.log('找到匹配发票:', {
+                                invoiceNo: matchedInvoice.invoiceNo,
+                                reimburser: matchedInvoice.reimburser,
+                                fullInvoice: matchedInvoice
+                            });
+                            
+                            if (matchedInvoice.reimburser) {
+                                console.log('填充报销人:', matchedInvoice.reimburser);
+                                reimburserInput.value = matchedInvoice.reimburser;
+                            } else {
+                                console.log('匹配发票没有报销人信息');
+                                reimburserInput.value = '';
+                            }
+                        } else {
+                            console.log('未找到匹配的发票');
+                            reimburserInput.value = '';
+                        }
+                    } else {
+                        console.log('发票号码为空，清空报销人');
+                        reimburserInput.value = '';
+                    }
+                }
+                
+                console.log('=== 自动填充报销人结束 ===');
+            }
+            
             // 添加收款单位输入事件监听，更新发票号码选项
             const payeeInput = document.getElementById('payment-record-payee');
             if (payeeInput) {
@@ -2519,13 +2978,30 @@
                 });
             }
             
-            // 添加发票号码输入事件监听，自动填写分类
+            // 添加发票号码输入事件监听，自动填写分类和报销人
             const invoiceNoInput = document.getElementById('payment-record-invoiceNo');
             if (invoiceNoInput) {
+                // 输入事件
                 invoiceNoInput.addEventListener('input', function() {
                     autoFillCategory();
+                    autoFillReimburser();
+                });
+                
+                // 选择事件（从datalist中选择时触发）
+                invoiceNoInput.addEventListener('change', function() {
+                    autoFillCategory();
+                    autoFillReimburser();
+                });
+                
+                // 失去焦点事件
+                invoiceNoInput.addEventListener('blur', function() {
+                    autoFillCategory();
+                    autoFillReimburser();
                 });
             }
+            
+            // 初始化时检查是否有发票号码值，如有则自动填充
+            autoFillReimburser();
             
             // 添加金额输入框鼠标悬停提示
             const amountInput = document.getElementById('payment-record-amount');
@@ -2963,6 +3439,7 @@
             const payer = document.getElementById('payment-record-payer').value;
             const payee = document.getElementById('payment-record-payee').value;
             const invoiceNo = document.getElementById('payment-record-invoiceNo').value;
+            const reimburser = document.getElementById('payment-record-reimburser').value;
             
             // 获取预设的公司名称
             const companyName1 = localStorage.getItem('companyName1') || '公司1';
@@ -3006,13 +3483,13 @@
                 if (index !== -1) {
                     paymentRecords[index] = {
                         ...paymentRecords[index],
-                        date, type, category, amount, description, payer, payee, invoiceNo
+                        date, type, category, amount, description, payer, payee, invoiceNo, reimburser
                     };
                 }
             } else {
                 paymentRecords.push({
                     id: 'PAY' + Date.now(),
-                    date, type, category, amount, description, payer, payee, invoiceNo,
+                    date, type, category, amount, description, payer, payee, invoiceNo, reimburser,
                     createDate: new Date().toISOString().split('T')[0]
                 });
             }
@@ -3070,7 +3547,7 @@
         // 直接更新页面上所有显示的发票状态
         function updateAllInvoiceStatusDisplays() {
             // 获取所有页面上的状态元素
-            const statusElements = document.querySelectorAll('span.px-2.inline-flex.text-xs.leading-5.font-semibold.rounded-full');
+            const statusElements = document.querySelectorAll('span.px-2.inline-flex.text-xs.leading-5.font-semibold.rounded-lg');
             
             // 遍历所有状态元素，更新其状态和样式
             statusElements.forEach(element => {
@@ -3103,7 +3580,7 @@
                                 }
                                 
                                 // 更新元素的样式和文本
-                                element.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}`;
+                                element.className = `px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${statusClass}`;
                                 element.textContent = invoice.status;
                             }
                         }
@@ -3279,7 +3756,7 @@
                         <input type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded invoice-checkbox" value="${invoice.id}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${statusClass}">
                             ${invoice.status}
                         </span>
                     </td>
@@ -3290,7 +3767,7 @@
                         <div class="text-sm text-gray-500">${invoice.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-2 py-1 rounded-full' : 'text-gray-500'}">${invoice.invoiceType || '普票'}</div>
+                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-3 py-1 rounded-lg' : 'text-gray-500'}">${invoice.invoiceType || '普票'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${invoice.invoiceNo}</div>
@@ -3315,6 +3792,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-500">${invoice.category}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.reimburser || ''}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-primary hover:text-primary-dark edit-invoice mr-2" data-id="${invoice.id}"><i class="fa fa-edit"></i></button>
@@ -3555,7 +4035,7 @@
             });
             
             // 准备导出数据
-            const headers = ['发票类型', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额', '状态'];
+            const headers = ['发票类型', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额', '状态', '报销人'];
             const data = [];
             
             // 计算合计值
@@ -3579,15 +4059,16 @@
                     (parseFloat(invoice.amount) || 0).toFixed(2),
                     `${((parseFloat(invoice.taxRate) || 0) * 100).toFixed(0)}%`,
                     taxAmount.toFixed(2),
-                    invoice.status
+                    invoice.status,
+                    invoice.reimburser || ''
                 ]);
             });
             
             // 添加合计行
-            data.push(['', '', '', '', '合计', '', '', '', '']);
-            data.push(['专票-进项', '', '', '', '', '', '', inputTaxTotal.toFixed(2), '']);
-            data.push(['专票-销项', '', '', '', '', '', '', outputTaxTotal.toFixed(2), '']);
-            data.push(['税差 (进项 - 销项)', '', '', '', '', '', '', (inputTaxTotal - outputTaxTotal).toFixed(2), '']);
+            data.push(['', '', '', '', '合计', '', '', '', '', '']);
+            data.push(['专票-进项', '', '', '', '', '', '', inputTaxTotal.toFixed(2), '', '']);
+            data.push(['专票-销项', '', '', '', '', '', '', outputTaxTotal.toFixed(2), '', '']);
+            data.push(['税差 (进项 - 销项)', '', '', '', '', '', '', (inputTaxTotal - outputTaxTotal).toFixed(2), '', '']);
             
             // 创建CSV内容
             let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
@@ -3884,7 +4365,7 @@
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
             
             // 添加表头
-            csvContent += "序号,发票类型,发票代码,发票号码,销售方名称,销售方税号,购买方名称,购买方税号,发票日期,登记日期,金额,税率,税额,发票状态,商品名称,商品类别\n";
+            csvContent += "序号,发票类型,发票代码,发票号码,销售方名称,销售方税号,购买方名称,购买方税号,发票日期,登记日期,金额,税率,税额,发票状态,商品名称,商品类别,报销人\n";
             
             // 添加数据行
             filteredInvoices.forEach((invoice, index) => {
@@ -3904,7 +4385,8 @@
                     (invoice.taxAmount || 0).toFixed(2),
                     invoice.status || '',
                     invoice.items ? invoice.items[0].name || '' : '',
-                    invoice.category || ''
+                    invoice.category || '',
+                    invoice.reimburser || ''
                 ];
                 
                 // 将数组转换为CSV行，处理逗号和引号
@@ -4361,6 +4843,7 @@
                         invoice.items[0].name = document.getElementById('edit-item-name').value;
                     }
                     invoice.category = document.getElementById('edit-category').value;
+                    invoice.reimburser = document.getElementById('edit-reimburser').value;
                     
                     // 保存到localStorage
                     localStorage.setItem('invoices', JSON.stringify(mockInvoices));
@@ -4393,6 +4876,11 @@
             
             // 抬头公司筛选事件
             document.getElementById('invoice-company-filter').addEventListener('change', function() {
+                filterInvoices(currentSearchTerm);
+            });
+            
+            // 报销人筛选事件
+            document.getElementById('reimburser-filter').addEventListener('change', function() {
                 filterInvoices(currentSearchTerm);
             });
             
@@ -4662,7 +5150,7 @@
                 let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
                 
                 // 添加表头
-                csvContent += "序号,发票类型,发票代码,发票号码,销售方名称,销售方税号,购买方名称,购买方税号,发票日期,登记日期,付款日期,金额,税率,税额,发票状态,商品名称,商品类别\n";
+                csvContent += "序号,发票类型,发票代码,发票号码,销售方名称,销售方税号,购买方名称,购买方税号,发票日期,登记日期,付款日期,金额,税率,税额,发票状态,商品名称,商品类别,报销人\n";
                 
                 // 添加数据行
                 filteredInvoices.forEach((invoice, index) => {
@@ -4683,7 +5171,8 @@
                         (invoice.taxAmount || 0).toFixed(2),
                         invoice.status || '',
                         invoice.items ? invoice.items[0].name || '' : '',
-                        invoice.category || ''
+                        invoice.category || '',
+                        invoice.reimburser || ''
                     ];
                     
                     // 将数组转换为CSV行，处理逗号和引号
@@ -4738,7 +5227,8 @@
         const taxRate = document.getElementById('recognition-tax-rate').value;
         const taxAmount = document.getElementById('recognition-tax-amount').value;
         const itemName = document.getElementById('recognition-item-name').value;
-        const itemCategory = document.getElementById('recognition-item-category').value;
+                    const itemCategory = document.getElementById('recognition-item-category').value;
+                    const reimburser = document.getElementById('recognition-reimburser').value;
                     
                     // 创建新发票对象，确保与现有发票结构完全匹配
                     // 处理税率，确保即使为空或格式不正确也不会保存NaN
@@ -4779,7 +5269,8 @@
                         status: '待付款', // 保存后直接设为待付款，不再需要待验证状态
                         imageUrl: "", // 图片URL（识别结果中没有，默认留空）
                         paymentDate: "", // 付款日期初始为空，后续由用户在列表中选择
-                        registerDate: new Date().toISOString().split('T')[0] // 登记日期，点击保存当日
+                        registerDate: new Date().toISOString().split('T')[0], // 登记日期，点击保存当日
+                        reimburser: reimburser // 报销人
                     };
                     
                     // 添加到发票数组
@@ -5013,7 +5504,7 @@
                         <input type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded invoice-checkbox" value="${invoice.id}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
                             ${invoice.status}
                         </span>
                     </td>
@@ -5024,7 +5515,7 @@
                         <div class="text-sm text-gray-500">${invoice.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-2 py-1 rounded-full' : 'text-gray-500'}">${invoice.invoiceType || '普票'}</div>
+                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-3 py-1 rounded-lg' : 'text-gray-500'}">${invoice.invoiceType || '普票'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${invoice.invoiceNo}</div>
@@ -5049,6 +5540,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-500">${invoice.category}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.reimburser || ''}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-primary hover:text-primary-dark edit-invoice mr-2" data-id="${invoice.id}"><i class="fa fa-edit"></i></button>
@@ -5510,21 +6004,17 @@
             // 5. 提取开票日期
             console.log('开始查找发票日期...');
             
-            // 直接提取带有空格的年份、月份和日期
-            // 年份提取：只匹配开票日期中的年份，支持格式如"2024 年"或"2 0 2 4 年"
-            // 修复：添加期和冒号之间的空格支持
-            const yearMatch = processedText.match(/开\s*票\s*日\s*期\s*[:：]\s*.*?(2\s*0\s*\d\s*\d)\s*年/); // 支持期和冒号之间有空格
-            // 月份提取：只匹配开票日期中的月份
-            const monthMatch = processedText.match(/开\s*票\s*日\s*期\s*[:：]\s*.*?(0?[1-9]|1[0-2])\s*月/); // 支持期和冒号之间有空格
-            // 日期提取：只匹配开票日期中的日期
-            const dayMatch = processedText.match(/开\s*票\s*日\s*期\s*[:：]\s*.*?(0?[1-9]|[12]\d|3[01])\s*日/); // 支持期和冒号之间有空格
+            // 修改：支持日期在'开票日期:'之前或之后的情况
+            // 匹配格式：2026年01月10日 开票日期: 或 开票日期: 2026年01月10日
+            const datePattern = /(2\s*0\s*\d\s*\d)\s*年\s*(0?[1-9]|1[0-2])\s*月\s*(0?[1-9]|[12]\d|3[01])\s*日/;
+            const dateMatch = processedText.match(datePattern);
             
-            if (yearMatch && monthMatch && dayMatch) {
-                const year = yearMatch[1].replace(/\s+/g, '');
-                const month = monthMatch[1].replace(/\s+/g, '').padStart(2, '0');
-                const day = dayMatch[1].replace(/\s+/g, '').padStart(2, '0');
+            if (dateMatch) {
+                const year = dateMatch[1].replace(/\s+/g, '');
+                const month = dateMatch[2].replace(/\s+/g, '').padStart(2, '0');
+                const day = dateMatch[3].replace(/\s+/g, '').padStart(2, '0');
                 invoiceDate = `${year}-${month}-${day}`;
-                console.log('直接提取年月日:', invoiceDate);
+                console.log('提取到发票日期:', invoiceDate);
             }
             console.log('最终发票日期:', invoiceDate);
             
@@ -5785,11 +6275,32 @@
                 console.log('去重后的公司列表:', uniqueCompanies);
                 
                 // 根据位置确定购买方和销售方
-                // 通常第一个公司是购买方，第二个是销售方（根据购前销后的规律）
+                // 修复：根据发票结构，通常购买方在销售方之前，但需要考虑文本中"销"在"购"前的情况
                 if (uniqueCompanies.length >= 2) {
-                    buyer = uniqueCompanies[0].replace(/\s+/g, '');
-                    seller = uniqueCompanies[1].replace(/\s+/g, '');
-                    console.log('根据传统方法分配：购买方:', buyer, '销售方:', seller);
+                    // 查看预处理文本中公司出现的实际位置
+                    const firstCompanyIndex = processedText.indexOf(uniqueCompanies[0]);
+                    const secondCompanyIndex = processedText.indexOf(uniqueCompanies[1]);
+                    
+                    // 检查文本中是否存在"购"和"销"的顺序
+                    const gouIndex = processedText.indexOf('购');
+                    const xiaoIndex = processedText.indexOf('销');
+                    
+                    if (gouIndex !== -1 && xiaoIndex !== -1 && xiaoIndex < gouIndex) {
+                        // 特殊情况："销"在"购"前面，此时第一个公司是销售方，第二个是购买方
+                        seller = uniqueCompanies[0].replace(/\s+/g, '');
+                        buyer = uniqueCompanies[1].replace(/\s+/g, '');
+                        console.log('检测到"销"在"购"前，调整分配：购买方:', buyer, '销售方:', seller);
+                    } else if (firstCompanyIndex < secondCompanyIndex) {
+                        // 正常情况：第一个公司是购买方，第二个是销售方
+                        buyer = uniqueCompanies[0].replace(/\s+/g, '');
+                        seller = uniqueCompanies[1].replace(/\s+/g, '');
+                        console.log('根据传统方法分配：购买方:', buyer, '销售方:', seller);
+                    } else {
+                        // 特殊情况：第二个公司先出现，调整顺序
+                        buyer = uniqueCompanies[1].replace(/\s+/g, '');
+                        seller = uniqueCompanies[0].replace(/\s+/g, '');
+                        console.log('根据出现位置调整分配：购买方:', buyer, '销售方:', seller);
+                    }
                 } else if (uniqueCompanies.length === 1) {
                     // 如果只有一个公司，默认是销售方
                     seller = uniqueCompanies[0].replace(/\s+/g, '');
@@ -6264,29 +6775,77 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">项目分类</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <select id="recognition-item-category" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                            <option value="">请选择项目分类</option>
-                            <option value="前期账面余额">前期账面余额</option>
-                            <option value="货款">货款</option>
-                            <option value="原材料">原材料</option>
-                            <option value="辅助材料">辅助材料</option>
-                            <option value="电镀费">电镀费</option>
-                            <option value="包装箱费用">包装箱费用</option>
-                            <option value="易耗品材料">易耗品材料</option>
-                            <option value="外协加工费">外协加工费</option>
-                            <option value="运杂费">运杂费</option>
-                            <option value="维修或模具费">维修或模具费</option>
-                            <option value="水电费">水电费</option>
-                            <option value="工资">工资</option>
-                            <option value="员工报销">员工报销</option>
-                            <option value="员工餐费用">员工餐费用</option>
-                            <option value="员工福利">员工福利</option>
-                            <option value="通信费">通信费</option>
-                            <option value="调账">调账</option>
-                            <option value="其它支出">其它支出</option>
-                            <option value="固定资产设备">固定资产设备</option>
-                            <option value="其它行政招待费用">其它行政招待费用</option>
-                        </select>
+                        <div class="flex items-center space-x-2">
+                            <select id="recognition-item-category" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                <option value="">请选择项目分类</option>
+                            </select>
+                            <button id="add-category-btn" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                        <!-- 新增项目分类模态框 -->
+                        <div id="add-category-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+                            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900">新增项目分类</h3>
+                                    <button id="close-category-modal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="px-6 py-4">
+                                    <div class="mb-4">
+                                        <label for="new-category-name" class="block text-sm font-medium text-gray-700 mb-1">分类名称</label>
+                                        <input type="text" id="new-category-name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" placeholder="请输入项目分类名称">
+                                    </div>
+                                </div>
+                                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                                    <button id="cancel-add-category" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                        取消
+                                    </button>
+                                    <button id="save-category" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                        保存
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">报销人</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center space-x-2">
+                            <select id="recognition-reimburser" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                                <option value="">请选择报销人</option>
+                            </select>
+                            <button id="add-reimburser-btn" class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        </div>
+                        <!-- 新增报销人模态框 -->
+                        <div id="add-reimburser-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50 hidden">
+                            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden">
+                                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900">新增报销人</h3>
+                                    <button id="close-reimburser-modal" class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="px-6 py-4">
+                                    <div class="mb-4">
+                                        <label for="new-reimburser-name" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                                        <input type="text" id="new-reimburser-name" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" placeholder="请输入报销人姓名">
+                                    </div>
+                                </div>
+                                <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                                    <button id="cancel-add-reimburser" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                        取消
+                                    </button>
+                                    <button id="save-reimburser" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                        保存
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </td>
                 </tr>
 
@@ -6297,6 +6856,127 @@
             invoiceNumberInput.addEventListener('input', function() {
                 checkDuplicateInvoiceNumber(this.value);
             });
+            
+            // 加载项目分类列表
+            loadCategoryList();
+            // 加载报销人列表
+            loadReimburserList();
+            
+            // 新增项目分类按钮事件
+            const addCategoryBtn = document.getElementById('add-category-btn');
+            if (addCategoryBtn) {
+                addCategoryBtn.addEventListener('click', function() {
+                    document.getElementById('add-category-modal').classList.remove('hidden');
+                });
+            }
+            
+            // 关闭新增项目分类模态框
+            const closeCategoryModal = document.getElementById('close-category-modal');
+            if (closeCategoryModal) {
+                closeCategoryModal.addEventListener('click', function() {
+                    document.getElementById('add-category-modal').classList.add('hidden');
+                    document.getElementById('new-category-name').value = '';
+                });
+            }
+            
+            // 取消新增项目分类
+            const cancelAddCategory = document.getElementById('cancel-add-category');
+            if (cancelAddCategory) {
+                cancelAddCategory.addEventListener('click', function() {
+                    document.getElementById('add-category-modal').classList.add('hidden');
+                    document.getElementById('new-category-name').value = '';
+                });
+            }
+            
+            // 保存新增项目分类
+            const saveCategory = document.getElementById('save-category');
+            if (saveCategory) {
+                saveCategory.addEventListener('click', function() {
+                    const newName = document.getElementById('new-category-name').value.trim();
+                    if (newName) {
+                        // 获取现有项目分类列表
+                        let categories = JSON.parse(localStorage.getItem('categories') || JSON.stringify(['前期账面余额', '货款', '原材料', '辅助材料', '电镀费', '包装箱费用', '易耗品材料', '外协加工费', '运杂费', '维修或模具费', '水电费', '工资', '员工报销', '员工餐费用', '员工福利', '通信费', '调账', '其它支出', '固定资产设备', '其它行政招待费用']));
+                        // 检查是否已存在
+                        if (!categories.includes(newName)) {
+                            categories.push(newName);
+                            localStorage.setItem('categories', JSON.stringify(categories));
+                            // 重新加载项目分类列表
+                            loadCategoryList();
+                        }
+                        // 关闭模态框
+                        document.getElementById('add-category-modal').classList.add('hidden');
+                        document.getElementById('new-category-name').value = '';
+                    }
+                });
+            }
+            
+            // 管理选项按钮事件
+            const manageOptionsBtn = document.getElementById('manage-options-btn');
+            if (manageOptionsBtn) {
+                manageOptionsBtn.addEventListener('click', function() {
+                    // 渲染管理列表
+                    renderCategoryManagementList();
+                    renderReimburserManagementList();
+                    // 打开管理模态框
+                    document.getElementById('manage-options-modal').classList.remove('hidden');
+                });
+            }
+            
+            // 关闭管理模态框事件
+            const closeManageModal = document.getElementById('close-manage-modal');
+            if (closeManageModal) {
+                closeManageModal.addEventListener('click', function() {
+                    document.getElementById('manage-options-modal').classList.add('hidden');
+                });
+            }
+            
+            // 新增报销人按钮事件
+            const addReimburserBtn = document.getElementById('add-reimburser-btn');
+            if (addReimburserBtn) {
+                addReimburserBtn.addEventListener('click', function() {
+                    document.getElementById('add-reimburser-modal').classList.remove('hidden');
+                });
+            }
+            
+            // 关闭新增报销人模态框
+            const closeReimburserModal = document.getElementById('close-reimburser-modal');
+            if (closeReimburserModal) {
+                closeReimburserModal.addEventListener('click', function() {
+                    document.getElementById('add-reimburser-modal').classList.add('hidden');
+                    document.getElementById('new-reimburser-name').value = '';
+                });
+            }
+            
+            // 取消新增报销人
+            const cancelAddReimburser = document.getElementById('cancel-add-reimburser');
+            if (cancelAddReimburser) {
+                cancelAddReimburser.addEventListener('click', function() {
+                    document.getElementById('add-reimburser-modal').classList.add('hidden');
+                    document.getElementById('new-reimburser-name').value = '';
+                });
+            }
+            
+            // 保存新增报销人
+            const saveReimburser = document.getElementById('save-reimburser');
+            if (saveReimburser) {
+                saveReimburser.addEventListener('click', function() {
+                    const newName = document.getElementById('new-reimburser-name').value.trim();
+                    if (newName) {
+                        // 获取现有报销人列表
+                        let reimbursers = JSON.parse(localStorage.getItem('reimbursers') || '[]');
+                        // 检查是否已存在
+                        if (!reimbursers.includes(newName)) {
+                            reimbursers.push(newName);
+                            localStorage.setItem('reimbursers', JSON.stringify(reimbursers));
+                            // 重新加载报销人列表
+                            loadReimburserList();
+                        }
+                        // 关闭模态框
+                        document.getElementById('add-reimburser-modal').classList.add('hidden');
+                        document.getElementById('new-reimburser-name').value = '';
+                    }
+                });
+            }
             
             // 添加编辑按钮事件监听器
             const editRecognitionBtn = document.getElementById('edit-recognition');
@@ -6336,6 +7016,163 @@
                         this.innerHTML = '<i class="fa fa-lock mr-2"></i> 锁定';
                     }
                 });
+            }
+        }
+        
+        // 加载项目分类列表
+        function loadCategoryList() {
+            const categorySelect = document.getElementById('recognition-item-category');
+            if (!categorySelect) return;
+            
+            // 获取项目分类列表，使用默认分类作为初始值
+            const defaultCategories = ['前期账面余额', '货款', '原材料', '辅助材料', '电镀费', '包装箱费用', '易耗品材料', '外协加工费', '运杂费', '维修或模具费', '水电费', '工资', '员工报销', '员工餐费用', '员工福利', '通信费', '调账', '其它支出', '固定资产设备', '其它行政招待费用'];
+            const categories = JSON.parse(localStorage.getItem('categories') || JSON.stringify(defaultCategories));
+            
+            // 清空现有选项
+            categorySelect.innerHTML = '<option value="">请选择项目分类</option>';
+            
+            // 添加项目分类选项
+            categories.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                categorySelect.appendChild(option);
+            });
+        }
+        
+        // 加载报销人列表
+        function loadReimburserList() {
+            const reimburserSelect = document.getElementById('recognition-reimburser');
+            if (!reimburserSelect) return;
+            
+            // 获取报销人列表
+            const reimbursers = JSON.parse(localStorage.getItem('reimbursers') || '[]');
+            
+            // 清空现有选项
+            reimburserSelect.innerHTML = '<option value="">请选择报销人</option>';
+            
+            // 添加报销人选项
+            reimbursers.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                reimburserSelect.appendChild(option);
+            });
+        }
+        
+        // 渲染项目分类管理列表
+        function renderCategoryManagementList() {
+            const categoryList = document.getElementById('category-management-list');
+            if (!categoryList) return;
+            
+            // 获取项目分类列表，使用默认分类作为初始值
+            const defaultCategories = ['前期账面余额', '货款', '原材料', '辅助材料', '电镀费', '包装箱费用', '易耗品材料', '外协加工费', '运杂费', '维修或模具费', '水电费', '工资', '员工报销', '员工餐费用', '员工福利', '通信费', '调账', '其它支出', '固定资产设备', '其它行政招待费用'];
+            const categories = JSON.parse(localStorage.getItem('categories') || JSON.stringify(defaultCategories));
+            
+            // 清空现有内容
+            categoryList.innerHTML = '';
+            
+            // 渲染每个项目分类
+            categories.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2 border border-gray-200 rounded-md';
+                item.innerHTML = `
+                    <span class="text-sm text-gray-900">${name}</span>
+                    <button class="delete-category-btn text-red-500 hover:text-red-700 focus:outline-none" data-category="${name}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `;
+                categoryList.appendChild(item);
+            });
+            
+            // 添加删除事件监听器
+            addCategoryDeleteListeners();
+        }
+        
+        // 渲染报销人管理列表
+        function renderReimburserManagementList() {
+            const reimburserList = document.getElementById('reimburser-management-list');
+            if (!reimburserList) return;
+            
+            // 获取报销人列表
+            const reimbursers = JSON.parse(localStorage.getItem('reimbursers') || '[]');
+            
+            // 清空现有内容
+            reimburserList.innerHTML = '';
+            
+            // 渲染每个报销人
+            reimbursers.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between p-2 border border-gray-200 rounded-md';
+                item.innerHTML = `
+                    <span class="text-sm text-gray-900">${name}</span>
+                    <button class="delete-reimburser-btn text-red-500 hover:text-red-700 focus:outline-none" data-reimburser="${name}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `;
+                reimburserList.appendChild(item);
+            });
+            
+            // 添加删除事件监听器
+            addReimburserDeleteListeners();
+        }
+        
+        // 添加项目分类删除事件监听器
+        function addCategoryDeleteListeners() {
+            const deleteButtons = document.querySelectorAll('.delete-category-btn');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const categoryName = this.getAttribute('data-category');
+                    deleteCategory(categoryName);
+                });
+            });
+        }
+        
+        // 添加报销人删除事件监听器
+        function addReimburserDeleteListeners() {
+            const deleteButtons = document.querySelectorAll('.delete-reimburser-btn');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const reimburserName = this.getAttribute('data-reimburser');
+                    deleteReimburser(reimburserName);
+                });
+            });
+        }
+        
+        // 删除项目分类
+        function deleteCategory(categoryName) {
+            if (confirm(`确定要删除项目分类 "${categoryName}" 吗？`)) {
+                // 获取现有项目分类列表
+                const defaultCategories = ['前期账面余额', '货款', '原材料', '辅助材料', '电镀费', '包装箱费用', '易耗品材料', '外协加工费', '运杂费', '维修或模具费', '水电费', '工资', '员工报销', '员工餐费用', '员工福利', '通信费', '调账', '其它支出', '固定资产设备', '其它行政招待费用'];
+                let categories = JSON.parse(localStorage.getItem('categories') || JSON.stringify(defaultCategories));
+                
+                // 从数组中删除指定分类
+                categories = categories.filter(name => name !== categoryName);
+                
+                // 保存到localStorage
+                localStorage.setItem('categories', JSON.stringify(categories));
+                
+                // 更新管理列表和下拉框
+                renderCategoryManagementList();
+                loadCategoryList();
+            }
+        }
+        
+        // 删除报销人
+        function deleteReimburser(reimburserName) {
+            if (confirm(`确定要删除报销人 "${reimburserName}" 吗？`)) {
+                // 获取现有报销人列表
+                let reimbursers = JSON.parse(localStorage.getItem('reimbursers') || '[]');
+                
+                // 从数组中删除指定报销人
+                reimbursers = reimbursers.filter(name => name !== reimburserName);
+                
+                // 保存到localStorage
+                localStorage.setItem('reimbursers', JSON.stringify(reimbursers));
+                
+                // 更新管理列表和下拉框
+                renderReimburserManagementList();
+                loadReimburserList();
             }
         }
         
@@ -6496,8 +7333,9 @@
                 
                 switch (field) {
                     case 'date':
-                        valueA = new Date(a.date);
-                        valueB = new Date(b.date);
+                    case 'registerDate':
+                        valueA = new Date(a[field]);
+                        valueB = new Date(b[field]);
                         break;
                     case 'invoiceNo':
                         // 发票号码按数字排序
@@ -6549,8 +7387,9 @@
                 
                 switch (field) {
                     case 'date':
-                        valueA = new Date(a.date);
-                        valueB = new Date(b.date);
+                    case 'registerDate':
+                        valueA = new Date(a[field]);
+                        valueB = new Date(b[field]);
                         break;
                     case 'invoiceNo':
                         // 发票号码按数字排序
@@ -6747,7 +7586,7 @@
                         <input type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded invoice-checkbox" value="${invoice.id}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
                             ${invoice.status}
                         </span>
                     </td>
@@ -6761,7 +7600,7 @@
                         <div class="text-sm text-gray-500">${invoice.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-2 py-1 rounded-full' : 'text-gray-500'}">${invoice.invoiceType || '专票'}</div>
+                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-3 py-1 rounded-lg' : 'text-gray-500'}">${invoice.invoiceType || '专票'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${invoice.invoiceNo}</div>
@@ -6786,6 +7625,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-500">${invoice.category}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.reimburser || ''}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-primary hover:text-primary-dark edit-invoice mr-2" data-id="${invoice.id}"><i class="fa fa-edit"></i></button>
@@ -6887,7 +7729,7 @@
                         <input type="checkbox" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded invoice-checkbox" value="${invoice.id}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
                             ${invoice.status}
                         </span>
                     </td>
@@ -6898,7 +7740,7 @@
                         <div class="text-sm text-gray-500">${invoice.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-2 py-1 rounded-full' : 'text-gray-500'}">${invoice.invoiceType || '普票'}</div>
+                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-3 py-1 rounded-lg' : 'text-gray-500'}">${invoice.invoiceType || '普票'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${invoice.invoiceNo}</div>
@@ -6923,6 +7765,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-500">${invoice.category}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.reimburser || ''}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-primary hover:text-primary-dark edit-invoice mr-2" data-id="${invoice.id}"><i class="fa fa-edit"></i></button>
@@ -6983,6 +7828,20 @@
             document.getElementById('edit-date').value = invoice.date;
             document.getElementById('edit-item-name').value = invoice.items ? invoice.items[0].name : '';
             document.getElementById('edit-category').value = invoice.category;
+            
+            // 加载报销人列表
+            const reimburserSelect = document.getElementById('edit-reimburser');
+            const reimbursers = JSON.parse(localStorage.getItem('reimbursers') || '[]');
+            reimburserSelect.innerHTML = '<option value="">请选择报销人</option>';
+            reimbursers.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                reimburserSelect.appendChild(option);
+            });
+            
+            // 设置当前报销人
+            document.getElementById('edit-reimburser').value = invoice.reimburser || '';
             
             // 显示编辑模态框
             document.getElementById('edit-invoice-modal').classList.remove('hidden');
@@ -7054,6 +7913,8 @@
             
             // 获取发票状态筛选值
             const invoiceStatus = document.getElementById('invoice-status-filter').value;
+            // 获取报销人筛选值
+            const reimburser = document.getElementById('reimburser-filter').value;
             // 获取发票类型筛选值
             const invoiceType = document.getElementById('invoice-type-filter').value;
             // 获取抬头公司筛选值
@@ -7104,6 +7965,12 @@
                 let invoiceStatusMatch = true;
                 if (invoiceStatus && invoiceStatus !== '') {
                     invoiceStatusMatch = invoice.status === invoiceStatus;
+                }
+                
+                // 报销人筛选条件
+                let reimburserMatch = true;
+                if (reimburser && reimburser !== '') {
+                    reimburserMatch = invoice.reimburser === reimburser;
                 }
                 
                 // 发票类型筛选条件
@@ -7247,7 +8114,7 @@
                     advancedMatch = advancedMatch && registerDate && registerDate <= filterDate;
                 }
                 
-                return searchMatch && invoiceStatusMatch && invoiceTypeMatch && companyMatch && dateMatch && advancedMatch;
+                return searchMatch && invoiceStatusMatch && invoiceTypeMatch && companyMatch && dateMatch && advancedMatch && reimburserMatch;
             });
             
             // 计算总页数
@@ -7290,7 +8157,7 @@
                         <input type="checkbox" class="invoice-checkbox h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" value="${invoice.id}">
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
+                        <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${statusClass} cursor-pointer status-toggle" data-id="${invoice.id}" data-status="${invoice.status}">
                             ${invoice.status}
                         </span>
                     </td>
@@ -7301,7 +8168,7 @@
                         <div class="text-sm text-gray-500">${invoice.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-2 py-1 rounded-full' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-2 py-1 rounded-full' : 'text-gray-500'}">${invoice.invoiceType || '专票'}</div>
+                        <div class="text-sm ${invoice.invoiceType === '专票-进项' ? 'bg-green-800 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '专票-销项' ? 'bg-red-600 text-white px-3 py-1 rounded-lg' : invoice.invoiceType === '普票' ? 'bg-yellow-600 text-white px-3 py-1 rounded-lg' : 'text-gray-500'}">${invoice.invoiceType || '专票'}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">${invoice.invoiceNo}</div>
@@ -7326,6 +8193,9 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-500">${invoice.category}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${invoice.reimburser || ''}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button class="text-primary hover:text-primary-dark edit-invoice mr-2" data-id="${invoice.id}"><i class="fa fa-edit"></i></button>
@@ -7382,8 +8252,37 @@
             
 
             
-            // 更新统计信息和分页控件
-            updateInvoicePaginationAndStats(filteredInvoices);
+        // 更新报销人筛选下拉框选项
+        function updateReimburserFilterOptions() {
+            const reimburserFilter = document.getElementById('reimburser-filter');
+            if (!reimburserFilter) return;
+            
+            // 获取所有唯一的报销人
+            const reimbursers = [...new Set(mockInvoices.map(invoice => invoice.reimburser).filter(reimburser => reimburser && reimburser !== ''))];
+            
+            // 保存当前选中的值
+            const currentValue = reimburserFilter.value;
+            
+            // 清空现有选项（保留第一个"所有报销人"选项）
+            reimburserFilter.innerHTML = '<option value="">所有报销人</option>';
+            
+            // 添加新的报销人选项
+            reimbursers.forEach(reimburser => {
+                const option = document.createElement('option');
+                option.value = reimburser;
+                option.textContent = reimburser;
+                reimburserFilter.appendChild(option);
+            });
+            
+            // 恢复当前选中的值
+            reimburserFilter.value = currentValue;
+        }
+        
+        // 更新统计信息和分页控件
+        updateInvoicePaginationAndStats(filteredInvoices);
+        
+        // 更新报销人筛选下拉框选项
+        updateReimburserFilterOptions();
         }
         
         // 更新分页和统计信息
