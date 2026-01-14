@@ -956,6 +956,9 @@
             // 初始化应用
             initializeApp();
             
+            // 更新公司切换按钮文本
+            updateCompanyButtons();
+            
             // 检查URL参数并处理
             checkUrlParams();
         });
@@ -963,6 +966,35 @@
         // 获取当前选中的公司
         function getCurrentCompany() {
             return localStorage.getItem('currentCompany') || 'company1';
+        }
+        
+        // 获取公司名称映射
+        function getCompanyNames() {
+            return JSON.parse(localStorage.getItem('companyNames')) || {
+                'companyA': '普利美（常州）环境工程科技有限公司',
+                'companyB': '无锡龙力印铁设备制造有限公司'
+            };
+        }
+        
+        // 获取公司显示名称
+        function getCompanyDisplayName(companyId) {
+            const companyNames = getCompanyNames();
+            // 转换ID格式以匹配收支表.html的格式
+            const mappedId = companyId === 'company1' ? 'companyA' : 'companyB';
+            return companyNames[mappedId] || companyId;
+        }
+        
+        // 更新公司切换按钮文本
+        function updateCompanyButtons() {
+            const company1Btn = document.getElementById('company1-btn');
+            const company2Btn = document.getElementById('company2-btn');
+            
+            if (company1Btn) {
+                company1Btn.textContent = getCompanyDisplayName('company1');
+            }
+            if (company2Btn) {
+                company2Btn.textContent = getCompanyDisplayName('company2');
+            }
         }
         
         // 初始化本地存储
@@ -3435,11 +3467,7 @@
             const transactions = JSON.parse(localStorage.getItem(`transactions_${company}`)) || [];
             
             // 设置公司抬头
-            const companyNames = {
-                'company1': '普利美（常州）环境工程科技有限公司',
-                'company2': '无锡龙力印铁设备制造有限公司'
-            };
-            const displayName = companyNames[company] || company;
+            const displayName = getCompanyDisplayName(company);
             document.getElementById('company-header').querySelector('h2').textContent = displayName;
             
             // 获取筛选条件
@@ -3616,11 +3644,7 @@
             const transactions = JSON.parse(localStorage.getItem(`transactions_${company}`)) || [];
             
             // 设置公司抬头
-            const companyNames = {
-                'company1': '普利美（常州）环境工程科技有限公司',
-                'company2': '无锡龙力印铁设备制造有限公司'
-            };
-            const displayName = companyNames[company] || company;
+            const displayName = getCompanyDisplayName(company);
             document.getElementById('company-header').querySelector('h2').textContent = displayName;
             
             // 计算汇总数据（所有记录）

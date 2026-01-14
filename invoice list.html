@@ -39,15 +39,78 @@
                 padding: 10mm;
                 margin: 10mm auto;
                 background: white;
-                box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
             }
             @media print {
                 .page-a4 {
                     padding: 5mm;
+                    box-shadow: none;
+                    margin: 0;
+                }
+                #print-page {
+                    display: none;
+                }
+                /* 去除所有阴影效果 */
+                * {
+                    box-shadow: none !important;
+                    shadow: none !important;
+                }
+                /* 调整边距和内边距，避免分页 */
+                section {
+                    margin-bottom: 5mm !important;
+                    padding: 3mm !important;
+                }
+                /* 确保税额统计三列分布 */
+                section > div.grid {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 2mm !important;
+                }
+                section > div.grid > div {
+                    text-align: center;
+                }
+                section > div.grid > div:first-child {
+                    text-align: left;
+                }
+                section > div.grid > div:last-child {
+                    text-align: right;
+                }
+                
+                .table-border {
+                    table-layout: fixed;
                 }
                 .table-border th, .table-border td {
-                    font-size: 0.8rem;
-                    padding: 3px 5px;
+                    border: 1px solid #d1d5db;
+                    padding: 2px 3px;
+                    font-size: 0.65rem;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .table-border th:nth-child(3), .table-border td:nth-child(3),
+                .table-border th:nth-child(4), .table-border td:nth-child(4) {
+                    font-size: 0.6rem;
+                }
+                .table-border th:nth-child(1), .table-border td:nth-child(1) {
+                    width: 4%;
+                }
+                .table-border th:nth-child(2), .table-border td:nth-child(2) {
+                    width: 12%;
+                }
+                .table-border th:nth-child(3), .table-border td:nth-child(3) {
+                    width: 18%;
+                }
+                .table-border th:nth-child(4), .table-border td:nth-child(4) {
+                    width: 20%;
+                }
+                .table-border th:nth-child(5), .table-border td:nth-child(5) {
+                    width: 10%;
+                }
+                .table-border th:nth-child(6), .table-border td:nth-child(6),
+                .table-border th:nth-child(7), .table-border td:nth-child(7),
+                .table-border th:nth-child(9), .table-border td:nth-child(9) {
+                    width: 7%;
+                }
+                .table-border th:nth-child(8), .table-border td:nth-child(8) {
+                    width: 10%;
                 }
             }
             .table-header-bg {
@@ -55,12 +118,42 @@
             }
             .table-border {
                 border-collapse: collapse;
+                table-layout: fixed;
             }
             .table-border th, .table-border td {
                 border: 1px solid #d1d5db;
-                padding: 3px 5px;
+                padding: 2px 3px;
+                font-size: 0.65rem;
                 white-space: nowrap;
-                font-size: 0.8rem;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .table-border th:nth-child(3), .table-border td:nth-child(3),
+            .table-border th:nth-child(4), .table-border td:nth-child(4) {
+                font-size: 0.6rem;
+            }
+            .table-border th:nth-child(1), .table-border td:nth-child(1) {
+                width: 4%;
+            }
+            .table-border th:nth-child(2), .table-border td:nth-child(2) {
+                width: 12%;
+            }
+            .table-border th:nth-child(3), .table-border td:nth-child(3) {
+                width: 18%;
+            }
+            .table-border th:nth-child(4), .table-border td:nth-child(4) {
+                width: 20%;
+            }
+            .table-border th:nth-child(5), .table-border td:nth-child(5) {
+                width: 10%;
+            }
+            .table-border th:nth-child(6), .table-border td:nth-child(6),
+            .table-border th:nth-child(7), .table-border td:nth-child(7),
+            .table-border th:nth-child(9), .table-border td:nth-child(9) {
+                width: 7%;
+            }
+            .table-border th:nth-child(8), .table-border td:nth-child(8) {
+                width: 10%;
             }
             .text-vertical-center {
                 vertical-align: middle;
@@ -144,14 +237,13 @@
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-xl font-bold text-gray-800">进项发票</h2>
             </div>
-            <div class="overflow-x-auto">
                 <table id="invoice-in-table" class="w-full table-border">
                     <thead>
                         <tr class="table-header-bg">
                             <th class="text-vertical-center">序号</th>
                             <th class="text-vertical-center">发票日期</th>
-                            <th class="text-vertical-center">发票号</th>
-                            <th class="text-vertical-center">供应商</th>
+                            <th class="text-vertical-center">发票号码</th>
+                            <th class="text-vertical-center">销售方</th>
                             <th class="text-vertical-center">金额</th>
                             <th class="text-vertical-center">税率</th>
                             <th class="text-vertical-center">税额</th>
@@ -172,7 +264,6 @@
                         </tr>
                     </tfoot>
                 </table>
-            </div>
         </section>
 
         <!-- 销项发票表格 -->
@@ -180,14 +271,13 @@
             <div class="flex justify-between items-center mb-2">
                 <h2 class="text-xl font-bold text-gray-800">销项发票</h2>
             </div>
-            <div class="overflow-x-auto">
                 <table id="invoice-out-table" class="w-full table-border">
                     <thead>
                         <tr class="table-header-bg">
                             <th class="text-vertical-center">序号</th>
                             <th class="text-vertical-center">发票日期</th>
-                            <th class="text-vertical-center">发票号</th>
-                            <th class="text-vertical-center">客户</th>
+                            <th class="text-vertical-center">发票号码</th>
+                            <th class="text-vertical-center">购买方</th>
                             <th class="text-vertical-center">金额</th>
                             <th class="text-vertical-center">税率</th>
                             <th class="text-vertical-center">税额</th>
@@ -208,7 +298,6 @@
                         </tr>
                     </tfoot>
                 </table>
-            </div>
         </section>
 
         <!-- 页面底部 -->
@@ -245,14 +334,14 @@
                         <input type="date" id="invoice-date" class="w-full border border-gray-300 rounded px-3 py-2" required>
                     </div>
                     <div>
-                        <label for="invoice-number" class="block text-sm font-medium text-gray-700 mb-1">发票号</label>
+                        <label for="invoice-number" class="block text-sm font-medium text-gray-700 mb-1">发票号码</label>
                         <input type="text" id="invoice-number" class="w-full border border-gray-300 rounded px-3 py-2" required>
                     </div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                        <label id="party-label" for="party-name" class="block text-sm font-medium text-gray-700 mb-1">供应商</label>
+                        <label id="party-label" for="party-name" class="block text-sm font-medium text-gray-700 mb-1">销售方</label>
                         <input type="text" id="party-name" class="w-full border border-gray-300 rounded px-3 py-2" required>
                     </div>
                     <div>
@@ -362,6 +451,9 @@
             elements.handoverDate.value = today;
             elements.printDate.textContent = today;
             
+            // 检查是否有从主系统导出的数据
+            checkForExportedData();
+            
             // 从URL参数获取数据
             const urlParams = new URLSearchParams(window.location.search);
             const year = urlParams.get('year');
@@ -381,7 +473,7 @@
                 
                 // 显示公司名称
                 const companyName = companyNames[company] || company;
-                elements.companyName.textContent = `公司名称：${companyName}`;
+                elements.companyName.textContent = `${companyName}`;
                 
                 // 从主系统localStorage获取发票数据
                 const mainInvoices = JSON.parse(localStorage.getItem('invoice_management_invoices')) || [];
@@ -432,6 +524,57 @@
             
             // 绑定事件
             bindEvents();
+        }
+        
+        // 检查是否有从主系统导出的数据
+        function checkForExportedData() {
+            const exportedData = localStorage.getItem('invoiceExportData');
+            if (exportedData) {
+                try {
+                    const { invoices, company } = JSON.parse(exportedData);
+                    
+                    // 根据发票类型分类数据
+                    const purchaseInvoices = [];
+                    const salesInvoices = [];
+                    
+                    invoices.forEach(invoice => {
+                        // 映射数据到表格所需格式
+                        const mappedInvoice = {
+                            date: invoice.date || invoice.registerDate || '',
+                            number: invoice.invoiceNo || '',
+                            amount: invoice.amount || '0',
+                            taxRate: invoice.taxRate || '0',
+                            taxAmount: invoice.taxAmount || '0',
+                            status: invoice.status || 'pending',
+                            remark: invoice.remark || ''
+                        };
+                        
+                        if (invoice.invoiceType === '专票-进项') {
+                            // 进项发票：party为销售方
+                            mappedInvoice.party = invoice.seller || '';
+                            purchaseInvoices.push(mappedInvoice);
+                        } else if (invoice.invoiceType === '专票-销项') {
+                            // 销项发票：party为购买方
+                            mappedInvoice.party = invoice.buyer || '';
+                            salesInvoices.push(mappedInvoice);
+                        }
+                    });
+                    
+                    // 更新全局数据
+                    invoiceData.in = purchaseInvoices;
+                    invoiceData.out = salesInvoices;
+                    
+                    // 设置公司名称
+                if (company) {
+                    elements.companyName.textContent = `${company}`;
+                }
+                    
+                    // 清空localStorage中的导出数据，避免重复加载
+                    localStorage.removeItem('invoiceExportData');
+                } catch (error) {
+                    console.error('解析导出数据失败:', error);
+                }
+            }
         }
         
         // 加载数据
@@ -502,7 +645,7 @@
                     <td>${invoice.number}</td>
                     <td>${invoice.party}</td>
                     <td class="text-right">${parseFloat(invoice.amount).toFixed(2)}</td>
-                    <td class="text-center">${invoice.taxRate}%</td>
+                    <td class="text-center">${parseFloat(invoice.taxRate) < 1 ? (parseFloat(invoice.taxRate) * 100) : parseFloat(invoice.taxRate)}%</td>
                     <td class="text-right">${parseFloat(invoice.taxAmount).toFixed(2)}</td>
                     <td class="text-center">
                         <span class="status-badge status-${invoice.status}">
@@ -587,7 +730,7 @@
                 elements.invoiceRemark.value = invoice.remark || '';
             }
             
-            elements.partyLabel.textContent = type === 'in' ? '供应商' : '客户';
+            elements.partyLabel.textContent = type === 'in' ? '销售方' : '购买方';
             elements.invoiceModal.classList.remove('hidden');
         }
         

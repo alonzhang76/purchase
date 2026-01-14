@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -1302,6 +1302,36 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        // 从localStorage更新公司选择器
+        function updateCompanySelectors() {
+            const companySelect = document.getElementById('companySelect');
+            const companies = JSON.parse(localStorage.getItem('companyNames')) || {
+                'companyA': '普利美（常州）环境工程科技有限公司',
+                'companyB': '无锡龙力印铁设备制造有限公司'
+            };
+            
+            if (companySelect) {
+                // 保存当前选中的值
+                const currentValue = companySelect.value;
+                
+                // 清空现有选项
+                companySelect.innerHTML = '';
+                
+                // 添加新选项
+                Object.entries(companies).forEach(([id, name]) => {
+                    // 转换ID格式以匹配invoice.html的格式
+                    const invoiceId = id === 'companyA' ? 'company2' : 'company1';
+                    const option = document.createElement('option');
+                    option.value = invoiceId;
+                    option.textContent = name;
+                    companySelect.appendChild(option);
+                });
+                
+                // 恢复选中值
+                companySelect.value = currentValue;
+            }
+        }
+        
         // 全局变量
         let currentPages = { purchase: 1, sales: 1 };
         const itemsPerPage = 10;
@@ -1320,6 +1350,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 调试：检查localStorage中的数据
             console.log('localStorage中的invoices数据:', localStorage.getItem('invoice_management_invoices'));
+            
+            // 更新公司选择器
+            updateCompanySelectors();
             
             // 初始化年份选项
             initYearOptions();

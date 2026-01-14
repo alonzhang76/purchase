@@ -9,7 +9,7 @@
     <!-- Font Awesome -->
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <!-- Chart.js -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.8/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- 统一的 Tailwind 配置 -->
     <!-- 通用的金额格式化函数 -->
@@ -60,6 +60,17 @@
                 parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
                 return parts.join('.');
             }
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            const textMap = {
+                'pending': '未开始',
+                'in-progress': '执行中',
+                'completed': '执行完毕',
+                'cancelled': '取消'
+            };
+            return textMap[status] || status;
         }
     </script>
     <script>
@@ -148,7 +159,7 @@
         });
 
         // 公司选择状态管理 - 从localStorage读取保存的公司，默认使用第一个公司
-        let currentCompany = localStorage.getItem('currentCompany_procurement') || 'companyA';
+        let currentCompany = localStorage.getItem('currentCompany_index') || 'companyA';
         
         // 获取当前公司的函数
         function getCurrentCompany() {
@@ -166,6 +177,69 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
+        }
+        
+        // 保存公司名称到localStorage
+        function saveCompanyNames() {
+            const companyInputs = document.querySelectorAll('.company-item input');
+            const companies = {};
+            
+            companyInputs.forEach(input => {
+                const companyId = input.getAttribute('data-company-id');
+                companies[companyId] = input.value;
+            });
+            
+            localStorage.setItem('companyNames', JSON.stringify(companies));
+            
+            // 更新当前页面的公司选择器
+            updateCompanySelectors();
+            
+            // 关闭模态框
+            document.getElementById('manage-companies-modal').classList.add('hidden');
+        }
+        
+        // 更新页面上的所有公司选择器
+        function updateCompanySelectors() {
+            const companySelectors = document.querySelectorAll('select[id="company-select"]');
+            const companies = JSON.parse(localStorage.getItem('companyNames')) || {
+                'companyA': '普利美（常州）环境工程科技有限公司',
+                'companyB': '无锡龙力印铁设备制造有限公司'
+            };
+            
+            companySelectors.forEach(selector => {
+                // 保存当前选中的值
+                const currentValue = selector.value;
+                
+                // 清空现有选项
+                selector.innerHTML = '';
+                
+                // 添加新选项
+                Object.entries(companies).forEach(([id, name]) => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = name;
+                    selector.appendChild(option);
+                });
+                
+                // 恢复选中值
+                selector.value = currentValue;
+            });
+            
+            // 更新模态框中的公司选择器
+            const modalSelectors = document.querySelectorAll('#contract-migration-modal select, #create-payment-modal select');
+            modalSelectors.forEach(selector => {
+                const currentValue = selector.value;
+                selector.innerHTML = '';
+                
+                Object.entries(companies).forEach(([id, name]) => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = name;
+                    selector.appendChild(option);
+                });
+                
+                selector.value = currentValue;
+            });
         }
         
         // 计算并更新发票状态（基于付款金额与发票金额的比较）- 优化版
@@ -272,7 +346,7 @@
             // 但可以在这里初始化一些基础的公司关联数据结构，确保数据存储格式一致
         }
 
-        // 初始化公司选择下拉菜单和备份恢复功能
+        // 管理抬头公司功能
         document.addEventListener('DOMContentLoaded', function() {
             // 初始化模拟数据（如果不存在）
             initMockData();
@@ -280,6 +354,14 @@
             // 初始化详细采购报表
             if (typeof initDetailedPurchaseReport === 'function') {
                 initDetailedPurchaseReport();
+            }
+            
+            // 管理抬头公司按钮点击事件
+            const manageCompaniesBtn = document.getElementById('manage-companies-btn');
+            if (manageCompaniesBtn) {
+                manageCompaniesBtn.addEventListener('click', function() {
+                    document.getElementById('manage-companies-modal').classList.remove('hidden');
+                });
             }
             
             const companySelect = document.getElementById('company-select');
@@ -299,6 +381,9 @@
                     location.reload();
                 });
             }
+            // 页面加载时更新公司选择器
+            updateCompanySelectors();
+            
             // 页面加载完成后重新渲染所有列表 - 安全检查
             try {
                 if (typeof renderPurchaseOrderList === 'function') {
@@ -507,6 +592,215 @@
     </style>
 </head>
 <body class="bg-gray-50 font-sans">
+    <!-- 管理抬头公司模态框 -->
+    <div id="manage-companies-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0 sm:items-end sm:justify-center">
+            <!-- 背景遮罩 -->
+            <div class="fixed inset-0 transition-opacity z-45" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <!-- 模态框内容 -->
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 sm:align-bottom">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            管理抬头公司
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                管理系统中使用的公司抬头信息，修改后将同步更新所有相关文件。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="space-y-4">
+                        <!-- 公司列表 -->
+                        <div id="companies-list" class="space-y-3">
+                            <!-- 公司项将通过JavaScript动态生成 -->
+                            <div class="company-item flex items-center gap-3">
+                                <div class="w-16 text-sm text-gray-500">companyA:</div>
+                                <input type="text" class="form-input flex-1" value="普利美（常州）环境工程科技有限公司" data-company-id="companyA">
+                            </div>
+                            <div class="company-item flex items-center gap-3">
+                                <div class="w-16 text-sm text-gray-500">companyB:</div>
+                                <input type="text" class="form-input flex-1" value="无锡龙力印铁设备制造有限公司" data-company-id="companyB">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm" onclick="saveCompanyNames()">
+                        保存修改
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('manage-companies-modal').classList.add('hidden')">
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 合同迁移模态框 -->
+    <div id="contract-migration-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0 sm:items-end sm:justify-center">
+            <!-- 背景遮罩 -->
+            <div class="fixed inset-0 transition-opacity z-45" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <!-- 模态框内容 -->
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 sm:align-bottom">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            合同迁移
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                将A公司的采购合同迁移到B公司。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <div class="space-y-4">
+                        <!-- 源公司选择 -->
+                        <div>
+                            <label for="source-company" class="block text-sm font-medium text-gray-700">
+                                源公司
+                            </label>
+                            <select id="source-company" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                <option value="companyA">普利美（常州）环境工程科技有限公司</option>
+                                <option value="companyB">无锡龙力印铁设备制造有限公司</option>
+                            </select>
+                        </div>
+                        
+                        <!-- 目标公司选择 -->
+                        <div>
+                            <label for="target-company" class="block text-sm font-medium text-gray-700">
+                                目标公司
+                            </label>
+                            <select id="target-company" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+                                <option value="companyA">普利美（常州）环境工程科技有限公司</option>
+                                <option value="companyB">无锡龙力印铁设备制造有限公司</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm" onclick="migrateContracts()">
+                        迁移
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('contract-migration-modal').classList.add('hidden')">
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建付款模态框 -->
+    <div id="create-payment-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- 背景遮罩 -->
+            <div class="fixed inset-0 transition-opacity z-45" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <!-- 模态框内容 -->
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fa fa-credit-card text-primary-600 text-lg"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            新建付款
+                        </h3>
+                        <div class="mt-4">
+                            <form id="create-payment-form" class="space-y-4">
+                                <!-- 付款方式选择 -->
+                                <div class="form-group">
+                                    <label>付款方式</label>
+                                    <div class="radio-group">
+                                        <label>
+                                            <input type="radio" name="payment-method-option" value="invoice" checked>
+                                            凭发票付款
+                                        </label>
+                                        <label>
+                                            <input type="radio" name="payment-method-option" value="contract">
+                                            凭合同付款
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- 凭发票付款部分 -->
+                                <div id="invoice-payment-section">
+                                    <!-- 新发票信息（先付款再开票时显示） -->
+                                    <div id="new-invoice-section" class="space-y-4 hidden">
+                                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                            <div class="form-group">
+                                                <label for="new-invoice-date" class="form-label">新发票日期</label>
+                                                <input type="date" id="new-invoice-date" class="form-input">
+                                            </div>
+                                        </div>
+                                           
+                                        <!-- 新发票金额输入框已移除，系统将使用付款金额作为发票金额 -->
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新建发票模态框 -->
+    <div id="create-invoice-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- 背景遮罩 -->
+            <div class="fixed inset-0 transition-opacity z-45" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            
+            <!-- 模态框内容 -->
+            <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+                <div class="sm:flex sm:items-start">
+                    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <i class="fa fa-file-text-o text-primary-600 text-lg"></i>
+                    </div>
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            新建发票
+                        </h3>
+                        <div class="mt-2">
+                            <p class="text-sm text-gray-500">
+                                请填写发票相关信息。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-5">
+                    <form id="create-invoice-form" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label for="invoice-date" class="form-label">发票日期</label>
+                                <input type="date" id="invoice-date" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="invoice-number" class="form-label">发票编号</label>
+                                <input type="text" id="invoice-number" class="form-input">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="flex h-screen overflow-hidden">
         <!-- 侧边导航栏 -->
         <aside class="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -602,6 +896,9 @@
                         <h2 id="page-title" class="text-lg font-medium">备忘录</h2>
                     </div>
                     <div class="flex items-center gap-4">
+                        <button id="manage-companies-btn" class="btn btn-primary">
+                            <i class="fa fa-cog mr-2"></i>管理抬头公司
+                        </button>
                         <div class="relative">
                             <select id="company-select" class="form-input h-10">
                                 <option value="companyA">普利美（常州）环境工程科技有限公司</option>
@@ -628,70 +925,15 @@
                         </div>
                     </div>
                 
-                <!-- 合同迁移模态框 -->
-                <div id="contract-migration-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
-                    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0 sm:items-end sm:justify-center">
-                        <!-- 背景遮罩 -->
-                        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
-                            <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
-                        </div>
-                        
-                        <!-- 模态框内容 -->
-                        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 sm:align-bottom">
-                            <div class="sm:flex sm:items-start">
-                                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                                        合同迁移
-                                    </h3>
-                                    <div class="mt-2">
-                                        <p class="text-sm text-gray-500">
-                                            将A公司的采购合同迁移到B公司。
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-5">
-                                <div class="space-y-4">
-                                    <!-- 源公司选择 -->
-                                    <div>
-                                        <label for="source-company" class="block text-sm font-medium text-gray-700">
-                                            源公司
-                                        </label>
-                                        <select id="source-company" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
-                                            <option value="companyA">普利美（常州）环境工程科技有限公司</option>
-                                            <option value="companyB">无锡龙力印铁设备制造有限公司</option>
-                                        </select>
-                                    </div>
-                                    
-                                    <!-- 目标公司选择 -->
-                                    <div>
-                                        <label for="target-company" class="block text-sm font-medium text-gray-700">
-                                            目标公司
-                                        </label>
-                                        <select id="target-company" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
-                                            <option value="companyA">普利美（常州）环境工程科技有限公司</option>
-                                            <option value="companyB">无锡龙力印铁设备制造有限公司</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
-                                <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm" onclick="migrateContracts()">
-                                    迁移
-                                </button>
-                                <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="document.getElementById('contract-migration-modal').classList.add('hidden')">
-                                    取消
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+
+
 
                 <!-- 新建付款模态框 -->
                 <div id="create-payment-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
                     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                         <!-- 背景遮罩 -->
-                        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                        <div class="fixed inset-0 transition-opacity z-45" aria-hidden="true">
                             <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
                         </div>
                         
@@ -989,7 +1231,12 @@
                 <!-- 采购管理页面 -->
                 <div id="procurement-page" class="page hidden">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-                        <h2 class="text-xl font-bold mb-4 md:mb-0">采购管理</h2>
+                        <div class="flex items-center gap-3 mb-4 md:mb-0">
+                            <h2 class="text-xl font-bold">采购管理</h2>
+                            <button class="btn btn-primary" onclick="window.open('contract-inventory.html', '_blank', 'noopener,noreferrer')">
+                                <i class="fa fa-file-text mr-2"></i>合同货物记录
+                            </button>
+                        </div>
                         <div class="flex flex-col sm:flex-row gap-3">
 
                             <div class="w-full sm:w-auto max-w-sm">
@@ -1271,7 +1518,7 @@
                 <div id="create-invoice-modal" class="fixed z-50 inset-0 overflow-y-auto hidden">
                     <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                         <!-- 背景遮罩 -->
-                        <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                        <div class="fixed inset-0 transition-opacity z-45" aria-hidden="true">
                             <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
                         </div>
                         
@@ -3657,9 +3904,49 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
             }
         }
         
-        // 获取采购订单的合并状态（发票状态 + 付款状态）
+        // 获取合同号的产品状态
+        function getContractProductStatus(contractNumber) {
+            // 从contract-inventory.html的localStorage中读取合同数据
+            const currentCompany = getCurrentCompany();
+            const contractStorageKey = `contracts_${currentCompany}`;
+            const contracts = JSON.parse(localStorage.getItem(contractStorageKey)) || [];
+            
+            // 查找对应合同号的合同
+            const contract = contracts.find(c => c.contractNumber === contractNumber);
+            if (!contract) {
+                return { status: '', cssClass: '' };
+            }
+            
+            // 根据合同状态确定CSS类
+            let cssClass = '';
+            switch (contract.status) {
+                case '未开始':
+                    cssClass = 'badge-info';
+                    break;
+                case '执行中':
+                    cssClass = 'badge-warning';
+                    break;
+                case '执行完毕':
+                    cssClass = 'badge-success';
+                    break;
+                default:
+                    cssClass = '';
+            }
+            
+            // 返回合同状态和CSS类
+            return { status: contract.status, cssClass: cssClass };
+        }
+        
+        // 获取采购订单的合并状态（产品状态 + 发票状态 + 付款状态）
         function getOrderCombinedStatus(contractNumber) {
+            // 获取产品状态
+            const productStatus = getContractProductStatus(contractNumber);
+            
+            // 获取发票状态
             const invoiceStatus = getOrderInvoiceStatus(contractNumber);
+            
+            // 获取付款状态
+            const paymentStatus = getOrderPaymentStatus(contractNumber);
             
             // 检查发票状态是否已经包含付款信息（凭发票付款模式）
             // 如果发票状态包含"已付清"、"部分付款"、"未付款"等关键词，则表示已经包含付款信息
@@ -3667,27 +3954,34 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                               invoiceStatus.status.includes('部分付款') || 
                                               invoiceStatus.status.includes('未付款');
             
-            // 如果发票状态已经包含付款信息，则只返回发票状态，避免重复显示
+            // 生成合并状态
+            let combinedStatus;
             if (invoiceContainsPaymentInfo) {
-                return invoiceStatus;
+                // 发票状态已经包含付款信息，只合并产品状态和发票状态
+                combinedStatus = productStatus.status ? `${getStatusText(productStatus.status)}-${invoiceStatus.status}` : invoiceStatus.status;
+            } else {
+                // 发票状态不包含付款信息，合并产品状态、发票状态和付款状态
+                combinedStatus = productStatus.status ? `${getStatusText(productStatus.status)}-${invoiceStatus.status}-${paymentStatus.status}` : `${invoiceStatus.status} + ${paymentStatus.status}`;
             }
             
-            // 否则，合并发票状态和付款状态
-            const paymentStatus = getOrderPaymentStatus(contractNumber);
-            const combinedStatus = `${invoiceStatus.status} + ${paymentStatus.status}`;
+            // 确定合并后的CSS类
+            let combinedCssClass;
             
-            // 确定合并后的CSS类（优先级：危险 > 警告 > 信息 > 成功 > 主要）
-            let combinedCssClass = invoiceStatus.cssClass;
-            
-            // 状态优先级处理
-            if (paymentStatus.cssClass.includes('danger') || invoiceStatus.cssClass.includes('danger')) {
-                combinedCssClass = 'badge-danger';
-            } else if (paymentStatus.cssClass.includes('warning') || invoiceStatus.cssClass.includes('warning')) {
-                combinedCssClass = 'badge-warning';
-            } else if (paymentStatus.cssClass.includes('info') || invoiceStatus.cssClass.includes('info')) {
-                combinedCssClass = 'badge-info';
-            } else if (paymentStatus.cssClass.includes('success') || invoiceStatus.cssClass.includes('success')) {
+            // 特殊处理：只有"执行完毕-已开票-已付清"使用深绿色
+            if (combinedStatus === '执行完毕-已开票-已付清') {
                 combinedCssClass = 'badge-success';
+            } else {
+                // 其他所有状态都使用除了绿色以外的颜色
+                // 直接根据具体状态设置颜色，而不是依赖于优先级
+                if (combinedStatus.includes('未付款') || combinedStatus.includes('部分付款')) {
+                    combinedCssClass = 'badge-danger';
+                } else if (combinedStatus.includes('未开票')) {
+                    combinedCssClass = 'badge-warning';
+                } else if (combinedStatus.includes('执行中')) {
+                    combinedCssClass = 'badge-info';
+                } else {
+                    combinedCssClass = 'badge-primary';
+                }
             }
             
             return { status: combinedStatus, cssClass: combinedCssClass };
@@ -5545,7 +5839,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                  // 直接获取公司选择下拉菜单的当前值，确保使用最新选择的公司
                  const companySelectElement = document.getElementById('company-select');
                  const currentCompanyFromSelect = companySelectElement ? companySelectElement.value : 'companyA';
-                 const currentCompanyFromStorage = localStorage.getItem('currentCompany_procurement') || 'companyA';
+                 const currentCompanyFromStorage = localStorage.getItem('currentCompany_index') || 'companyA';
                  
                  // 优先使用下拉菜单的当前值，避免localStorage可能未更新的问题
                  const currentCompany = currentCompanyFromSelect || currentCompanyFromStorage;
@@ -8311,7 +8605,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                         
                         // 收集所有需要备份的数据
                         const backupData = {
-                            version: '2.0',
+                            version: '2.1',
                             exportDate: new Date().toISOString(),
                             currentCompany: currentCompany,
                             companies: companies,
@@ -8330,6 +8624,8 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                 payments: {},
                                 // 合同数据（按公司分组）
                                 contracts: {},
+                                // 合同库存管理数据（按公司分组）
+                                contractInventory: {},
                                 // 系统设置
                                 lastActivePage: localStorage.getItem('lastActivePage') || '',
                                 // 发票页面的待办事项数据
@@ -8370,6 +8666,9 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                             backupData.data.invoices[company] = JSON.parse(localStorage.getItem(`${company}-invoices`) || '[]');
                             backupData.data.payments[company] = JSON.parse(localStorage.getItem(`${company}-payments`) || '[]');
                             backupData.data.contracts[company] = JSON.parse(localStorage.getItem(`${company}-contracts`) || '[]');
+                            
+                            // 收集合同库存管理数据
+                            backupData.data.contractInventory[company] = JSON.parse(localStorage.getItem(`contracts_${company}`) || '[]');
                             
                             // 收集收支表数据
                             backupData.data.balanceSheet.transactions[company] = JSON.parse(localStorage.getItem(`transactions_${company}`) || '[]');
@@ -8490,6 +8789,11 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                 // 恢复合同数据（按公司）
                                 if (data.contracts && data.contracts[company] !== undefined) {
                                     localStorage.setItem(`${company}-contracts`, JSON.stringify(data.contracts[company]));
+                                }
+                                
+                                // 恢复合同库存管理数据（按公司）
+                                if (data.contractInventory && data.contractInventory[company] !== undefined) {
+                                    localStorage.setItem(`contracts_${company}`, JSON.stringify(data.contractInventory[company]));
                                 }
                                 
                                 // 恢复收支表数据（按公司）
