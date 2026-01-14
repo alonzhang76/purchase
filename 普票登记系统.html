@@ -1106,6 +1106,9 @@
                             </button>
                         </div>
                         <div class="flex space-x-2">
+                            <button id="batch-payment-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <i class="fa fa-credit-card mr-2"></i> 批量付款
+                            </button>
                             <button id="export-invoices-btn" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
                                 <i class="fa fa-download mr-2"></i> 导出
                             </button>
@@ -2000,6 +2003,9 @@
 
         // 为导出按钮添加点击事件监听器
         document.getElementById('export-invoices-btn').addEventListener('click', exportInvoices);
+        
+        // 为批量付款按钮添加点击事件监听器
+        document.getElementById('batch-payment-btn').addEventListener('click', handleBatchPayment);
 
         // 导出发票数据
         function exportInvoices() {
@@ -2057,6 +2063,88 @@
             showToast('发票数据已导出', 'success');
         }
 
+        // 处理批量付款
+        function handleBatchPayment() {
+            // 获取选中的复选框
+            const checkedBoxes = document.querySelectorAll('.invoice-checkbox:checked');
+            
+            // 检查是否有选中的发票
+            if (checkedBoxes.length === 0) {
+                alert('请先选择要付款的发票');
+                return;
+            }
+            
+            // 确认是否要进行批量付款
+            if (!confirm(`确定要对选中的 ${checkedBoxes.length} 张发票进行批量付款吗？`)) {
+                return;
+            }
+            
+            // 获取选中的发票ID
+            const selectedIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+            
+            // 获取所有发票数据
+            const allInvoices = JSON.parse(localStorage.getItem('invoices')) || [];
+            
+            // 获取选中的发票
+            const selectedInvoices = allInvoices.filter(invoice => selectedIds.includes(invoice.id));
+            
+            // 获取现有的付款记录
+            let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
+            
+            // 获取预设的公司名称
+            const companyName1 = localStorage.getItem('companyName1') || '公司1';
+            
+            // 为每张选中的发票创建付款记录
+            selectedInvoices.forEach(invoice => {
+                // 计算实际欠款金额
+                const totalPaid = paymentRecords
+                    .filter(record => record.invoiceNo === invoice.invoiceNo)
+                    .reduce((sum, record) => sum + (parseFloat(record.amount) || 0), 0);
+                const actualOwed = (parseFloat(invoice.amount) || 0) - totalPaid;
+                
+                // 只有当还有欠款时才创建付款记录
+                if (actualOwed > 0) {
+                    // 创建付款记录
+                    const paymentRecord = {
+                        id: 'PAY' + Date.now() + Math.floor(Math.random() * 1000),
+                        date: new Date().toISOString().split('T')[0],
+                        type: '付款',
+                        category: invoice.category || '其他',
+                        amount: actualOwed,
+                        description: `批量付款 - ${invoice.invoiceNo}`,
+                        payer: invoice.buyer || companyName1,
+                        payee: invoice.seller || '',
+                        invoiceNo: invoice.invoiceNo,
+                        reimburser: invoice.reimburser || '',
+                        createDate: new Date().toISOString().split('T')[0],
+                        company: invoice.buyer || companyName1
+                    };
+                    
+                    // 添加到付款记录数组
+                    paymentRecords.push(paymentRecord);
+                }
+            });
+            
+            // 保存更新后的付款记录到localStorage
+            localStorage.setItem('paymentRecords', JSON.stringify(paymentRecords));
+            
+            // 更新发票状态
+            updateInvoiceStatus();
+            
+            // 更新汇总统计
+            updateSummaryStats();
+            
+            // 刷新当前页面的发票列表
+            filterInvoices(currentSearchTerm);
+            
+            // 刷新账款记录页面
+            if (document.getElementById('payment-search-input')) {
+                filterPaymentRecords(document.getElementById('payment-search-input').value.toLowerCase());
+            }
+            
+            alert(`已成功为 ${checkedBoxes.length} 张发票创建付款记录`);
+        }
+        
         // 初始化图表 - 已删除（仪表盘和统计分析页面已移除）
         function initCharts() {
             // 无图表需要初始化
