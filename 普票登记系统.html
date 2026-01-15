@@ -6704,7 +6704,11 @@
             // （2）解析发票中不含有"专用"2字，则"发票类型"字段的值为：普票；
             const hasSpecial = processedTextNoSpaces.includes('专用') || processedText.includes('专用');
             const validCompanies = ['无锡龙力印铁设备制造有限公司', '中国太平洋财产保险股份有限公司无锡分公司'];
-            const isSellerValid = validCompanies.some(name => seller.includes(name));
+            // 标准化销售方名称，将中文括号转换为英文括号
+            const normalizedSeller = seller.replace(/（/g, '(').replace(/）/g, ')');
+            // 标准化有效公司名称，将中文括号转换为英文括号
+            const normalizedValidCompanies = validCompanies.map(name => name.replace(/（/g, '(').replace(/）/g, ')'));
+            const isSellerValid = normalizedValidCompanies.some(name => normalizedSeller.includes(name));
             
             // 重置invoiceType，根据规则重新设置
             invoiceType = '';
@@ -6791,12 +6795,20 @@
             // 处理发票类型
             let finalInvoiceType = invoiceInfo.invoiceType;
             if (finalInvoiceType === '专票') {
+                // 标准化公司名称，将中文括号转换为英文括号
+                const normalizedCompanyName1 = companyName1.replace(/（/g, '(').replace(/）/g, ')');
+                const normalizedCompanyName2 = companyName2.replace(/（/g, '(').replace(/）/g, ')');
+                // 标准化销售方名称，将中文括号转换为英文括号
+                const normalizedSeller = invoiceInfo.seller ? invoiceInfo.seller.replace(/（/g, '(').replace(/）/g, ')') : '';
+                // 标准化购买方名称，将中文括号转换为英文括号
+                const normalizedBuyer = invoiceInfo.buyer ? invoiceInfo.buyer.replace(/（/g, '(').replace(/）/g, ')') : '';
+                
                 // 检查销售方是否为公司1或公司2
-                if (invoiceInfo.seller && (invoiceInfo.seller.includes(companyName1) || invoiceInfo.seller.includes(companyName2))) {
+                if (normalizedSeller && (normalizedSeller.includes(normalizedCompanyName1) || normalizedSeller.includes(normalizedCompanyName2))) {
                     finalInvoiceType = '专票-销项';
                 }
                 // 检查购买方是否为公司1或公司2
-                else if (invoiceInfo.buyer && (invoiceInfo.buyer.includes(companyName1) || invoiceInfo.buyer.includes(companyName2))) {
+                else if (normalizedBuyer && (normalizedBuyer.includes(normalizedCompanyName1) || normalizedBuyer.includes(normalizedCompanyName2))) {
                     finalInvoiceType = '专票-进项';
                 }
             }
