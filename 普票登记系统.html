@@ -2016,24 +2016,82 @@
             // 如果有选中的发票，只导出选中的发票
             if (checkedBoxes.length > 0) {
                 const selectedIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
-                exportData = mockInvoices.filter(invoice => selectedIds.includes(invoice.id));
+                exportData = mockInvoices.filter(invoice => selectedIds.includes(invoice.id.toString()));
             } else {
                 // 否则导出所有发票
                 exportData = mockInvoices;
             }
 
+            // 按报销人排序
+            exportData.sort((a, b) => {
+                const reimbA = a.reimburser || '未分配';
+                const reimbB = b.reimburser || '未分配';
+                return reimbA.localeCompare(reimbB);
+            });
+
+            // 按报销人分组
+            const groupedData = exportData.reduce((groups, invoice) => {
+                const reimburser = invoice.reimburser || '未分配';
+                if (!groups[reimburser]) {
+                    groups[reimburser] = [];
+                }
+                groups[reimburser].push(invoice);
+                return groups;
+            }, {});
+
             // 准备导出的字段
-            const headers = ['状态', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额', '报销人'];
-            const data = exportData.map(invoice => [
-                invoice.status,
-                invoice.date,
-                `'${invoice.invoiceNo}`,  // 发票号码添加单引号，确保Excel以文本格式显示
-                invoice.seller,
-                invoice.buyer,
-                (invoice.amount || 0).toFixed(2),
-                `${((invoice.taxRate || 0) * 100).toFixed(0)}%`,
-                (invoice.taxAmount || 0).toFixed(2),
-                invoice.reimburser || ''
+            const headers = ['序号', '状态', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额', '报销人'];
+            const data = [];
+            let grandTotalAmount = 0;
+            let grandTotalTaxAmount = 0;
+            let serialNumber = 1;
+
+            // 处理每个报销人组
+            Object.entries(groupedData).forEach(([reimburser, invoices]) => {
+                let groupTotalAmount = 0;
+                let groupTotalTaxAmount = 0;
+
+                // 添加该报销人的所有发票
+                invoices.forEach(invoice => {
+                    const amount = invoice.amount || 0;
+                    const taxAmount = invoice.taxAmount || 0;
+                    groupTotalAmount += amount;
+                    groupTotalTaxAmount += taxAmount;
+                    grandTotalAmount += amount;
+                    grandTotalTaxAmount += taxAmount;
+
+                    data.push([
+                        serialNumber,
+                        invoice.status,
+                        invoice.date,
+                        `'${invoice.invoiceNo}`,  // 发票号码添加单引号，确保Excel以文本格式显示
+                        invoice.seller,
+                        invoice.buyer,
+                        amount.toFixed(2),
+                        `${((invoice.taxRate || 0) * 100).toFixed(0)}%`,
+                        taxAmount.toFixed(2),
+                        invoice.reimburser || ''
+                    ]);
+                    serialNumber++;
+                });
+
+                // 添加该报销人的小计行
+                data.push([
+                    '', '', '', '', '', '',
+                    groupTotalAmount.toFixed(2),
+                    '',
+                    groupTotalTaxAmount.toFixed(2),
+                    `${reimburser} - 小计`
+                ]);
+            });
+
+            // 添加总计行
+            data.push([
+                '', '', '', '', '', '',
+                grandTotalAmount.toFixed(2),
+                '',
+                grandTotalTaxAmount.toFixed(2),
+                '总计'
             ]);
 
             // 创建CSV内容
