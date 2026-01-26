@@ -226,7 +226,7 @@
             });
             
             // 更新模态框中的公司选择器
-            const modalSelectors = document.querySelectorAll('#contract-migration-modal select, #create-payment-modal select');
+            const modalSelectors = document.querySelectorAll('#contract-migration-modal select, #create-payment-modal select[id*="company"]');
             modalSelectors.forEach(selector => {
                 const currentValue = selector.value;
                 selector.innerHTML = '';
@@ -716,11 +716,11 @@
                         <i class="fa fa-credit-card text-primary-600 text-lg"></i>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            新建付款
-                        </h3>
-                        <div class="mt-4">
-                            <form id="create-payment-form" class="space-y-4">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                                        新建付款
+                                    </h3>
+                                    <div class="mt-4 max-h-[60vh] overflow-y-auto">
+                                        <form id="create-payment-form" class="space-y-4">
                                 <!-- 付款方式选择 -->
                                 <div class="form-group">
                                     <label>付款方式</label>
@@ -746,13 +746,79 @@
                                                 <input type="date" id="new-invoice-date" class="form-input">
                                             </div>
                                         </div>
-                                           
+                                            
                                         <!-- 新发票金额输入框已移除，系统将使用付款金额作为发票金额 -->
                                     </div>
-                                </form>
-                            </div>
+                                </div>
+                                
+                                <!-- 付款详情 -->
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div class="form-group">
+                                        <label for="payment-number" class="form-label">合同号</label>
+                                        <input type="text" id="payment-number" class="form-input" style="width: 100%;" required>
+                                    </div>
+                                </div>
+                                
+                                <!-- 关联发票区域 -->
+                                <div class="form-group">
+                                    <label class="form-label mb-2">关联发票</label>
+                                    <div class="mb-2">
+                                        <input type="text" id="payment-invoice-id" class="form-input" placeholder="关联发票编号（多个发票用逗号分隔）" style="width: 100%;">
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded-md max-h-60 overflow-y-auto" id="invoice-checkboxes-container">
+                                        <p class="text-gray-500 text-sm">加载中...</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div class="form-group">
+                                        <label for="payment-date" class="form-label">付款日期</label>
+                                        <input type="date" id="payment-date" class="form-input" required>
+                                    </div>
+                                    
+                                    <div class="form-group">
+                                        <label for="payment-amount" class="form-label">付款金额</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">¥</span>
+                                            <input type="number" id="payment-amount" class="form-input pl-8 text-center" step="0.01" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                    <div class="form-group">
+                                        <label for="payment-method" class="form-label">付款方式</label>
+                                        <select id="payment-method" class="form-input" required>
+                                            <option value="银行转账">银行转账</option>
+                                            <option value="支付宝">支付宝</option>
+                                            <option value="微信支付">微信支付</option>
+                                            <option value="现金">现金</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="payment-supplier" class="form-label">供应商</label>
+                                    <input type="text" id="payment-supplier" class="form-input" required>
+                                    <div id="payment-supplier-search-results" class="hidden absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md border border-gray-200 max-h-60 overflow-y-auto"></div>
+                                </div>
+                                
+                                <!-- 备注 -->
+                                <div class="form-group">
+                                    <label for="payment-remark" class="form-label">备注</label>
+                                    <textarea id="payment-remark" class="form-textarea" rows="3" placeholder="请输入备注信息"></textarea>
+                                </div>
+                            </form>
                         </div>
                     </div>
+                </div>
+                <div class="mt-5 sm:mt-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm" id="save-payment-btn">
+                        <i class="fa fa-save mr-1"></i>保存
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" id="cancel-payment-btn">
+                        取消
+                    </button>
                 </div>
             </div>
         </div>
@@ -783,7 +849,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-5">
+                <div class="mt-5 max-h-[60vh] overflow-y-auto">
                     <form id="create-invoice-form" class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="form-group">
@@ -795,7 +861,50 @@
                                 <input type="text" id="invoice-number" class="form-input">
                             </div>
                         </div>
+                        
+                        <!-- 发票金额 -->
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div class="form-group">
+                                <label for="invoice-amount" class="form-label">发票金额</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">¥</span>
+                                    <input type="number" id="invoice-amount" class="form-input pl-8 text-center" placeholder="0.00" step="0.01" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 合同号 -->
+                        <div class="form-group">
+                            <label for="purchase-order" class="form-label">合同号</label>
+                            <input type="text" id="purchase-order" class="form-input" placeholder="请输入合同号" required>
+                        </div>
+                        
+                        <!-- 供应商信息 -->
+                        <div class="form-group">
+                            <label class="form-label">供应商信息</label>
+                            <div class="relative">
+                                <input type="text" id="supplier-name" class="form-input" placeholder="供应商名称">
+                                <div id="supplier-search-results" class="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg overflow-y-auto max-h-48 hidden"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 备注 -->
+                        <div class="form-group">
+                            <label for="invoice-remark" class="form-label">备注</label>
+                            <textarea id="invoice-remark" class="form-textarea" rows="3" placeholder="请输入备注信息"></textarea>
+                        </div>
                     </form>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="btn btn-primary sm:w-auto w-full" id="save-invoice-btn">
+                        <i class="fa fa-save mr-1"></i>保存
+                    </button>
+                    <button type="button" class="btn btn-secondary sm:mr-3 mr-0 sm:w-auto w-full mb-3 sm:mb-0" id="sync-invoice-btn">
+                        同步至进销发票
+                    </button>
+                    <button type="button" class="btn btn-secondary sm:mr-3 mr-0 sm:w-auto w-full mb-3 sm:mb-0" id="cancel-invoice-btn">
+                        取消
+                    </button>
                 </div>
             </div>
         </div>
@@ -952,7 +1061,7 @@
                                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                                         新建付款
                                     </h3>
-                                    <div class="mt-4">
+                                    <div class="mt-4 max-h-[60vh] overflow-y-auto">
                                         <form id="create-payment-form" class="space-y-4">
                                             <!-- 付款方式选择 -->
                                             <div class="form-group">
@@ -1537,7 +1646,7 @@
                                     <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
                                         新建发票
                                     </h3>
-                                    <div class="mt-4">
+                                    <div class="mt-4 max-h-[60vh] overflow-y-auto">
                                         <form class="space-y-4">
                                             <!-- 发票编号 -->
                                             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
