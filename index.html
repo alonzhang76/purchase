@@ -8715,6 +8715,13 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                             
                             // 收集合同库存管理数据
                             backupData.data.contractInventory[company] = JSON.parse(localStorage.getItem(`contracts_${company}`) || '[]');
+                            // 收集收货记录数据
+                            backupData.data.contractInventoryReceipts = backupData.data.contractInventoryReceipts || {};
+                            backupData.data.contractInventoryReceipts[company] = JSON.parse(localStorage.getItem(`receipts_${company}`) || '[]');
+                            // 收集退货记录数据
+                            backupData.data.contractInventoryReturns = backupData.data.contractInventoryReturns || {};
+                            backupData.data.contractInventoryReturns[company] = JSON.parse(localStorage.getItem(`returns_${company}`) || '[]');
+
                             
                             // 收集收支表数据
                             backupData.data.balanceSheet.transactions[company] = JSON.parse(localStorage.getItem(`transactions_${company}`) || '[]');
@@ -8841,6 +8848,17 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                 if (data.contractInventory && data.contractInventory[company] !== undefined) {
                                     localStorage.setItem(`contracts_${company}`, JSON.stringify(data.contractInventory[company]));
                                 }
+                                
+                                // 恢复收货记录数据（按公司）
+                                if (data.contractInventoryReceipts && data.contractInventoryReceipts[company] !== undefined) {
+                                    localStorage.setItem(`receipts_${company}`, JSON.stringify(data.contractInventoryReceipts[company]));
+                                }
+                                
+                                // 恢复退货记录数据（按公司）
+                                if (data.contractInventoryReturns && data.contractInventoryReturns[company] !== undefined) {
+                                    localStorage.setItem(`returns_${company}`, JSON.stringify(data.contractInventoryReturns[company]));
+                                }
+
                                 
                                 // 恢复收支表数据（按公司）
                                 if (data.balanceSheet && data.balanceSheet.transactions && data.balanceSheet.transactions[company] !== undefined) {
