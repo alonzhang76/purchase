@@ -7435,31 +7435,7 @@
             // 更新汇总合计
             updateTotalSummary();
             
-            // 添加付款日期输入框的事件监听器
-            document.querySelectorAll('[id^="payment-date-"]').forEach(input => {
-                input.addEventListener('change', function() {
-                    // 获取发票ID
-                    const invoiceId = this.id.replace('payment-date-', '');
-                    // 获取新的付款日期
-                    const newPaymentDate = this.value;
-                    
-                    // 更新发票数据
-                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
-                    if (invoice) {
-                        invoice.paymentDate = newPaymentDate;
-                        // 保存到localStorage
-                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
-                    }
-                    
-                    // 更新行背景色
-                    const row = this.closest('tr');
-                    if (newPaymentDate && newPaymentDate !== '') {
-                        row.style.backgroundColor = '#d4edda'; // 浅绿色
-                    } else {
-                        row.style.backgroundColor = ''; // 恢复默认背景色
-                    }
-                });
-            });
+
         }
         
         // 排序功能
@@ -7752,9 +7728,6 @@
                         <div class="text-sm text-gray-500">${invoice.registerDate || invoice.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <input type="date" id="payment-date-${invoice.id}" value="${invoice.paymentDate || ''}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-gray-500">${invoice.date}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -7817,33 +7790,7 @@
             // 更新汇总合计
             updateTotalSummary();
             
-            // 添加付款日期输入框的事件监听器
-            document.querySelectorAll('[id^="payment-date-"]').forEach(input => {
-                input.addEventListener('change', function() {
-                    // 获取发票ID
-                    const invoiceId = this.id.replace('payment-date-', '');
-                    // 获取新的付款日期
-                    const newPaymentDate = this.value;
-                    
-                    // 更新发票数据
-                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
-                    if (invoice) {
-                        invoice.paymentDate = newPaymentDate;
-                        // 保存到localStorage
-                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
-                    }
-                    
-                    // 更新当前行的背景色
-                    const row = this.closest('tr');
-                    if (row) {
-                        if (newPaymentDate && newPaymentDate !== '') {
-                            row.style.backgroundColor = '#d4edda'; // 浅绿色
-                        } else {
-                            row.style.backgroundColor = ''; // 恢复默认背景色
-                        }
-                    }
-                });
-            });
+
             
 
             
@@ -8380,33 +8327,7 @@
                 });
             });
             
-            // 添加付款日期输入框的事件监听器
-            document.querySelectorAll('[id^="payment-date-"]').forEach(input => {
-                input.addEventListener('change', function() {
-                    // 获取发票ID
-                    const invoiceId = this.id.replace('payment-date-', '');
-                    // 获取新的付款日期
-                    const newPaymentDate = this.value;
-                    
-                    // 更新发票数据
-                    const invoice = mockInvoices.find(inv => inv.id === invoiceId);
-                    if (invoice) {
-                        invoice.paymentDate = newPaymentDate;
-                        // 保存到localStorage
-                        localStorage.setItem('invoices', JSON.stringify(mockInvoices));
-                    }
-                    
-                    // 更新行背景色
-                    const row = this.closest('tr');
-                    if (row) {
-                        if (newPaymentDate && newPaymentDate !== '') {
-                            row.style.backgroundColor = '#d4edda'; // 浅绿色
-                        } else {
-                            row.style.backgroundColor = ''; // 恢复默认背景色
-                        }
-                    }
-                });
-            });
+
             
 
             
