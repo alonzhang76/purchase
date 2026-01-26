@@ -2483,14 +2483,14 @@
                             .reduce((sum, r) => sum + r.quantity, 0);
                         
                         // 计算库存数量
-                        const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(2));
+                        const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(3));
                         
                         // 计算未收数量
                         const productQuantity = parseFloat(product.quantity) || 0;
-                        const pendingQuantity = parseFloat((productQuantity - inventoryQuantity).toFixed(2));
+                        const pendingQuantity = parseFloat((productQuantity - inventoryQuantity).toFixed(3));
                         
                         // 计算完成率
-                        const completionRate = productQuantity > 0 ? (inventoryQuantity / productQuantity * 100).toFixed(2) : '0.00';
+                        const completionRate = productQuantity > 0 ? (inventoryQuantity / productQuantity * 100).toFixed(3) : '0.00';
                         
                         inventoryData.push({
                             ...contract,
@@ -2519,13 +2519,13 @@
                         .reduce((sum, r) => sum + r.quantity, 0);
                     
                     // 计算库存数量
-                    const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(2));
+                    const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(3));
                     
                     // 计算未收数量
-                    const pendingQuantity = parseFloat((contract.quantity - inventoryQuantity).toFixed(2));
+                    const pendingQuantity = parseFloat((contract.quantity - inventoryQuantity).toFixed(3));
                     
                     // 计算完成率
-                    const completionRate = contract.quantity > 0 ? (inventoryQuantity / contract.quantity * 100).toFixed(2) : '0.00';
+                    const completionRate = contract.quantity > 0 ? (inventoryQuantity / contract.quantity * 100).toFixed(3) : '0.00';
                     
                     inventoryData.push({
                         ...contract,
@@ -2655,14 +2655,14 @@
                             .reduce((sum, r) => sum + r.quantity, 0);
                         
                         // 计算实际收货数量（已收数量 - 已退数量）
-                        const actualReceivedQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(2));
+                        const actualReceivedQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(3));
                         
                         // 计算差异数量（库存数量 - 合同数量）
                         const productQuantity = parseFloat(product.quantity) || 0;
-                        const difference = parseFloat((actualReceivedQuantity - productQuantity).toFixed(2));
+                        const difference = parseFloat((actualReceivedQuantity - productQuantity).toFixed(3));
                         
                         // 计算差异率（库存数量 - 合同数量）/ 合同数量 * 100
-                        const differenceRate = productQuantity > 0 ? ((difference / productQuantity) * 100).toFixed(2) : '0.00';
+                        const differenceRate = productQuantity > 0 ? ((difference / productQuantity) * 100).toFixed(3) : '0.00';
                         
                         // 确定产品状态
                         let productStatus;
@@ -2720,13 +2720,13 @@
                         .reduce((sum, r) => sum + r.quantity, 0);
                     
                     // 计算实际收货数量（已收数量 - 已退数量）
-                    const actualReceivedQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(2));
+                    const actualReceivedQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(3));
                     
                     // 计算差异数量（库存数量 - 合同数量）
-                    const difference = parseFloat((actualReceivedQuantity - contract.quantity).toFixed(2));
+                    const difference = parseFloat((actualReceivedQuantity - contract.quantity).toFixed(3));
                     
                     // 计算差异率（库存数量 - 合同数量）/ 合同数量 * 100
-                    const differenceRate = contract.quantity > 0 ? ((difference / contract.quantity) * 100).toFixed(2) : '0.00';
+                    const differenceRate = contract.quantity > 0 ? ((difference / contract.quantity) * 100).toFixed(3) : '0.00';
                     
                     // 确定状态
                     let status;
@@ -3502,14 +3502,14 @@
                             .reduce((sum, r) => sum + r.quantity, 0);
                         
                         // 计算库存数量
-                        const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(2));
+                        const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(3));
                         
                         // 计算未收数量
                         const productQuantity = parseFloat(product.quantity) || 0;
-                        const pendingQuantity = parseFloat((productQuantity - inventoryQuantity).toFixed(2));
+                        const pendingQuantity = parseFloat((productQuantity - inventoryQuantity).toFixed(3));
                         
                         // 计算完成率
-                        const completionRate = productQuantity > 0 ? (inventoryQuantity / productQuantity * 100).toFixed(2) : '0.00';
+                        const completionRate = productQuantity > 0 ? (inventoryQuantity / productQuantity * 100).toFixed(3) : '0.00';
                         
                         inventoryData.push({
                             '合同号': contract.contractNumber,
@@ -3538,13 +3538,13 @@
                         .reduce((sum, r) => sum + r.quantity, 0);
                     
                     // 计算库存数量
-                    const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(2));
+                    const inventoryQuantity = parseFloat((receivedQuantity - returnedQuantity).toFixed(3));
                     
                     // 计算未收数量
-                    const pendingQuantity = parseFloat((contract.quantity - inventoryQuantity).toFixed(2));
+                    const pendingQuantity = parseFloat((contract.quantity - inventoryQuantity).toFixed(3));
                     
                     // 计算完成率
-                    const completionRate = contract.quantity > 0 ? (inventoryQuantity / contract.quantity * 100).toFixed(2) : '0.00';
+                    const completionRate = contract.quantity > 0 ? (inventoryQuantity / contract.quantity * 100).toFixed(3) : '0.00';
                     
                     inventoryData.push({
                         '合同号': contract.contractNumber,
