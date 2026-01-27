@@ -6474,32 +6474,41 @@
             
             // 1. 先尝试从价税合计大写中提取
             // 处理带有空格的中文大写金额，如：叁 仟 捌 佰 零 柒 圆 捌 角 玖 分
-            const chineseAmountRegex = /(壹|贰|叁|肆|伍|陆|柒|捌|玖|拾)\s*(仟|佰|拾|万|亿|)\s*(壹|贰|叁|肆|伍|陆|柒|捌|玖|拾|零)?\s*(仟|佰|拾|万|亿|)\s*(壹|贰|叁|肆|伍|陆|柒|捌|玖|拾|零)?\s*(仟|佰|拾|)\s*(壹|贰|叁|肆|伍|陆|柒|捌|玖|拾|零)?\s*(圆|元)\s*(壹|贰|叁|肆|伍|陆|柒|捌|玖|拾|零)?\s*(角)\s*(壹|贰|叁|肆|伍|陆|柒|捌|玖|拾|零)?\s*(分)/i;
+            // 简化正则表达式，使用更灵活的匹配方式
+            const chineseAmountRegex = /(?:价税合计|合计)\s*(?:\(大写\))?\s*([壹贰叁肆伍陆柒捌玖拾佰仟万亿圆角分整\s]+)(?:整)?/i;
             
             let match = processedText.match(chineseAmountRegex);
-            if (match) {
-                chineseAmount = match[0];
+            if (match && match[1]) {
+                chineseAmount = match[1].replace(/\s+/g, ''); // 移除空格
                 console.log('从价税合计大写中提取到中文大写金额:', chineseAmount);
             }
             
-            // 2. 如果失败，尝试其他格式
+            // 2. 如果失败，尝试直接匹配中文大写金额
             if (!chineseAmount) {
-                const fallbackPatterns = [
-                    // 匹配格式：价税合计（大写） 叁仟捌佰零柒圆捌角玖分
-                    /(?:价税合计|合计)\s*\(大写\)\s*([壹贰叁肆伍陆柒捌玖拾佰仟万亿圆角分整]+)/i,
-                    // 匹配格式：大写: 叁仟捌佰零柒圆捌角玖分
-                    /大写\s*[:：]\s*([壹贰叁肆伍陆柒捌玖拾佰仟万亿圆角分整]+)/i,
-                    // 匹配格式：直接匹配中文大写金额（无空格）
-                    /([壹贰叁肆伍陆柒捌玖拾佰仟万亿圆角分整]+(?:分|角|元|圆))/i
-                ];
-                
-                for (const pattern of fallbackPatterns) {
-                    match = processedText.match(pattern);
-                    if (match && match[1]) {
-                        chineseAmount = match[1];
-                        console.log('从其他格式提取到中文大写金额:', chineseAmount);
-                        break;
-                    }
+                // 直接匹配完整的中文大写金额，包括空格
+                const directPattern = /([壹贰叁肆伍陆柒捌玖拾佰仟万亿圆角分整\s]+(?:整)?)/i;
+                match = processedText.match(directPattern);
+                if (match && match[1]) {
+                    chineseAmount = match[1].replace(/\s+/g, ''); // 移除空格
+                    console.log('直接匹配提取到中文大写金额:', chineseAmount);
+                }
+            }
+            
+            // 3. 特殊处理：从"价税合计（大写）"和"（小写）"之间提取
+            if (!chineseAmount) {
+                const priceTaxMatch = processedText.match(/价税合计\s*\(大写\)\s*([\s\S]+?)\s*\(小写\)/i);
+                if (priceTaxMatch && priceTaxMatch[1]) {
+                    chineseAmount = priceTaxMatch[1].replace(/\s+/g, ''); // 移除空格
+                    console.log('从价税合计大写和小写之间提取到中文大写金额:', chineseAmount);
+                }
+            }
+            
+            // 4. 特殊处理：从"合计"和"价税合计"之间提取
+            if (!chineseAmount) {
+                const totalMatch = processedText.match(/合计\s*([\s\S]+?)\s*价税合计/i);
+                if (totalMatch && totalMatch[1]) {
+                    chineseAmount = totalMatch[1].replace(/\s+/g, ''); // 移除空格
+                    console.log('从合计和价税合计之间提取到中文大写金额:', chineseAmount);
                 }
             }
             
@@ -6615,52 +6624,59 @@
             // 税额提取 - 按照用户要求：提取介于"中文大写金额"前的"合计"与人民币符号之间的数值
             console.log('开始提取税额，按照用户要求的规则...');
             
-            // 8.1 首先找到中文大写金额的位置
-            let chineseAmountPos = -1;
+            // 8.1 首先找到所有人民币符号后的数值
+            // 支持带有任意空格的数值格式
+            const allRmbValues = processedText.match(/¥\s*([\d\s,]+(?:\.\s*\d\s*\d)?)/g);
+            console.log('找到的所有人民币数值:', allRmbValues);
             
-            // 如果已经提取到了中文大写金额，直接查找其在文本中的位置
-            if (chineseAmount) {
-                chineseAmountPos = processedText.indexOf(chineseAmount);
-                if (chineseAmountPos !== -1) {
-                    console.log('找到中文大写金额位置:', chineseAmountPos);
-                }
+            // 8.2 如果找到至少两个人民币数值，第二个通常是税额
+            if (allRmbValues && allRmbValues.length >= 2) {
+                // 税额通常是第二个人民币数值
+                const taxAmountStr = allRmbValues[1].replace(/¥\s*/g, '').replace(/[\s,]/g, '');
+                taxAmount = taxAmountStr;
+                console.log('按照人民币数值顺序提取到税额:', taxAmount);
             }
             
-            // 如果没有找到，尝试直接查找价税合计的位置
-            if (chineseAmountPos === -1) {
-                const priceTaxTotalMatch = processedText.match(/(?:价税合计|合计)\s*\(大写\)/i);
-                if (priceTaxTotalMatch) {
-                    chineseAmountPos = priceTaxTotalMatch.index;
-                    console.log('找到价税合计大写位置:', chineseAmountPos);
-                }
-            }
-            
-            // 如果仍然没有找到，尝试查找"叁仟捌佰"等中文大写金额的起始位置
-            if (chineseAmountPos === -1) {
-                const manualMatch = processedText.match(/(叁|贰|壹|肆|伍|陆|柒|捌|玖|拾)\s*仟/);
-                if (manualMatch) {
-                    chineseAmountPos = manualMatch.index;
-                    console.log('手动找到中文大写金额起始位置:', chineseAmountPos);
-                }
-            }
-            
-            if (chineseAmountPos !== -1) {
-                // 8.2 提取中文大写金额之前的文本
-                const textBeforeChineseAmount = processedText.substring(0, chineseAmountPos);
-                console.log('中文大写金额之前的文本:', textBeforeChineseAmount);
+            // 8.3 如果上述方法失败，尝试按照用户规则提取
+            if (!taxAmount) {
+                // 首先找到中文大写金额的位置
+                let chineseAmountPos = -1;
                 
-                // 8.3 找到"合计"的位置
-                const totalPos = textBeforeChineseAmount.lastIndexOf('合计');
-                if (totalPos !== -1) {
-                    // 8.4 提取"合计"之前的文本，因为税额在"合计"之前
-                    const textBeforeTotal = textBeforeChineseAmount.substring(0, totalPos).trim();
-                    console.log('合计之前的文本:', textBeforeTotal);
+                // 如果已经提取到了中文大写金额，直接查找其在文本中的位置
+                if (chineseAmount) {
+                    chineseAmountPos = processedText.indexOf(chineseAmount);
+                    if (chineseAmountPos !== -1) {
+                        console.log('找到中文大写金额位置:', chineseAmountPos);
+                    }
+                }
+                
+                // 如果没有找到，尝试直接查找价税合计的位置
+                if (chineseAmountPos === -1) {
+                    const priceTaxTotalMatch = processedText.match(/(?:价税合计|合计)\s*\(大写\)/i);
+                    if (priceTaxTotalMatch) {
+                        chineseAmountPos = priceTaxTotalMatch.index;
+                        console.log('找到价税合计大写位置:', chineseAmountPos);
+                    }
+                }
+                
+                // 如果仍然没有找到，尝试查找"叁仟捌佰"等中文大写金额的起始位置
+                if (chineseAmountPos === -1) {
+                    const manualMatch = processedText.match(/(叁|贰|壹|肆|伍|陆|柒|捌|玖|拾)\s*仟/);
+                    if (manualMatch) {
+                        chineseAmountPos = manualMatch.index;
+                        console.log('手动找到中文大写金额起始位置:', chineseAmountPos);
+                    }
+                }
+                
+                if (chineseAmountPos !== -1) {
+                    // 提取中文大写金额之前的文本
+                    const textBeforeChineseAmount = processedText.substring(0, chineseAmountPos);
+                    console.log('中文大写金额之前的文本:', textBeforeChineseAmount);
                     
-                    // 8.5 提取所有人民币符号后的数值
-                    // 支持带有任意空格的数值格式
-                    const rmbValues = textBeforeTotal.match(/¥\s*([\d\s,]+(?:\.\s*\d\s*\d)?)/g);
+                    // 提取所有人民币符号后的数值
+                    const rmbValues = textBeforeChineseAmount.match(/¥\s*([\d\s,]+(?:\.\s*\d\s*\d)?)/g);
                     if (rmbValues && rmbValues.length >= 2) {
-                        // 8.6 税额通常是第二个人民币数值
+                        // 税额通常是第二个人民币数值
                         const taxAmountStr = rmbValues[1].replace(/¥\s*/g, '').replace(/[\s,]/g, '');
                         taxAmount = taxAmountStr;
                         console.log('按照用户规则提取到税额:', taxAmount);
