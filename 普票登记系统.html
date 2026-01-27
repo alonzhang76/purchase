@@ -4248,6 +4248,11 @@
         
         // 导出自专票数据到invoice list.html
         function exportSpecialInvoicesToExcel() {
+            // 标准化公司名称，将全角括号转换为半角括号
+            function normalizeCompanyName(name) {
+                return String(name || '').replace(/（/g, '(').replace(/）/g, ')');
+            }
+            
             // 获取抬头公司筛选值
             const invoiceCompany = document.getElementById('special-invoice-company-filter').value;
             
@@ -4262,6 +4267,7 @@
             const invoiceStatus = document.getElementById('special-invoice-status-filter').value;
             const invoiceType = document.getElementById('special-invoice-type-filter').value;
             const daysFilter = document.getElementById('special-days-filter').value;
+            const normalizedInvoiceCompany = normalizeCompanyName(invoiceCompany);
             
             // 计算日期范围
             const now = new Date();
@@ -4292,8 +4298,8 @@
                 // 搜索条件
                 const lowerSearchTerm = searchTerm.toLowerCase();
                 const searchMatch = String(invoice.invoiceNo || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.seller || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.buyer || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.seller).toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.buyer).toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.date || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.registerDate || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.amount || '').toLowerCase().includes(lowerSearchTerm) ||
@@ -4324,9 +4330,9 @@
                     // 对于专票-销项：销售方是选定的公司
                     // 对于专票-进项：购买方是选定的公司
                     if (invoice.invoiceType === '专票-销项') {
-                        companyMatch = (invoice.seller || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany);
                     } else if (invoice.invoiceType === '专票-进项') {
-                        companyMatch = (invoice.buyer || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany);
                     }
                 }
                 
@@ -4375,7 +4381,7 @@
             // 准备要传递的数据
             const invoiceData = {
                 invoices: filteredInvoices,
-                company: invoiceCompany
+                company: normalizedInvoiceCompany
             };
             
             // 将数据存储到localStorage，以便在invoice list.html中读取
