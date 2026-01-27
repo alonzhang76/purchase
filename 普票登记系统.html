@@ -3779,6 +3779,11 @@
                     break;
             }
             
+            // 标准化公司名称，将全角括号转换为半角括号
+            function normalizeCompanyName(name) {
+                return String(name || '').replace(/（/g, '(').replace(/）/g, ')');
+            }
+            
             // 筛选发票
             const filteredInvoices = mockInvoices.filter(invoice => {
                 // 只显示专票，包括专票-销项和专票-进项
@@ -3789,8 +3794,8 @@
                 
                 // 搜索条件
                 const searchMatch = String(invoice.invoiceNo || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.seller || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.buyer || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.seller).toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.buyer).toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.date || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.registerDate || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.amount || '').toLowerCase().includes(lowerSearchTerm) ||
@@ -3817,16 +3822,17 @@
                     // 获取公司名称
                     const companyName1 = localStorage.getItem('companyName1') || '公司1';
                     const companyName2 = localStorage.getItem('companyName2') || '公司2';
+                    const normalizedInvoiceCompany = normalizeCompanyName(invoiceCompany);
                     
                     // 对于专票-销项：销售方是选定的公司
                     // 对于专票-进项：购买方是选定的公司
                     // 对于普票：销售方或购买方是选定的公司
                     if (invoice.invoiceType === '专票-销项') {
-                        companyMatch = (invoice.seller || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany);
                     } else if (invoice.invoiceType === '专票-进项') {
-                        companyMatch = (invoice.buyer || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany);
                     } else {
-                        companyMatch = (invoice.seller || '').includes(invoiceCompany) || (invoice.buyer || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany) || normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany);
                     }
                 }
                 
@@ -5539,6 +5545,11 @@
                     break;
             }
             
+            // 标准化公司名称，将全角括号转换为半角括号
+            function normalizeCompanyName(name) {
+                return String(name || '').replace(/（/g, '(').replace(/）/g, ')');
+            }
+            
             // 筛选发票
             const filteredInvoices = mockInvoices.filter(invoice => {
                 // 只显示普票
@@ -5549,8 +5560,8 @@
                 
                 // 搜索条件
                 const searchMatch = String(invoice.invoiceNo || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.seller || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.buyer || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.seller).toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.buyer).toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.date || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.registerDate || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.amount || '').toLowerCase().includes(lowerSearchTerm) ||
@@ -5574,8 +5585,9 @@
                 // 抬头公司筛选条件
                 let companyMatch = true;
                 if (invoiceCompany && invoiceCompany !== '') {
+                    const normalizedInvoiceCompany = normalizeCompanyName(invoiceCompany);
                     // 对于普票：销售方或购买方是选定的公司
-                    companyMatch = (invoice.seller || '').includes(invoiceCompany) || (invoice.buyer || '').includes(invoiceCompany);
+                    companyMatch = normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany) || normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany);
                 }
                 
                 // 登记日期筛选条件
@@ -8065,6 +8077,11 @@
                     break;
             }
             
+            // 标准化公司名称，将全角括号转换为半角括号
+            function normalizeCompanyName(name) {
+                return String(name || '').replace(/（/g, '(').replace(/）/g, ')');
+            }
+            
             // 筛选发票
             const filteredInvoices = mockInvoices.filter(invoice => {
                 // 将搜索词转换为小写，确保不区分大小写搜索
@@ -8072,8 +8089,8 @@
                 
                 // 搜索条件
                 const searchMatch = String(invoice.invoiceNo || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.seller || '').toLowerCase().includes(lowerSearchTerm) ||
-                                   String(invoice.buyer || '').toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.seller).toLowerCase().includes(lowerSearchTerm) ||
+                                   normalizeCompanyName(invoice.buyer).toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.date || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.registerDate || '').toLowerCase().includes(lowerSearchTerm) ||
                                    String(invoice.amount || '').toLowerCase().includes(lowerSearchTerm) ||
@@ -8103,15 +8120,16 @@
                 // 抬头公司筛选条件
                 let companyMatch = true;
                 if (invoiceCompany && invoiceCompany !== '') {
+                    const normalizedInvoiceCompany = normalizeCompanyName(invoiceCompany);
                     // 对于专票-销项：销售方是选定的公司
                     // 对于专票-进项：购买方是选定的公司
                     // 对于普票：销售方或购买方是选定的公司
                     if (invoice.invoiceType === '专票-销项') {
-                        companyMatch = (invoice.seller || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany);
                     } else if (invoice.invoiceType === '专票-进项') {
-                        companyMatch = (invoice.buyer || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany);
                     } else {
-                        companyMatch = (invoice.seller || '').includes(invoiceCompany) || (invoice.buyer || '').includes(invoiceCompany);
+                        companyMatch = normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany) || normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany);
                     }
                 }
                 
