@@ -2210,9 +2210,12 @@
                         
                         // 确定产品状态
                         let productStatus;
+                        const productQuantity = parseFloat(product.quantity) || 0;
                         if (actualReceivedQuantity === 0) {
                             productStatus = 'pending'; // 未开始
-                        } else if (actualReceivedQuantity < parseFloat(product.quantity) || 0) {
+                        } else if (Math.abs(actualReceivedQuantity - productQuantity) < 0.001) {
+                            productStatus = 'completed'; // 执行完毕（考虑浮点数精度误差）
+                        } else if (actualReceivedQuantity < productQuantity) {
                             productStatus = 'in-progress'; // 执行中
                         } else {
                             productStatus = 'completed'; // 执行完毕
@@ -2251,9 +2254,12 @@
                     
                     // 确定产品状态
                     let productStatus;
+                    const productQuantity = parseFloat(contract.quantity) || 0;
                     if (actualReceivedQuantity === 0) {
                         productStatus = 'pending'; // 未开始
-                    } else if (actualReceivedQuantity < contract.quantity || 0) {
+                    } else if (Math.abs(actualReceivedQuantity - productQuantity) < 0.001) {
+                        productStatus = 'completed'; // 执行完毕（考虑浮点数精度误差）
+                    } else if (actualReceivedQuantity < productQuantity) {
                         productStatus = 'in-progress'; // 执行中
                     } else {
                         productStatus = 'completed'; // 执行完毕
@@ -2581,11 +2587,11 @@
                         <td>${item.product}</td>
                         <td>${item.spec}</td>
                         <td>${item.unit}</td>
-                        <td>${item.quantity}</td>
-                        <td>${item.receivedQuantity}</td>
-                        <td>${item.returnedQuantity}</td>
-                        <td>${item.inventoryQuantity}</td>
-                        <td>${item.pendingQuantity}</td>
+                        <td>${parseFloat(item.quantity).toFixed(3)}</td>
+                        <td>${parseFloat(item.receivedQuantity).toFixed(3)}</td>
+                        <td>${parseFloat(item.returnedQuantity).toFixed(3)}</td>
+                        <td>${parseFloat(item.inventoryQuantity).toFixed(3)}</td>
+                        <td>${parseFloat(item.pendingQuantity).toFixed(3)}</td>
                         <td>${item.completionRate}%</td>
                     </tr>
                 `).join('');
@@ -2599,11 +2605,11 @@
             const totalPendingQuantity = filteredInventoryData.reduce((sum, item) => sum + item.pendingQuantity, 0);
             
             // 更新总计行
-            document.getElementById('total-contract-quantity').textContent = totalContractQuantity;
-            document.getElementById('total-received-quantity').textContent = totalReceivedQuantity;
-            document.getElementById('total-returned-quantity').textContent = totalReturnedQuantity;
-            document.getElementById('total-inventory-quantity').textContent = totalInventoryQuantity;
-            document.getElementById('total-pending-quantity').textContent = totalPendingQuantity;
+            document.getElementById('total-contract-quantity').textContent = parseFloat(totalContractQuantity).toFixed(3);
+            document.getElementById('total-received-quantity').textContent = parseFloat(totalReceivedQuantity).toFixed(3);
+            document.getElementById('total-returned-quantity').textContent = parseFloat(totalReturnedQuantity).toFixed(3);
+            document.getElementById('total-inventory-quantity').textContent = parseFloat(totalInventoryQuantity).toFixed(3);
+            document.getElementById('total-pending-quantity').textContent = parseFloat(totalPendingQuantity).toFixed(3);
             
             // 更新分页控件
             updatePaginationAndStats(filteredInventoryData, {
@@ -2917,13 +2923,26 @@
                         
                         const pendingQuantity = Math.max(0, productQuantity - receivedQuantity);
                         
-                        allContractActivities.push({
-                            ...contract,
-                            product: productName,
-                            quantity: productQuantity,
-                            receivedQuantity,
-                            pendingQuantity
-                        });
+                        // 确定产品状态
+                    let productStatus;
+                    if (receivedQuantity === 0) {
+                        productStatus = 'pending'; // 未开始
+                    } else if (Math.abs(receivedQuantity - productQuantity) < 0.001) {
+                        productStatus = 'completed'; // 执行完毕（考虑浮点数精度误差）
+                    } else if (receivedQuantity < productQuantity) {
+                        productStatus = 'in-progress'; // 执行中
+                    } else {
+                        productStatus = 'completed'; // 执行完毕
+                    }
+                    
+                    allContractActivities.push({
+                        ...contract,
+                        product: productName,
+                        quantity: productQuantity,
+                        receivedQuantity,
+                        pendingQuantity,
+                        status: productStatus
+                    });
                     });
                 } else {
                     // 兼容旧数据结构（单个产品）
@@ -2932,10 +2951,24 @@
                         .reduce((sum, r) => sum + r.quantity, 0);
                     const pendingQuantity = Math.max(0, contract.quantity - receivedQuantity);
                     
+                    // 确定产品状态
+                    let productStatus;
+                    const productQuantity = parseFloat(contract.quantity) || 0;
+                    if (receivedQuantity === 0) {
+                        productStatus = 'pending'; // 未开始
+                    } else if (Math.abs(receivedQuantity - productQuantity) < 0.001) {
+                        productStatus = 'completed'; // 执行完毕（考虑浮点数精度误差）
+                    } else if (receivedQuantity < productQuantity) {
+                        productStatus = 'in-progress'; // 执行中
+                    } else {
+                        productStatus = 'completed'; // 执行完毕
+                    }
+                    
                     allContractActivities.push({
                         ...contract,
                         receivedQuantity,
-                        pendingQuantity
+                        pendingQuantity,
+                        status: productStatus
                     });
                 }
             });
@@ -2951,9 +2984,9 @@
                     <td>${activity.contractNumber}</td>
                     <td>${activity.supplier}</td>
                     <td>${activity.product}</td>
-                    <td>${activity.quantity}</td>
-                    <td>${activity.receivedQuantity}</td>
-                    <td>${activity.pendingQuantity}</td>
+                    <td>${parseFloat(activity.quantity).toFixed(3)}</td>
+                    <td>${parseFloat(activity.receivedQuantity).toFixed(3)}</td>
+                    <td>${parseFloat(activity.pendingQuantity).toFixed(3)}</td>
                     <td><span class="badge badge-${getStatusColor(activity.status)}">${getStatusText(activity.status)}</span></td>
                     <td>${new Date(activity.updatedAt).toLocaleString()}</td>
                 </tr>

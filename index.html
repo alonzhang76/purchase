@@ -48,17 +48,24 @@
         
         // 数量千分位格式化函数
         function formatQuantity(quantity) {
+            console.log('formatQuantity called with:', quantity);
             const num = parseFloat(quantity);
+            console.log('Parsed num:', num);
             if (isNaN(num)) return '0';
             // 检查是否为整数
             if (Number.isInteger(num)) {
-                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                const result = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                console.log('Integer result:', result);
+                return result;
             } else {
-                // 对于小数，只对整数部分进行千分位格式化
-                const numStr = num.toString();
-                const parts = numStr.split('.');
+                // 对于小数，限制小数位数为3位，然后对整数部分进行千分位格式化
+                const roundedNum = num.toFixed(3);
+                console.log('Rounded num:', roundedNum);
+                const parts = roundedNum.split('.');
                 parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                return parts.join('.');
+                const result = parts.join('.');
+                console.log('Decimal result:', result);
+                return result;
             }
         }
         
@@ -904,6 +911,40 @@
                     </button>
                     <button type="button" class="btn btn-secondary sm:mr-3 mr-0 sm:w-auto w-full mb-3 sm:mb-0" id="cancel-invoice-btn">
                         取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 管理单位模态框 -->
+    <div id="manageUnitsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold">管理单位选项</h2>
+                    <button id="closeManageUnitsModal" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="newUnitInput" class="form-input flex-1" placeholder="输入新单位">
+                        <button id="addUnitBtn" class="btn btn-primary">
+                            <i class="fa fa-plus mr-1"></i>添加
+                        </button>
+                    </div>
+                    
+                    <div id="unitsList" class="space-y-2">
+                        <!-- 单位列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-2">
+                    <button id="cancelManageUnitsBtn" class="btn btn-secondary">
+                        取消
+                    </button>
+                    <button id="saveUnitsBtn" class="btn btn-primary">
+                        保存
                     </button>
                 </div>
             </div>
@@ -2257,7 +2298,7 @@
     
     <!-- 新建采购订单模态框 -->
     <div id="newPurchaseOrderModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold">新建采购订单</h2>
@@ -2358,26 +2399,38 @@
                         </div>
                         <div id="productList" class="space-y-4">
                             <!-- 第一个产品行 -->
-                            <div class="grid grid-cols-12 gap-2 p-3 bg-gray-50 rounded-md product-row">
+                            <div class="grid grid-cols-12 gap-3 p-3 bg-gray-50 rounded-md product-row">
                                 <div class="col-span-2">
                                     <div class="relative">
                                         <input type="text" class="form-input product-name" placeholder="产品名称" required>
                                         <div class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto mt-1 product-dropdown"></div>
                                     </div>
                                 </div>
-                                <div class="col-span-3">
+                                <div class="col-span-2">
                                     <div class="relative">
                                         <input type="text" class="form-input product-specification" placeholder="规格型号" required>
                                         <div class="absolute z-50 w-full bg-white border border-gray-300 rounded-md shadow-lg hidden max-h-60 overflow-y-auto mt-1 spec-dropdown"></div>
                                     </div>
                                 </div>
                                 <div class="col-span-2">
-                                    <input type="number" class="form-input product-unit-price" placeholder="单价" min="0" step="0.01" required>
+                                    <input type="number" class="form-input product-unit-price" placeholder="单价" min="0" step="0.001" required style="-moz-appearance: textfield; appearance: textfield;">
+                                    <style>
+                                        /* 确保移除所有浏览器的微调按钮 */
+                                        input[type="number"]::-webkit-inner-spin-button,
+                                        input[type="number"]::-webkit-outer-spin-button {
+                                            -webkit-appearance: none;
+                                            margin: 0;
+                                        }
+                                        input[type="number"] {
+                                            -moz-appearance: textfield;
+                                            appearance: textfield;
+                                        }
+                                    </style>
                                 </div>
                                 <div class="col-span-2">
-                                    <input type="number" class="form-input product-quantity" placeholder="数量" min="1" step="1" required>
+                                    <input type="number" class="form-input product-quantity" placeholder="数量" min="0" step="0.001" required style="-moz-appearance: textfield; appearance: textfield;">
                                 </div>
-                                <div class="col-span-1">
+                                <div class="col-span-2">
                                     <select class="form-input product-unit" required>
                                         <option value="只">只</option>
                                         <option value="卷">卷</option>
@@ -2390,18 +2443,18 @@
                                 <div class="col-span-2">
                                     <input type="number" class="form-input product-amount" placeholder="金额" min="0" step="0.01" readonly>
                                 </div>
-                                <div class="col-span-1 flex items-center">
-                                    <button type="button" class="remove-product-btn text-red-500 hover:text-red-700" disabled>
-                                        <i class="fa fa-trash"></i>
-                                    </button>
-                                </div>
                             </div>
                         </div>
                         
-                        <!-- 添加产品按钮 -->
-                        <button type="button" id="addProductBtn" class="btn btn-secondary mt-2">
-                            <i class="fa fa-plus mr-1"></i>添加产品
-                        </button>
+                        <!-- 管理单位按钮 -->
+                        <div class="flex items-center justify-between mt-2">
+                            <button type="button" id="addProductBtn" class="btn btn-secondary">
+                                <i class="fa fa-plus mr-1"></i>添加产品
+                            </button>
+                            <button type="button" id="manageUnitsBtn" class="btn btn-primary">
+                                <i class="fa fa-cog mr-1"></i>管理单位
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- 总金额 -->
@@ -2431,6 +2484,78 @@
             return `PO-${year}${month}${day}-${random}`;
         }
         
+        // 单位管理功能
+        let units = JSON.parse(localStorage.getItem('units')) || ['只', '卷', '箱', '吨', '公斤', '套'];
+        
+        // 保存单位到localStorage
+        function saveUnits() {
+            localStorage.setItem('units', JSON.stringify(units));
+        }
+        
+        // 加载单位到下拉框
+        function loadUnitsToDropdowns() {
+            const unitDropdowns = document.querySelectorAll('.product-unit');
+            unitDropdowns.forEach(dropdown => {
+                const currentValue = dropdown.value;
+                dropdown.innerHTML = '';
+                units.forEach(unit => {
+                    const option = document.createElement('option');
+                    option.value = unit;
+                    option.textContent = unit;
+                    if (option.value === currentValue) {
+                        option.selected = true;
+                    }
+                    dropdown.appendChild(option);
+                });
+            });
+        }
+        
+        // 显示管理单位模态框
+        function showManageUnitsModal() {
+            console.log('showManageUnitsModal called!');
+            const modal = document.getElementById('manageUnitsModal');
+            const unitsList = document.getElementById('unitsList');
+            console.log('manageUnitsModal:', modal);
+            console.log('unitsList:', unitsList);
+            
+            if (!modal) {
+                console.error('manageUnitsModal not found!');
+                return;
+            }
+            
+            if (!unitsList) {
+                console.error('unitsList not found!');
+                return;
+            }
+            
+            // 清空现有列表
+            unitsList.innerHTML = '';
+            
+            // 生成单位列表
+            units.forEach((unit, index) => {
+                const unitItem = document.createElement('div');
+                unitItem.className = 'flex items-center gap-2 p-2 border rounded-md';
+                unitItem.innerHTML = `
+                    <input type="text" value="${unit}" class="form-input flex-1" data-index="${index}">
+                    <button type="button" class="delete-unit-btn text-red-500 hover:text-red-700" data-index="${index}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                `;
+                unitsList.appendChild(unitItem);
+            });
+            
+            // 绑定删除按钮事件
+            document.querySelectorAll('.delete-unit-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    units.splice(index, 1);
+                    showManageUnitsModal(); // 重新显示列表
+                });
+            });
+            
+            modal.classList.remove('hidden');
+        }
+        
         // 初始化新建采购订单模态框
         document.addEventListener('DOMContentLoaded', function() {
             // 设置默认日期为今天
@@ -2449,6 +2574,72 @@
             
             // 绑定事件
             bindNewPurchaseOrderEvents();
+            
+            // 绑定管理单位按钮事件
+            const manageUnitsBtn = document.getElementById('manageUnitsBtn');
+            console.log('DOMContentLoaded - manageUnitsBtn:', manageUnitsBtn);
+            if (manageUnitsBtn) {
+                console.log('Binding click event to manageUnitsBtn');
+                manageUnitsBtn.addEventListener('click', function() {
+                    console.log('manageUnitsBtn clicked!');
+                    showManageUnitsModal();
+                });
+            } else {
+                console.error('manageUnitsBtn not found in DOMContentLoaded');
+            }
+            
+            // 绑定添加单位按钮事件
+            const addUnitBtn = document.getElementById('addUnitBtn');
+            if (addUnitBtn) {
+                addUnitBtn.addEventListener('click', function() {
+                    const newUnitInput = document.getElementById('newUnitInput');
+                    const newUnit = newUnitInput.value.trim();
+                    if (newUnit && !units.includes(newUnit)) {
+                        units.push(newUnit);
+                        showManageUnitsModal(); // 重新显示列表
+                        newUnitInput.value = '';
+                    }
+                });
+            }
+            
+            // 绑定保存单位按钮事件
+            const saveUnitsBtn = document.getElementById('saveUnitsBtn');
+            if (saveUnitsBtn) {
+                saveUnitsBtn.addEventListener('click', function() {
+                    // 收集所有输入的单位值
+                    const unitInputs = document.querySelectorAll('#unitsList input');
+                    units = Array.from(unitInputs).map(input => input.value.trim()).filter(unit => unit);
+                    
+                    // 保存到localStorage
+                    saveUnits();
+                    
+                    // 更新所有下拉框
+                    loadUnitsToDropdowns();
+                    
+                    // 关闭模态框
+                    document.getElementById('manageUnitsModal').classList.add('hidden');
+                    
+                    alert('单位选项保存成功！');
+                });
+            }
+            
+            // 绑定关闭按钮事件
+            const closeManageUnitsModal = document.getElementById('closeManageUnitsModal');
+            if (closeManageUnitsModal) {
+                closeManageUnitsModal.addEventListener('click', function() {
+                    document.getElementById('manageUnitsModal').classList.add('hidden');
+                });
+            }
+            
+            const cancelManageUnitsBtn = document.getElementById('cancelManageUnitsBtn');
+            if (cancelManageUnitsBtn) {
+                cancelManageUnitsBtn.addEventListener('click', function() {
+                    document.getElementById('manageUnitsModal').classList.add('hidden');
+                });
+            }
+            
+            // 初始化加载单位到下拉框
+            loadUnitsToDropdowns();
         });
         
         // 根据产品名称获取历史采购记录中的规格型号和单价
@@ -2605,7 +2796,35 @@
                     document.getElementById('contractNumber').value = contractNumber;
                     
                     document.getElementById('newPurchaseOrderModal').classList.remove('hidden');
+                    
+                    // 重新绑定管理单位按钮事件
+                    setTimeout(() => {
+                        const manageUnitsBtn = document.getElementById('manageUnitsBtn');
+                        console.log('openModalBtn click - manageUnitsBtn:', manageUnitsBtn);
+                        if (manageUnitsBtn) {
+                            console.log('Rebinding onclick to manageUnitsBtn after modal open');
+                            manageUnitsBtn.onclick = function() {
+                                console.log('manageUnitsBtn onclick triggered after modal open!');
+                                showManageUnitsModal();
+                            };
+                        } else {
+                            console.error('manageUnitsBtn not found after modal open');
+                        }
+                    }, 0);
                 });
+            }
+            
+            // 绑定管理单位按钮事件
+            const manageUnitsBtn = document.getElementById('manageUnitsBtn');
+            console.log('bindNewPurchaseOrderEvents - manageUnitsBtn:', manageUnitsBtn);
+            if (manageUnitsBtn) {
+                console.log('Binding onclick to manageUnitsBtn in bindNewPurchaseOrderEvents');
+                manageUnitsBtn.onclick = function() {
+                    console.log('manageUnitsBtn onclick triggered!');
+                    showManageUnitsModal();
+                };
+            } else {
+                console.error('manageUnitsBtn not found in bindNewPurchaseOrderEvents');
             }
             
             // 关闭模态框
@@ -2811,7 +3030,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                         productName: productRow.querySelector('.product-name').value,
                         specification: productRow.querySelector('.product-specification').value,
                         unitPrice: parseFloat(productRow.querySelector('.product-unit-price').value),
-                        quantity: parseInt(productRow.querySelector('.product-quantity').value),
+                        quantity: parseFloat(productRow.querySelector('.product-quantity').value),
                         unit: productRow.querySelector('.product-unit').value,
                         amount: parseFloat(productRow.querySelector('.product-amount').value)
                     };
@@ -2842,7 +3061,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
         // 计算单个产品的金额
         function calculateProductAmount(productRow) {
             const unitPrice = parseFloat(productRow.querySelector('.product-unit-price').value) || 0;
-            const quantity = parseInt(productRow.querySelector('.product-quantity').value) || 0;
+            const quantity = parseFloat(productRow.querySelector('.product-quantity').value) || 0;
             const amount = unitPrice * quantity;
             productRow.querySelector('.product-amount').value = amount.toFixed(2);
         }
@@ -3636,9 +3855,18 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                         // 添加新行
                         productList.appendChild(productRowTemplate);
                         
+                        // 更新新行的单位下拉框
+                        loadUnitsToDropdowns();
+                        
                         // 重新绑定所有删除事件
                         bindDeleteEvents();
                     };
+                }
+                
+                // 重新绑定管理单位按钮事件
+                const manageUnitsBtn = document.getElementById('manageUnitsBtn');
+                if (manageUnitsBtn) {
+                    manageUnitsBtn.onclick = showManageUnitsModal;
                 }
                 
                 // 添加编辑模式的提交处理函数
@@ -3646,6 +3874,9 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                     e.preventDefault();
                     
                     try {
+                        // 使用外部函数的变量
+                        const storageKey = `purchaseOrders_${currentCompany}`;
+                        
                         // 收集表单数据
                         const updatedOrder = {
                             ...order, // 保留原有ID
@@ -3672,7 +3903,7 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                 productName: productRow.querySelector('.product-name').value,
                                 specification: productRow.querySelector('.product-specification').value,
                                 unitPrice: parseFloat(productRow.querySelector('.product-unit-price').value) || 0,
-                                quantity: parseInt(productRow.querySelector('.product-quantity').value) || 0,
+                                quantity: parseFloat(productRow.querySelector('.product-quantity').value) || 0,
                                 unit: productRow.querySelector('.product-unit').value,
                                 amount: parseFloat(productRow.querySelector('.product-amount').value) || 0
                             };
@@ -3690,6 +3921,9 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                         updatedOrders.push(updatedOrder);
                         localStorage.setItem(storageKey, JSON.stringify(updatedOrders));
                         console.log('Successfully updated order in localStorage');
+                        console.log('Storage key:', storageKey);
+                        console.log('Order ID:', id);
+                        console.log('Updated order:', updatedOrder);
                         
                         // 移除提交事件监听器
                         updatedForm.removeEventListener('submit', editSubmitHandler);
@@ -5303,52 +5537,70 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                     const storageKey = `purchaseOrders_${currentCompany}`;
                     const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                     
-                    // 加载现有发票数据，用于过滤已存在的合同号
+                    // 加载现有发票数据，用于计算已开票金额
                     const invoiceStorageKey = `${getCurrentCompany()}-invoices`;
                     const invoices = JSON.parse(localStorage.getItem(invoiceStorageKey)) || [];
                     
-                    // 创建现有合同号集合（处理单个和多个合同号的情况）
-                    const existingContractNumbers = new Set();
+                    // 计算每个合同的已开票金额
+                    const contractInvoicedAmounts = {};
                     invoices.forEach(invoice => {
-                        if (invoice.purchaseOrder) {
+                        if (invoice.purchaseOrder && invoice.amount) {
                             // 处理多个合同号的情况（逗号分隔）
-                            const contracts = invoice.purchaseOrder.split(',').map(contract => contract.trim().toLowerCase());
-                            contracts.forEach(contract => existingContractNumbers.add(contract));
+                            const contracts = invoice.purchaseOrder.split(',').map(contract => contract.trim());
+                            contracts.forEach(contract => {
+                                if (!contractInvoicedAmounts[contract]) {
+                                    contractInvoicedAmounts[contract] = 0;
+                                }
+                                contractInvoicedAmounts[contract] += parseFloat(invoice.amount) || 0;
+                            });
                         }
                     });
                     
-                    // 过滤采购订单：包含搜索词且合同号不存在于发票列表
+                    // 过滤采购订单：包含搜索词且未开票金额大于0
                     const filteredOrders = purchaseOrders.filter(order => {
-                        // 首先排除已经存在于发票列表中的合同号
-                        if (existingContractNumbers.has(order.contractNumber.toLowerCase())) {
-                            return false;
-                        }
-                        // 然后检查采购订单的所有字段是否包含搜索词
+                        // 检查采购订单的所有字段是否包含搜索词
+                        let matchesSearchTerm = false;
                         for (const key in order) {
                             if (order.hasOwnProperty(key)) {
                                 const value = order[key];
                                 if (typeof value === 'string' && value.toLowerCase().includes(searchTerm)) {
-                                    return true;
+                                    matchesSearchTerm = true;
+                                    break;
                                 }
                             }
                         }
-                        return false;
+                        
+                        // 计算未开票金额
+                        const contractNumber = order.contractNumber;
+                        const totalAmount = parseFloat(order.totalAmount) || 0;
+                        const invoicedAmount = contractInvoicedAmounts[contractNumber] || 0;
+                        const unpaidAmount = totalAmount - invoicedAmount;
+                        
+                        // 只有当匹配搜索词且未开票金额大于0时，才返回true
+                        return matchesSearchTerm && unpaidAmount > 0;
                     });
                     
                     // 显示搜索结果
                     if (filteredOrders.length > 0) {
                         filteredOrders.forEach(order => {
+                            // 计算未开票金额
+                            const contractNumber = order.contractNumber;
+                            const totalAmount = parseFloat(order.totalAmount) || 0;
+                            const invoicedAmount = contractInvoicedAmounts[contractNumber] || 0;
+                            const unpaidAmount = totalAmount - invoicedAmount;
+                            
                             const resultItem = document.createElement('div');
                             resultItem.className = 'px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors';
                             resultItem.innerHTML = `
                                 <div class="flex items-start">
-                                    <input type="checkbox" class="mt-1 mr-2 supplier-result-checkbox" data-contract="${order.contractNumber}" data-amount="${order.totalAmount}">
+                                    <input type="checkbox" class="mt-1 mr-2 supplier-result-checkbox" data-contract="${order.contractNumber}" data-amount="${unpaidAmount}">
                                     <div>
                                         <div class="font-medium">${order.supplier || '无'}</div>
                                         <div class="text-sm text-gray-600">合同号: ${order.contractNumber || '无'}</div>
                                         <div class="text-sm text-gray-600">合同日期: ${order.orderDate || '无'}</div>
                                         <div class="text-sm text-gray-600">产品: ${order.products && order.products.length > 0 ? order.products.map(p => `${p.productName || '未命名产品'} x${formatQuantity(p.quantity || 0)}`).join(', ') : '无'}</div>
-                                        <div class="text-xs text-gray-500">总金额: ¥${(order.totalAmount || 0).toFixed(2)}</div>
+                                        <div class="text-xs text-gray-500">总金额: ¥${totalAmount.toFixed(2)}</div>
+                                        <div class="text-xs text-blue-500">未开票金额: ¥${unpaidAmount.toFixed(2)}</div>
                                     </div>
                                 </div>
                             `;
@@ -5386,6 +5638,9 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                                 // 填充合同号和金额
                                 purchaseOrderSelect.value = contractNumbers.join(', ');
                                 invoiceAmountInput.value = totalAmount.toFixed(2);
+                                
+                                // 存储选中合同的总未开票金额，用于后续验证
+                                window.selectedContractsTotalUnpaidAmount = totalAmount;
                             });
                             
                             resultsContainer.appendChild(resultItem);
@@ -5424,6 +5679,57 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
                     if (!supplierNameInput.contains(e.target) && !resultsContainer.contains(e.target)) {
                         resultsContainer.innerHTML = '';
                         resultsContainer.classList.add('hidden');
+                    }
+                });
+            }
+            
+            // 在发票金额输入框添加鼠标悬停提示，显示未开票金额
+            if (invoiceAmountInput) {
+                // 添加悬停事件
+                invoiceAmountInput.addEventListener('mouseover', function() {
+                    // 计算选中合同的总未开票金额
+                    const checkboxes = document.querySelectorAll('.supplier-result-checkbox:checked');
+                    let totalUnpaidAmount = 0;
+                    
+                    checkboxes.forEach(checkbox => {
+                        const amount = parseFloat(checkbox.dataset.amount) || 0;
+                        totalUnpaidAmount += amount;
+                    });
+                    
+                    if (totalUnpaidAmount > 0) {
+                        // 显示未开票金额提示
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'absolute bg-gray-800 text-white text-xs rounded py-1 px-2 z-50';
+                        tooltip.id = 'invoice-amount-tooltip';
+                        tooltip.textContent = `未开票金额: ¥${totalUnpaidAmount.toFixed(2)}`;
+                        
+                        // 计算提示位置
+                        const rect = invoiceAmountInput.getBoundingClientRect();
+                        const bodyRect = document.body.getBoundingClientRect();
+                        
+                        tooltip.style.top = `${rect.top - bodyRect.top - 30}px`;
+                        tooltip.style.left = `${rect.left - bodyRect.left}px`;
+                        
+                        document.body.appendChild(tooltip);
+                    }
+                });
+                
+                // 移除悬停提示
+                invoiceAmountInput.addEventListener('mouseout', function() {
+                    const tooltip = document.getElementById('invoice-amount-tooltip');
+                    if (tooltip) {
+                        tooltip.remove();
+                    }
+                });
+                
+                // 添加金额验证，确保发票金额不超过欠票金额
+                invoiceAmountInput.addEventListener('blur', function() {
+                    const inputAmount = parseFloat(this.value) || 0;
+                    const totalUnpaidAmount = window.selectedContractsTotalUnpaidAmount || 0;
+                    
+                    if (inputAmount > totalUnpaidAmount) {
+                        alert(`发票金额不能超过欠票金额 ¥${totalUnpaidAmount.toFixed(2)}`);
+                        this.value = totalUnpaidAmount.toFixed(2);
                     }
                 });
             }
