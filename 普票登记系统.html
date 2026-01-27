@@ -3997,6 +3997,18 @@
         
         // 计算税差
         function calculateTaxDifference() {
+            // 标准化公司名称，将全角括号转换为半角括号
+            function normalizeCompanyName(name) {
+                return String(name || '').replace(/（/g, '(').replace(/）/g, ')');
+            }
+            
+            // 检查是否选择了抬头公司
+            const invoiceCompany = document.getElementById('special-invoice-company-filter').value;
+            if (!invoiceCompany || invoiceCompany === '') {
+                alert('请先选择抬头公司');
+                return;
+            }
+            
             const period = document.getElementById('tax-difference-period').value;
             const now = new Date();
             let startDate, endDate;
@@ -4036,7 +4048,7 @@
             const searchTerm = document.getElementById('special-search-input').value.toLowerCase();
             const invoiceStatus = document.getElementById('special-invoice-status-filter').value;
             const invoiceType = document.getElementById('special-invoice-type-filter').value;
-            const invoiceCompany = document.getElementById('special-invoice-company-filter').value;
+            const normalizedInvoiceCompany = normalizeCompanyName(invoiceCompany);
             
             // 从localStorage获取所有发票数据
             const allInvoices = JSON.parse(localStorage.getItem('invoices')) || [];
@@ -4048,8 +4060,8 @@
                     return false;
                 }
                 
-                // 检查发票日期是否在计算范围内（使用发票日期invoice.date）
-                const invoiceDate = invoice.date ? new Date(invoice.date) : null;
+                // 检查发票日期是否在计算范围内（使用登记日期invoice.registerDate）
+                const invoiceDate = invoice.registerDate ? new Date(invoice.registerDate) : null;
                 if (!invoiceDate || invoiceDate < startDate || invoiceDate > endDate) {
                     return false;
                 }
@@ -4057,8 +4069,8 @@
                 // 检查搜索条件
                 const matchesSearch = !searchTerm || 
                     (invoice.invoiceNo && invoice.invoiceNo.toLowerCase().includes(searchTerm)) ||
-                    (invoice.seller && invoice.seller.toLowerCase().includes(searchTerm)) ||
-                    (invoice.buyer && invoice.buyer.toLowerCase().includes(searchTerm));
+                    (invoice.seller && normalizeCompanyName(invoice.seller).toLowerCase().includes(searchTerm)) ||
+                    (invoice.buyer && normalizeCompanyName(invoice.buyer).toLowerCase().includes(searchTerm));
                 
                 // 检查发票状态
                 const matchesStatus = !invoiceStatus || invoice.status === invoiceStatus;
@@ -4066,8 +4078,21 @@
                 // 检查发票类型
                 const matchesType = !invoiceType || invoice.invoiceType === invoiceType;
                 
-                // 检查抬头公司
-                const matchesCompany = !invoiceCompany || (invoice.buyer && invoice.buyer.includes(invoiceCompany));
+                // 检查抬头公司（使用标准化后的公司名称）
+                let matchesCompany = true;
+                if (invoiceCompany) {
+                    if (invoice.invoiceType === '专票-销项') {
+                        // 对于专票-销项：检查销售方
+                        matchesCompany = invoice.seller && normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany);
+                    } else if (invoice.invoiceType === '专票-进项') {
+                        // 对于专票-进项：检查购买方
+                        matchesCompany = invoice.buyer && normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany);
+                    } else {
+                        // 其他情况：检查销售方或购买方
+                        matchesCompany = (invoice.seller && normalizeCompanyName(invoice.seller).includes(normalizedInvoiceCompany)) ||
+                                      (invoice.buyer && normalizeCompanyName(invoice.buyer).includes(normalizedInvoiceCompany));
+                    }
+                }
                 
                 return matchesSearch && matchesStatus && matchesType && matchesCompany;
             });
