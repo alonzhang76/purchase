@@ -2132,11 +2132,6 @@
                 return;
             }
             
-            // 确认是否要进行批量付款
-            if (!confirm(`确定要对选中的 ${checkedBoxes.length} 张发票进行批量付款吗？`)) {
-                return;
-            }
-            
             // 获取选中的发票ID
             const selectedIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
             
@@ -2145,6 +2140,22 @@
             
             // 获取选中的发票
             const selectedInvoices = allInvoices.filter(invoice => selectedIds.includes(invoice.id));
+            
+            // 检查发票类型是否符合要求
+            const hasOutputInvoice = selectedInvoices.some(invoice => invoice.invoiceType === '专票-销项');
+            const hasInputInvoice = selectedInvoices.some(invoice => invoice.invoiceType === '专票-进项');
+            const hasOrdinaryInvoice = selectedInvoices.some(invoice => invoice.invoiceType === '普票');
+            
+            // 检查是否同时选中了不符合要求的发票类型
+            if (hasOutputInvoice && (hasInputInvoice || hasOrdinaryInvoice)) {
+                alert('专票-销项不能与专票-进项或普票同时选中');
+                return;
+            }
+            
+            // 确认是否要进行批量付款
+            if (!confirm(`确定要对选中的 ${checkedBoxes.length} 张发票进行批量付款吗？`)) {
+                return;
+            }
             
             // 获取现有的付款记录
             let paymentRecords = JSON.parse(localStorage.getItem('paymentRecords')) || [];
@@ -2162,16 +2173,31 @@
                 
                 // 只有当还有欠款时才创建付款记录
                 if (actualOwed > 0) {
+                    // 确定记录类型：专票-销项为收款，其他为付款
+                    const recordType = invoice.invoiceType === '专票-销项' ? '收款' : '付款';
+                    
+                    // 确定付款方和收款方
+                    let payer, payee;
+                    if (invoice.invoiceType === '专票-销项') {
+                        // 专票-销项：销售方是收款方，购买方是付款方
+                        payer = invoice.buyer || companyName1;
+                        payee = invoice.seller || '';
+                    } else {
+                        // 其他类型：购买方是付款方，销售方是收款方
+                        payer = invoice.buyer || companyName1;
+                        payee = invoice.seller || '';
+                    }
+                    
                     // 创建付款记录
                     const paymentRecord = {
                         id: 'PAY' + Date.now() + Math.floor(Math.random() * 1000),
                         date: new Date().toISOString().split('T')[0],
-                        type: '付款',
+                        type: recordType,
                         category: invoice.category || '其他',
                         amount: actualOwed,
-                        description: `批量付款 - ${invoice.invoiceNo}`,
-                        payer: invoice.buyer || companyName1,
-                        payee: invoice.seller || '',
+                        description: `批量${recordType} - ${invoice.invoiceNo}`,
+                        payer: payer,
+                        payee: payee,
                         invoiceNo: invoice.invoiceNo,
                         reimburser: invoice.reimburser || '',
                         createDate: new Date().toISOString().split('T')[0],
@@ -2200,7 +2226,7 @@
                 filterPaymentRecords(document.getElementById('payment-search-input').value.toLowerCase());
             }
             
-            alert(`已成功为 ${checkedBoxes.length} 张发票创建付款记录`);
+            alert(`已成功为 ${checkedBoxes.length} 张发票创建${hasOutputInvoice ? '收款' : '付款'}记录`);
         }
         
         // 初始化图表 - 已删除（仪表盘和统计分析页面已移除）
