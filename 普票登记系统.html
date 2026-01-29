@@ -2022,77 +2022,92 @@
                 exportData = mockInvoices;
             }
 
-            // 按报销人排序
-            exportData.sort((a, b) => {
-                const reimbA = a.reimburser || '未分配';
-                const reimbB = b.reimburser || '未分配';
-                return reimbA.localeCompare(reimbB);
-            });
+            // 获取公司名称
+            const companyName1 = localStorage.getItem('companyName1') || '公司1';
+            const companyName2 = localStorage.getItem('companyName2') || '公司2';
 
-            // 按报销人分组
-            const groupedData = exportData.reduce((groups, invoice) => {
-                const reimburser = invoice.reimburser || '未分配';
-                if (!groups[reimburser]) {
-                    groups[reimburser] = [];
-                }
-                groups[reimburser].push(invoice);
-                return groups;
-            }, {});
+            // 统一全角括号为半角括号的函数（用于公司名称匹配）
+            function normalizeCompanyName(name) {
+                if (!name) return '';
+                // 将全角括号转换为半角括号
+                return name.replace(/（/g, '(').replace(/）/g, ')');
+            }
 
             // 准备导出的字段
-            const headers = ['序号', '状态', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额', '报销人'];
+            const headers = ['序号', '发票日期', '发票号码', '销售方', '购买方', '金额', '税率', '税额'];
             const data = [];
             let grandTotalAmount = 0;
             let grandTotalTaxAmount = 0;
             let serialNumber = 1;
 
-            // 处理每个报销人组
-            Object.entries(groupedData).forEach(([reimburser, invoices]) => {
-                let groupTotalAmount = 0;
-                let groupTotalTaxAmount = 0;
+            // 定义公司和发票类型的组合
+            const companies = [companyName1, companyName2];
+            const invoiceTypes = ['专票-进项', '专票-销项', '普票'];
 
-                // 添加该报销人的所有发票
-                invoices.forEach(invoice => {
-                    const amount = invoice.amount || 0;
-                    const taxAmount = invoice.taxAmount || 0;
-                    groupTotalAmount += amount;
-                    groupTotalTaxAmount += taxAmount;
-                    grandTotalAmount += amount;
-                    grandTotalTaxAmount += taxAmount;
+            // 遍历每个公司和发票类型
+            companies.forEach(company => {
+                const normalizedCompany = normalizeCompanyName(company);
+                
+                invoiceTypes.forEach(invoiceType => {
+                    // 筛选当前公司和发票类型的发票
+                    // 使用规范化后的公司名称进行匹配
+                    // 注意：专票-销项用seller匹配（本公司是销售方），专票-进项用buyer匹配（本公司是购买方），普票两者都匹配
+                    const filteredInvoices = exportData.filter(invoice => {
+                        const normalizedBuyer = normalizeCompanyName(invoice.buyer || '');
+                        const normalizedSeller = normalizeCompanyName(invoice.seller || '');
+                        
+                        if (invoice.invoiceType === '专票-销项') {
+                            // 专票-销项：本公司是销售方，用seller匹配
+                            return normalizedSeller === normalizedCompany && invoice.invoiceType === invoiceType;
+                        } else if (invoice.invoiceType === '专票-进项') {
+                            // 专票-进项：本公司是购买方，用buyer匹配
+                            return normalizedBuyer === normalizedCompany && invoice.invoiceType === invoiceType;
+                        } else {
+                            // 普票：本公司可能是销售方或购买方
+                            return (normalizedBuyer === normalizedCompany || normalizedSeller === normalizedCompany) && invoice.invoiceType === invoiceType;
+                        }
+                    });
 
-                    data.push([
-                        serialNumber,
-                        invoice.status,
-                        invoice.date,
-                        `'${invoice.invoiceNo}`,  // 发票号码添加单引号，确保Excel以文本格式显示
-                        invoice.seller,
-                        invoice.buyer,
-                        amount.toFixed(2),
-                        `${((invoice.taxRate || 0) * 100).toFixed(0)}%`,
-                        taxAmount.toFixed(2),
-                        invoice.reimburser || ''
-                    ]);
-                    serialNumber++;
+                    // 如果存在此类别的发票，则添加到导出数据
+                    if (filteredInvoices.length > 0) {
+                        // 添加公司-发票类型标题
+                        data.push(['', '', '', '', '', '', '', '', `${company} - ${invoiceType}`]);
+
+                        // 遍历并添加具体发票信息
+                        let subtotalAmount = 0;
+                        let subtotalTaxAmount = 0;
+
+                        filteredInvoices.forEach(invoice => {
+                            const amount = invoice.amount || 0;
+                            const taxAmount = invoice.taxAmount || 0;
+                            subtotalAmount += amount;
+                            subtotalTaxAmount += taxAmount;
+
+                            data.push([
+                                serialNumber,
+                                invoice.date,
+                                `'${invoice.invoiceNo}`,
+                                invoice.seller,
+                                invoice.buyer,
+                                amount.toFixed(2),
+                                `${((invoice.taxRate || 0) * 100).toFixed(0)}%`,
+                                taxAmount.toFixed(2)
+                            ]);
+                            serialNumber++;
+                        });
+
+                        // 添加小计行
+                        data.push(['', '', '', '', '', subtotalAmount.toFixed(2), '', subtotalTaxAmount.toFixed(2), `${company} - ${invoiceType} 小计`]);
+
+                        // 更新总金额和总税额
+                        grandTotalAmount += subtotalAmount;
+                        grandTotalTaxAmount += subtotalTaxAmount;
+                    }
                 });
-
-                // 添加该报销人的小计行
-                data.push([
-                    '', '', '', '', '', '',
-                    groupTotalAmount.toFixed(2),
-                    '',
-                    groupTotalTaxAmount.toFixed(2),
-                    `${reimburser} - 小计`
-                ]);
             });
 
             // 添加总计行
-            data.push([
-                '', '', '', '', '', '',
-                grandTotalAmount.toFixed(2),
-                '',
-                grandTotalTaxAmount.toFixed(2),
-                '总计'
-            ]);
+            data.push(['', '', '', '', '', grandTotalAmount.toFixed(2), '', grandTotalTaxAmount.toFixed(2), '总计']);
 
             // 创建CSV内容
             let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
