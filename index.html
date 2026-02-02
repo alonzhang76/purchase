@@ -10,7 +10,8 @@
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- SheetJS (XLSX) 用于Excel导出 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- 统一的 Tailwind 配置 -->
     <!-- 通用的金额格式化函数 -->
     <script>
@@ -1464,7 +1465,7 @@
                                 <button id="clear-all-orders-btn" class="btn btn-danger btn-sm text-sm">
                                     <i class="fa fa-trash-o mr-1"></i>清空所有记录
                                 </button>
-                                <button id="migrate-selected-btn" class="btn btn-warning btn-sm text-sm" title="迁移选中的合同">
+                                <button id="migrate-selected-btn" class="btn btn-warning btn-sm text-sm" title="迁移选中的合同" onclick="handleMigrationButtonClick()">
                                     <i class="fa fa-exchange mr-1"></i>迁移
                                 </button>
                             </div>
@@ -8840,101 +8841,164 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
     <script>
         // 合同迁移功能函数
         function migrateContracts() {
+            console.log('=== 开始执行合同迁移 ===');
             const sourceCompany = document.getElementById('source-company').value;
             const targetCompany = document.getElementById('target-company').value;
+            console.log('源公司:', sourceCompany);
+            console.log('目标公司:', targetCompany);
             
             // 验证源公司和目标公司是否不同
             if (sourceCompany === targetCompany) {
                 alert('源公司和目标公司不能相同！');
+                console.log('源公司和目标公司相同，退出迁移流程');
                 return;
             }
             
             // 获取选中的合同行
             const selectedCheckboxes = document.querySelectorAll('#purchaseOrderTableBody input[type="checkbox"]:checked');
+            console.log('选中的复选框数量:', selectedCheckboxes.length);
             const selectedRows = Array.from(selectedCheckboxes).map(checkbox => checkbox.closest('tr'));
+            console.log('选中的行数量:', selectedRows.length);
+            
             if (selectedRows.length === 0) {
                 alert('请先选择需要迁移的合同！');
+                console.log('未选择任何合同，退出迁移流程');
                 return;
             }
             
             // 获取当前公司的合同数据（源公司就是当前公司）
-            const currentCompany = localStorage.getItem('currentCompany') || 'companyA';
+            const currentCompany = getCurrentCompany();
+            console.log('当前公司:', currentCompany);
             const sourceStorageKey = `purchaseOrders_${currentCompany}`;
+            console.log('源公司存储键:', sourceStorageKey);
             const currentCompanyContracts = JSON.parse(localStorage.getItem(sourceStorageKey) || '[]');
+            console.log('源公司合同总数:', currentCompanyContracts.length);
+            console.log('源公司合同数据:', currentCompanyContracts);
             
             // 从选中行获取合同信息
             const selectedContractNumbers = [];
-            selectedRows.forEach(row => {
-                const contractNumberCell = row.querySelector('td:nth-child(2)');
+            selectedRows.forEach((row, index) => {
+                console.log(`处理第 ${index + 1} 行`);
+                // 找到包含合同编号的单元格（从当前行向上查找，直到找到有合同编号的单元格）
+                let contractNumberCell = row.querySelector('td:nth-child(2)');
+                let currentRow = row;
+                
+                // 如果当前行没有合同编号，向上查找同一订单的其他行
+                while (contractNumberCell && contractNumberCell.textContent.trim() === '' && currentRow.previousElementSibling) {
+                    console.log('当前行无合同编号，向上查找');
+                    currentRow = currentRow.previousElementSibling;
+                    contractNumberCell = currentRow.querySelector('td:nth-child(2)');
+                }
+                
+                // 如果找到了合同编号
                 if (contractNumberCell && contractNumberCell.textContent.trim() !== '') {
-                    selectedContractNumbers.push(contractNumberCell.textContent.trim());
+                    const contractNumber = contractNumberCell.textContent.trim();
+                    console.log('找到合同编号:', contractNumber);
+                    // 避免重复添加相同的合同编号
+                    if (!selectedContractNumbers.includes(contractNumber)) {
+                        selectedContractNumbers.push(contractNumber);
+                        console.log('添加到选中列表');
+                    } else {
+                        console.log('合同编号已存在，跳过');
+                    }
+                } else {
+                    console.log('未找到合同编号');
                 }
             });
+            
+            console.log('最终选中的合同编号列表:', selectedContractNumbers);
             
             // 找到对应的合同数据
             const selectedContracts = currentCompanyContracts.filter(contract => 
                 selectedContractNumbers.includes(contract.contractNumber)
             );
+            console.log('匹配到的合同数据:', selectedContracts);
+            console.log('匹配到的合同数量:', selectedContracts.length);
             
             // 确认迁移操作
             if (!confirm(`确定要将选中的${selectedContracts.length}个合同迁移到${targetCompany === 'companyA' ? '普利美（常州）环境工程科技有限公司' : '无锡龙力印铁设备制造有限公司'}吗？\n\n此操作会将选中的合同数据复制到目标公司，\n目标公司中已存在的同名合同将被覆盖！`)) {
+                console.log('用户取消迁移操作');
                 return;
             }
             
             try {
                 // 获取目标公司的合同数据
                 const targetStorageKey = `purchaseOrders_${targetCompany}`;
+                console.log('目标公司存储键:', targetStorageKey);
                 const targetContracts = JSON.parse(localStorage.getItem(targetStorageKey) || '[]');
+                console.log('目标公司现有合同数量:', targetContracts.length);
                 
                 // 创建映射表，避免重复合同
                 const targetContractMap = new Map();
                 targetContracts.forEach(contract => {
                     targetContractMap.set(contract.contractNumber, contract);
                 });
+                console.log('目标公司合同映射表创建完成');
                 
                 // 合并合同数据，源公司合同覆盖目标公司同名合同
                 let migratedCount = 0;
                 let newCount = 0;
                 let updatedCount = 0;
                 
-                selectedContracts.forEach(sourceContract => {
+                console.log('开始迁移合同数据...');
+                selectedContracts.forEach((sourceContract, index) => {
+                    console.log(`迁移第 ${index + 1} 个合同: ${sourceContract.contractNumber}`);
                     if (targetContractMap.has(sourceContract.contractNumber)) {
                         // 更新现有合同
+                        console.log('目标公司已存在该合同，执行更新');
                         const index = targetContracts.findIndex(contract => 
                             contract.contractNumber === sourceContract.contractNumber
                         );
                         if (index !== -1) {
                             targetContracts[index] = sourceContract;
                             updatedCount++;
+                            console.log('合同更新成功');
                         }
                     } else {
                         // 添加新合同
+                        console.log('目标公司不存在该合同，执行新增');
                         targetContracts.push(sourceContract);
                         targetContractMap.set(sourceContract.contractNumber, sourceContract);
                         newCount++;
+                        console.log('合同新增成功');
                     }
                     migratedCount++;
                 });
                 
                 // 保存合并后的合同数据到目标公司
+                console.log('保存迁移后的合同数据到目标公司');
                 localStorage.setItem(targetStorageKey, JSON.stringify(targetContracts));
+                console.log('目标公司合同数据保存完成，新数量:', targetContracts.length);
                 
                 // 从源公司删除已迁移的合同
+                console.log('从源公司删除已迁移的合同');
                 const remainingContracts = currentCompanyContracts.filter(contract => 
                     !selectedContractNumbers.includes(contract.contractNumber)
                 );
+                console.log('源公司剩余合同数量:', remainingContracts.length);
                 localStorage.setItem(sourceStorageKey, JSON.stringify(remainingContracts));
+                console.log('源公司合同数据更新完成');
                 
                 // 显示迁移结果
+                console.log('迁移完成，显示结果');
+                console.log('迁移统计:', {
+                    migratedCount,
+                    newCount,
+                    updatedCount,
+                    deletedCount: selectedContracts.length
+                });
                 alert(`合同迁移成功！\n\n总迁移合同数: ${migratedCount}\n新增合同数: ${newCount}\n更新合同数: ${updatedCount}\n已从源公司删除: ${selectedContracts.length}个合同`);
                 
                 // 刷新采购订单列表
+                console.log('刷新采购订单列表');
                 renderPurchaseOrderList();
                 
                 // 关闭模态框
+                console.log('关闭迁移模态框');
                 document.getElementById('contract-migration-modal').classList.add('hidden');
                 
                 // 取消所有选中状态
+                console.log('取消所有选中状态');
                 document.querySelectorAll('#purchaseOrderTableBody input[type="checkbox"]:checked').forEach(checkbox => {
                     checkbox.checked = false;
                     const row = checkbox.closest('tr');
@@ -8946,6 +9010,39 @@ const purchaseOrders = JSON.parse(localStorage.getItem(storageKey)) || [];
             } catch (error) {
                 console.error('合同迁移失败:', error);
                 alert('合同迁移失败，请重试！');
+            }
+        }
+        
+        // 合同迁移按钮点击处理函数（全局函数，确保直接响应点击）
+        function handleMigrationButtonClick() {
+            console.log('=== 迁移按钮被点击 ===');
+            // 检查是否有选中的合同
+            const selectedCheckboxes = document.querySelectorAll('#purchaseOrderTableBody input[type="checkbox"]:checked');
+            console.log('选中的复选框数量:', selectedCheckboxes.length);
+            
+            if (selectedCheckboxes.length === 0) {
+                alert('请先选择要迁移的合同！');
+                console.log('未选择任何合同，退出迁移流程');
+                return;
+            }
+            
+            // 设置默认的源公司为当前公司
+            const currentCompany = getCurrentCompany();
+            console.log('当前公司:', currentCompany);
+            document.getElementById('source-company').value = currentCompany;
+            
+            // 如果当前公司是companyA，默认目标公司设为companyB，反之亦然
+            const defaultTargetCompany = currentCompany === 'companyA' ? 'companyB' : 'companyA';
+            console.log('默认目标公司:', defaultTargetCompany);
+            document.getElementById('target-company').value = defaultTargetCompany;
+            
+            // 打开模态框
+            const contractMigrationModal = document.getElementById('contract-migration-modal');
+            if (contractMigrationModal) {
+                contractMigrationModal.classList.remove('hidden');
+                console.log('迁移模态框已打开');
+            } else {
+                console.error('未找到迁移模态框元素');
             }
         }
         
