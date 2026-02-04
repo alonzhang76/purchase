@@ -1284,9 +1284,6 @@
                                             <i class="fa fa-cog mr-2"></i> 管理选项
                                         </button>
                                         <div class="flex space-x-3">
-                                            <button id="edit-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                                                <i class="fa fa-pencil mr-2"></i> 编辑
-                                            </button>
                                             <button id="save-recognition" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-success hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success">
                                                 <i class="fa fa-save mr-2"></i> 保存
                                             </button>
@@ -1493,6 +1490,44 @@
             </div>
             <div class="px-6 py-4">
                 <div class="space-y-4">
+                    <div>
+                        <label for="edit-invoice-type" class="block text-sm font-medium text-gray-700 mb-1">发票类型</label>
+                        <select id="edit-invoice-type" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                            <option value="专票-进项">专票-进项</option>
+                            <option value="专票-销项">专票-销项</option>
+                            <option value="普票">普票</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="edit-invoice-number" class="block text-sm font-medium text-gray-700 mb-1">发票号码</label>
+                        <input type="text" id="edit-invoice-number" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-invoice-date" class="block text-sm font-medium text-gray-700 mb-1">发票日期</label>
+                        <input type="date" id="edit-invoice-date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-seller" class="block text-sm font-medium text-gray-700 mb-1">销售方</label>
+                        <input type="text" id="edit-seller" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-buyer" class="block text-sm font-medium text-gray-700 mb-1">购买方</label>
+                        <input type="text" id="edit-buyer" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                    </div>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label for="edit-amount" class="block text-sm font-medium text-gray-700 mb-1">金额</label>
+                            <input type="number" id="edit-amount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="edit-tax-rate" class="block text-sm font-medium text-gray-700 mb-1">税率(%)</label>
+                            <input type="number" id="edit-tax-rate" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="edit-tax-amount" class="block text-sm font-medium text-gray-700 mb-1">税额</label>
+                            <input type="number" id="edit-tax-amount" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
+                        </div>
+                    </div>
                     <div>
                         <label for="edit-date" class="block text-sm font-medium text-gray-700 mb-1">登记日期</label>
                         <input type="date" id="edit-date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
@@ -5062,7 +5097,15 @@
                 
                 if (invoice) {
                     // 更新发票数据
-                    invoice.date = document.getElementById('edit-date').value;
+                    invoice.invoiceType = document.getElementById('edit-invoice-type').value;
+                    invoice.invoiceNo = document.getElementById('edit-invoice-number').value;
+                    invoice.date = document.getElementById('edit-invoice-date').value;
+                    invoice.seller = document.getElementById('edit-seller').value;
+                    invoice.buyer = document.getElementById('edit-buyer').value;
+                    invoice.amount = parseFloat(document.getElementById('edit-amount').value) || 0;
+                    invoice.taxRate = (parseFloat(document.getElementById('edit-tax-rate').value) || 0) / 100;
+                    invoice.taxAmount = parseFloat(document.getElementById('edit-tax-amount').value) || 0;
+                    invoice.registerDate = document.getElementById('edit-date').value;
                     if (invoice.items && invoice.items.length > 0) {
                         invoice.items[0].name = document.getElementById('edit-item-name').value;
                     }
@@ -6977,57 +7020,57 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-1/4">发票类型</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 w-3/4">
-                        <input type="text" id="recognition-invoice-type" value="${finalInvoiceType}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-invoice-type" value="${finalInvoiceType}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-1/4">发票号码</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 w-3/4">
-                        <input type="text" id="recognition-invoice-number" value="${invoiceInfo.invoiceNumber}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-invoice-number" value="${invoiceInfo.invoiceNumber}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                         <div id="duplicate-warning" class="hidden text-xs text-red-500 mt-1">发票号已存在，请检查</div>
                     </td>
                 </tr>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">发票日期</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="date" id="recognition-invoice-date" value="${invoiceInfo.invoiceDate}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="date" id="recognition-invoice-date" value="${invoiceInfo.invoiceDate}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
 
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">销售方</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" id="recognition-seller" value="${invoiceInfo.seller}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-seller" value="${invoiceInfo.seller}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">购买方</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" id="recognition-buyer" value="${invoiceInfo.buyer}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-buyer" value="${invoiceInfo.buyer}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">金额</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" id="recognition-amount" value="${invoiceInfo.amount}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-amount" value="${invoiceInfo.amount}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">税率</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" id="recognition-tax-rate" value="${invoiceInfo.taxRate}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-tax-rate" value="${invoiceInfo.taxRate}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">税额</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" id="recognition-tax-amount" value="${invoiceInfo.taxAmount}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-tax-amount" value="${invoiceInfo.taxAmount}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">项目名称</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" id="recognition-item-name" value="${invoiceInfo.itemName}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm" readonly>
+                        <input type="text" id="recognition-item-name" value="${invoiceInfo.itemName}" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-primary focus:border-primary sm:text-sm">
                     </td>
                 </tr>
                 <tr>
@@ -7232,46 +7275,6 @@
                         // 关闭模态框
                         document.getElementById('add-reimburser-modal').classList.add('hidden');
                         document.getElementById('new-reimburser-name').value = '';
-                    }
-                });
-            }
-            
-            // 添加编辑按钮事件监听器
-            const editRecognitionBtn = document.getElementById('edit-recognition');
-            if (editRecognitionBtn) {
-                // 移除可能存在的旧监听器，避免重复绑定
-                editRecognitionBtn.onclick = null;
-                
-                editRecognitionBtn.addEventListener('click', function() {
-                    // 获取所有输入框和选择框
-                    const recognitionInputs = document.querySelectorAll('#recognition-table input, #recognition-table select');
-                    let isEditing = false;
-                    
-                    // 检查当前是否处于编辑状态（即是否有输入框是可编辑的）
-                    recognitionInputs.forEach(input => {
-                        if (input.type !== 'select' && !input.hasAttribute('readonly')) {
-                            isEditing = true;
-                        }
-                    });
-                    
-                    if (isEditing) {
-                        // 切换到只读状态：为所有输入框添加readonly属性
-                        recognitionInputs.forEach(input => {
-                            if (input.type !== 'select') {
-                                input.setAttribute('readonly', 'readonly');
-                            }
-                        });
-                        // 更新按钮文本和图标
-                        this.innerHTML = '<i class="fa fa-pencil mr-2"></i> 编辑';
-                    } else {
-                        // 切换到可编辑状态：移除所有输入框的readonly属性
-                        recognitionInputs.forEach(input => {
-                            if (input.type !== 'select') {
-                                input.removeAttribute('readonly');
-                            }
-                        });
-                        // 更新按钮文本和图标
-                        this.innerHTML = '<i class="fa fa-lock mr-2"></i> 锁定';
                     }
                 });
             }
@@ -8030,7 +8033,15 @@
             if (!invoice) return;
             
             // 填充编辑表单
-            document.getElementById('edit-date').value = invoice.date;
+            document.getElementById('edit-invoice-type').value = invoice.invoiceType || '普票';
+            document.getElementById('edit-invoice-number').value = invoice.invoiceNo || '';
+            document.getElementById('edit-invoice-date').value = invoice.date || '';
+            document.getElementById('edit-seller').value = invoice.seller || '';
+            document.getElementById('edit-buyer').value = invoice.buyer || '';
+            document.getElementById('edit-amount').value = invoice.amount || '';
+            document.getElementById('edit-tax-rate').value = invoice.taxRate ? (invoice.taxRate * 100).toFixed(2) : '';
+            document.getElementById('edit-tax-amount').value = invoice.taxAmount || '';
+            document.getElementById('edit-date').value = invoice.registerDate || invoice.date;
             document.getElementById('edit-item-name').value = invoice.items ? invoice.items[0].name : '';
             document.getElementById('edit-category').value = invoice.category;
             
