@@ -1169,7 +1169,8 @@
                             updateContractAndSyncIndex(
                                 currentUpdateContractInfo.contractId,
                                 currentUpdateContractInfo.receivedQuantity,
-                                currentUpdateContractInfo.productName
+                                currentUpdateContractInfo.productName,
+                                currentUpdateContractInfo.spec || ''
                             );
                             // 重置当前更新信息
                             currentUpdateContractInfo = null;
@@ -2807,7 +2808,7 @@
                         <td style="${parseFloat(item.differenceRate) < 0 ? 'color: #ef4444; font-weight: bold;' : parseFloat(item.differenceRate) > 0 ? 'color: #10b981; font-weight: bold;' : 'color: #10b981;'}">${item.differenceRate}%</td>
                         <td><span class="badge badge-${getStatusColor(item.status)}">${getComparisonStatusText(item.status)}</span></td>
                         <td>
-                            <button class="btn btn-warning btn-sm" onclick="updateContractFromComparison('${item.id}', ${item.receivedQuantity}, '${item.product}')">
+                            <button class="btn btn-warning btn-sm" onclick="updateContractFromComparison('${item.id}', ${item.receivedQuantity}, '${item.product}', '${item.spec || ''}')">
                                 <i class="fa fa-refresh"></i> 更新合同
                             </button>
                         </td>
@@ -3042,19 +3043,20 @@
         }
         
         // 从比对结果更新合同 - 显示密码模态框
-        function updateContractFromComparison(contractId, receivedQuantity, productName) {
+        function updateContractFromComparison(contractId, receivedQuantity, productName, spec = '') {
             // 存储当前需要更新的合同信息
             currentUpdateContractInfo = {
                 contractId: contractId,
                 receivedQuantity: receivedQuantity,
-                productName: productName
+                productName: productName,
+                spec: spec
             };
             // 显示密码模态框
             document.getElementById('password-modal').classList.remove('hidden');
         }
         
         // 实际执行合同更新并同步到index.html
-        function updateContractAndSyncIndex(contractId, receivedQuantity, productName) {
+        function updateContractAndSyncIndex(contractId, receivedQuantity, productName, spec = '') {
             const contracts = getData('contracts');
             const contract = contracts.find(c => c.id === contractId);
             if (!contract) {
@@ -3068,7 +3070,12 @@
                     // 如果合同有products数组
                     if (Array.isArray(contract.products) && contract.products.length > 0) {
                         const updatedProducts = contract.products.map(product => {
-                            if (product.productName === productName) {
+                            // 精确匹配产品名称和规格型号
+                            const productNameMatch = product.productName && productName && 
+                                product.productName.trim().toLowerCase() === productName.trim().toLowerCase();
+                            const specMatch = (product.specification || '') === (spec || '');
+                            
+                            if (productNameMatch && specMatch) {
                                 return {
                                     ...product,
                                     quantity: receivedQuantity
@@ -3098,8 +3105,8 @@
             
             saveData('contracts', updatedContracts);
             
-            // 同步更新到index.html的localStorage
-            syncToIndexHtml(contract.contractNumber, receivedQuantity, productName);
+            // 同步更新到index.html的localStorage - 精确匹配具体产品记录
+            syncToIndexHtml(contract.contractNumber, receivedQuantity, productName, spec);
             
             // 更新相关列表
             renderContractList();
@@ -3110,31 +3117,37 @@
             alert('合同更新成功！');
         }
         
-        // 同步更新到index.html的localStorage
-        function syncToIndexHtml(contractNumber, receivedQuantity, productName) {
+        // 同步更新到index.html的localStorage - 精确匹配具体产品记录
+        function syncToIndexHtml(contractNumber, receivedQuantity, productName, spec = '') {
             const currentCompany = localStorage.getItem('currentCompany_index') || 'companyA';
             const indexStorageKey = `purchaseOrders_${currentCompany}`;
             
             // 获取index.html的采购订单数据
             const purchaseOrders = JSON.parse(localStorage.getItem(indexStorageKey)) || [];
             
-            // 更新采购订单数据
+            // 精确匹配并更新具体产品记录
+            let updatedCount = 0;
             const updatedOrders = purchaseOrders.map(order => {
                 // 不区分大小写和空格比较合同号
                 if (order.contractNumber && contractNumber && 
                     order.contractNumber.trim().toLowerCase() === contractNumber.trim().toLowerCase()) {
+                    
                     // 如果订单有products数组
                     if (Array.isArray(order.products) && order.products.length > 0) {
-                        // 更新产品数据
+                        // 更新匹配的产品数据 - 精确匹配产品名称和规格型号
                         const updatedProducts = order.products.map(product => {
                             // 创建深拷贝，避免直接修改原对象
                             const updatedProduct = {...product};
                             
-                            // 不区分大小写和空格比较产品名称
-                            if (updatedProduct.productName && productName && 
-                                updatedProduct.productName.trim().toLowerCase() === productName.trim().toLowerCase()) {
+                            // 精确匹配产品名称和规格型号
+                            const productNameMatch = updatedProduct.productName && productName && 
+                                updatedProduct.productName.trim().toLowerCase() === productName.trim().toLowerCase();
+                            const specMatch = (updatedProduct.specification || '') === (spec || '');
+                            
+                            if (productNameMatch && specMatch) {
                                 // 更新数量
                                 updatedProduct.quantity = parseFloat(receivedQuantity) || 0;
+                                updatedCount++;
                             }
                             
                             // 重新计算每个产品的金额（单价 * 数量）
@@ -3168,6 +3181,7 @@
             
             // 保存更新后的采购订单数据回localStorage
             localStorage.setItem(indexStorageKey, JSON.stringify(updatedOrders));
+            console.log(`同步更新到index.html: 合同号=${contractNumber}, 产品=${productName}, 规格=${spec}, 更新数量=${updatedCount}`);
         }
         
         // 辅助函数
